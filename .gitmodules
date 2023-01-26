@@ -72,8 +72,12 @@
 	url = https://github.com/dengwirda/PPR.git
 [submodule "components/ww3/src/source/WW3"]
 	path = components/ww3/src/WW3
-	url = git@github.com:E3SM-Project/WW3.git
-	branch = e3sm
+	#url = git@github.com:E3SM-Project/WW3.git
+	#branch = e3sm
+	url = git@github.com:erinethomas/WW3.git
+	branch = dev_WaveIceCoupling
 [submodule "components/mpas-seaice/src/icepack"]
 	path = components/mpas-seaice/src/icepack
-	url = git@github.com:E3SM-Project/Icepack.git
+	#url = git@github.com:E3SM-Project/Icepack.git
+	url = git@github.com:erinethomas/Icepack.git
+	branch = dev_WaveIceCoupling
