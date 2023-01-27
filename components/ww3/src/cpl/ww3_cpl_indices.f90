@@ -13,7 +13,7 @@ module ww3_cpl_indices
   integer :: index_x2w_Sa_tbot  
   integer :: index_x2w_Si_ifrac
   integer :: index_x2w_Si_ithick
-  integer :: index_x2w_si_ifloe 
+  integer :: index_x2w_Si_ifloe 
   integer :: index_x2w_So_t     
   integer :: index_x2w_So_u     
   integer :: index_x2w_So_v     
@@ -65,6 +65,7 @@ contains
     index_w2x_Sw_Hs = mct_avect_indexra(w2x,'Sw_Hs') ! Significant wave height
     index_w2x_Sw_Fp = mct_avect_indexra(w2x,'Sw_Fp') ! Peak wave freqency  
     index_w2x_Sw_Dp = mct_avect_indexra(w2x,'Sw_Dp') ! Peak wave direction
+    !index_w2x_Sw_Dp = mct_avect_indexra(w2x,'Sw_wavespec') ! full wave spectrum (fcn of frq)
 
     index_w2x_Sw_ustokes_wavenumber_1 = mct_avect_indexra(w2x,'Sw_ustokes_wavenumber_1') ! partitioned Stokes drift u 1
     index_w2x_Sw_vstokes_wavenumber_1 = mct_avect_indexra(w2x,'Sw_vstokes_wavenumber_1') ! partitioned Stokes drift v 1
