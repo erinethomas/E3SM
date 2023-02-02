@@ -167,7 +167,8 @@
       use seq_flds_mod
 
       use ww3_cpl_indices  , only : ww3_cpl_indices_set
-      use ww3_cpl_indices  , only : index_x2w_Sa_u, index_x2w_Sa_v, index_x2w_Sa_tbot, index_x2w_Si_ifrac, index_x2w_si_ithick
+      use ww3_cpl_indices  , only : index_x2w_Sa_u, index_x2w_Sa_v, index_x2w_Sa_tbot, & 
+                                    index_x2w_Si_ifrac, index_x2w_Si_ithick, index_x2w_Si_ifloe 
       use ww3_cpl_indices  , only : index_x2w_So_t, index_x2w_So_u, index_x2w_So_v, index_x2w_So_bldepth, index_x2w_So_ssh
       use ww3_cpl_indices  , only : index_w2x_Sw_ustokes_wavenumber_1, index_w2x_Sw_vstokes_wavenumber_1, &
                                     index_w2x_Sw_ustokes_wavenumber_2, index_w2x_Sw_vstokes_wavenumber_2, &
@@ -1173,9 +1174,9 @@ CONTAINS
          endif
 
          if (inflags1(4)) then
-            ICEI(IX,IY) = x2w0%rattr(index_x2w_si_ifrac,gindex)
-            ICEP1(IX,IY) = x2w0%rattr(index_x2w_si_ithick,gindex)
-            !ICEP5(IX,IY) = x2w0%rattr(index_x2w_si_ifloe,gindex)
+            ICEI(IX,IY) = x2w0%rattr(index_x2w_Si_ifrac,gindex)
+            ICEP1(IX,IY) = x2w0%rattr(index_x2w_Si_ithick,gindex)
+            !ICEP5(IX,IY) = x2w0%rattr(index_x2w_Si_ifloe,gindex)
 
          endif
 
@@ -1203,6 +1204,7 @@ CONTAINS
              w2x_w%rattr(index_w2x_Sw_Hs,jsea) = HS(jsea)
              w2x_w%rattr(index_w2x_Sw_Fp,jsea) = FP0(jsea)
              w2x_w%rattr(index_w2x_Sw_Dp,jsea) = THP0(jsea)
+             !w2x_w%rattr(index_w2x_Sw_wavespec) = EF(jsea,:)
 
 
              w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = USSP(jsea,1)
@@ -1225,6 +1227,7 @@ CONTAINS
           else
 
              w2x_w%rattr(index_w2x_Sw_Hs,jsea) = 0.0
+             !w2x_w%rattr(index_w2x_Sw_wavespec,jsea) = 0.0
             
              w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = 0.0
              w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = 0.0

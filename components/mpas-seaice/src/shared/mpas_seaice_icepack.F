@@ -3338,6 +3338,113 @@ contains
 
   end subroutine column_radiation
 
+
+!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+!
+!  column_waves
+!
+!> \brief
+!> \author Erin E. Thomas, LANL
+!> \date 30 January 2023
+!> \details
+!>
+!
+!-----------------------------------------------------------------------
+  subroutine column_wavefracture(domain)
+
+    use icepack_intfc, only: icepack_step_wavefracture
+
+    type(domain_type), intent(inout) :: domain
+    
+    type(block_type), pointer :: block
+    
+    type(MPAS_pool_type), pointer :: &
+       mesh, &
+       velocity_solver, &
+       tracers_aggregate, &
+      
+
+    ! configs
+    logical, pointer :: &
+
+    ! dimensions
+    integer, pointer :: &
+         nCategories, &
+
+    ! variables
+    real(kind=RKIND), dimension(:), pointer :: &
+         iceAreaCell, &
+         iceVolumeCell, &
+
+
+    real(kind=RKIND), dimension(:,:), pointer :: &
+
+
+    real(kind=RKIND), dimension(:,:,:), pointer :: &
+         iceAreaCategory, &
+
+    real(kind=RKIND), dimension(:,:), pointer :: &
+    
+
+    real(kind=RKIND), pointer :: &
+         dynamicsTimeStep
+    
+    ! local
+    integer :: &
+         iCell, &
+         iCategory
+    
+    
+    
+    block => domain % blocklist
+    do while (associated(block))
+
+       !MPAS_pool_get* calls
+       call MPAS_pool_get_subpool(block % structs, "tracers", tracers)
+
+       call MPAS_pool_get_dimension(mesh, "nCategories", nCategories)
+       call MPAS_pool_get_array(velocity_solver, "dynamicsTimeStep", dynamicsTimeStep)
+
+       call MPAS_pool_get_array(tracers_aggregate, "iceAreaCell", iceAreaCell)
+
+       !not 100% sure where the warning stuff goes
+       call_icepack_warnings_flush(nu_diag)
+       if (icepack_warnings_aborted()) call icedrv_system_abort(string=subname, &
+           file=__FILE__,line= __LINE__)
+
+       do iCell = 1, nCellsSolve
+          d_afsd_wave(i,:) = c0
+          call icepack_step_wavefracture(&
+                  wave_spec_type=wave_spec_type, &
+                  dt=dynamicsTimeStep, &
+                  ncat=nCategories, &
+                  nfsd=nfsd, &
+                  nfreq=nfreq, &
+                  aice = iceAreaCell(iCell), &
+                  vice = iceVolumeCell(iCell), &
+                  aicen = iceAreaCategory(1,:,iCell), &
+                  floe_rad_l = floe_rad_l(:), &
+                  floe_rad_c = floe_rad_c(:), &
+                  wave_spectrum = wave_spectrum(i,:), &
+                  wavefreq = wavefreq(:), &
+                  dwavefreq = dwavefreq(:), &
+                  trcrn = trcrn(i,:,:), &
+                  d_afsd_wave = d_afsd_wave(i,:))
+
+
+        
+       enddo !iCell
+
+       call icepack_warnings_flush(nu_diag)
+       if (icepack_warnings_aborted()) call icedrv_system_abort(string=subname, &
+           file=__FILE__, line=__LINE__)
+
+
+       block => block % next
+               enddo !do while
+  end subroutine column_wavefracture        
+
+
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 !
 !  column_ridging

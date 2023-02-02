@@ -2000,7 +2000,7 @@ contains
         seaSurfaceTiltV(i)             = x2i_i % rAttr(index_x2i_So_dhdy, n)
 
         !sigWaveHeight(i)              = x2i_i % rAttr(index_x2i_Sw_Hs, n)
-        !waveSpectra(i)              = x2i_i % rAttr(index_x2i_Sw_wavepect, n)
+        !waveSpectra(i)              = x2i_i % rAttr(index_x2i_Sw_wavepec, n)
 
         if (trim(config_ocean_surface_type) == "free") then ! free surface (MPAS-O)
 
