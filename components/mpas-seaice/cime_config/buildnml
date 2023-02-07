@@ -34,6 +34,7 @@ def buildnml(case, caseroot, compname):
     ice_mask         = case.get_value("MASK_GRID")
     ice_bgc          = case.get_value("MPASSI_BGC")
     ice_wavecoup     = case.get_value("MPASSI_WAVES")
+    ice_nwavefreq    = case.get_value("MPASSI_NWAVEFREQ")
     surface_mode     = case.get_value("MPASSI_SURFACE_MODE")
     iceberg_mode     = case.get_value("MPASSI_ICEBERG_MODE")
     prognostic_mode  = case.get_value("MPASSI_PROGNOSTIC_MODE")

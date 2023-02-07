@@ -63,6 +63,21 @@
         <group>case_comp</group>
         <file>env_case.xml</file>
         <desc>Option to enable Wave Coupling in MPASSI</desc>
+</entry>
+
+  <entry id="MPASSI_NWAVEFREQ">
+        <type>char</type>
+        <valid_values>25,36,50</valid_values>
+        <default_value></default_value>
+        <values>
+           <value compset="_WW3">36</value>
+           <value compset="_WW3%sp25x36">25</value>
+           <value compset="_WW3%sp36x36">36</value>
+           <value compset="_WW3%sp50x36">50</value>
+        </values>
+        <group>case_comp</group>
+        <file>env_case.xml</file>
+        <desc>Define number of wave frequencies in MPASSI</desc>
  </entry>
 
   <entry id="MPASSI_PROGNOSTIC_MODE">

@@ -421,6 +421,10 @@ my $START_TOD              = "$xmlvars{'START_TOD'}";
 my $RUN_REFDATE            = "$xmlvars{'RUN_REFDATE'}";
 my $CONTINUE_RUN           = "$xmlvars{'CONTINUE_RUN'}";
 
+if ($ice_wavecoup eq 'true') {
+    my $ice_nwavefreq = $xmlvars{'MPASSI_NWAVEFREQ'}
+}
+
 my $SSTICE_GRID_FILENAME;
 my $SSTICE_DATA_FILENAME;
 my $SSTICE_YEAR_ALIGN;
@@ -634,8 +638,17 @@ if ($ice_bgc eq 'ice_bgc') {
 }
 add_default($nl, 'config_use_column_itd_thermodynamics');
 add_default($nl, 'config_use_column_ridging');
-if ($ice_wavecoup eq 'ice_wavecoup') {
-        add_default($nl, 'config_use_column_wavefracture', 'val'=>".true.");
+if ($ice_wavecoup eq 'true') {
+	add_default($nl, 'config_use_column_wavefracture', 'val'=>".true.");
+    	if ($ice_nwavefreq eq '25') {
+		add_default($nl, 'config_nwavefreq','val'=>25);
+	}
+	elsif ($ice_nwavefreq eq '36') {
+		add_default($nl, 'config_nwavefreq','val'=>36);
+	}
+	elsif ($ice_nwavefreq eq '50') {
+		add_default($nl, 'config_nwavefreq','val'=>50);
+	}
 } else {
         add_default($nl, 'config_use_column_wavefracture', 'val'=>".false.");
 }

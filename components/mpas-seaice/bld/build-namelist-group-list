@@ -19,7 +19,6 @@ my @groups = qw(seaice_model
                 itd
 	        floesize	
                 ridging
-                wavefracture
                 atmosphere
                 ocean
                 diagnostics
