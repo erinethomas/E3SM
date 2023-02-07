@@ -1810,8 +1810,6 @@ contains
       frazilMassAdjustField,            &
       uOceanVelocityField,              &
       vOceanVelocityField,              &
-      !sigWaveHeightField,              &
-      !waveSpectraField,                &
       seaSurfaceTiltUField,             &
       seaSurfaceTiltVField,             &
       airLevelHeightField,              &
@@ -1845,7 +1843,8 @@ contains
       oceanZAerosolConcField,           &
       atmosAerosolFluxField,            &
       atmosBlackCarbonFluxField,        &
-      atmosDustFluxField
+      atmosDustFluxField,               &
+      waveSpectraField
 
    real (kind=RKIND), dimension(:), pointer :: &
       seaSurfaceTemperature,       &
@@ -1855,8 +1854,6 @@ contains
       frazilMassAdjust,            &
       uOceanVelocity,              &
       vOceanVelocity,              &
-      !sigWaveHeight,              &
-      !waveSpectra,                &
       seaSurfaceTiltU,             &
       seaSurfaceTiltV,             &
       airLevelHeight,              &
@@ -1893,7 +1890,8 @@ contains
       oceanZAerosolConc,           &
       atmosAerosolFlux,            &
       atmosBlackCarbonFlux,        &
-      atmosDustFlux
+      atmosDustFlux,               &
+      waveSpectra
 
 !-----------------------------------------------------------------------
 !
@@ -1936,8 +1934,7 @@ contains
       call mpas_pool_get_array(oceanCoupling, 'seaSurfaceTiltU', seaSurfaceTiltU)
       call mpas_pool_get_array(oceanCoupling, 'seaSurfaceTiltV', seaSurfaceTiltV)
 
-      !call mpas_pool_get_array(waveCoupling, 'sigWaveHeight', sigWaveHeight)
-      !call mpas_pool_get_array(waveCoupling, 'waveSpectra', waveSpectra)
+      call mpas_pool_get_array(waveCoupling, 'waveSpectra', waveSpectra)
 
       call mpas_pool_get_array(atmosCoupling, 'airLevelHeight', airLevelHeight)
       call mpas_pool_get_array(atmosCoupling, 'airPotentialTemperature', airPotentialTemperature)
@@ -1999,8 +1996,7 @@ contains
         seaSurfaceTiltU(i)             = x2i_i % rAttr(index_x2i_So_dhdx, n)
         seaSurfaceTiltV(i)             = x2i_i % rAttr(index_x2i_So_dhdy, n)
 
-        !sigWaveHeight(i)              = x2i_i % rAttr(index_x2i_Sw_Hs, n)
-        !waveSpectra(i)              = x2i_i % rAttr(index_x2i_Sw_wavepec, n)
+        waveSpectra(i)                 = x2i_i % rAttr(index_x2i_Sw_wavepec, n)
 
         if (trim(config_ocean_surface_type) == "free") then ! free surface (MPAS-O)
 
@@ -2333,7 +2329,7 @@ contains
       shortwave,        &
       atmosCoupling,    &
       oceanCoupling,    &
-      !waveCoupling,    &
+      waveCoupling,    &
       atmosFluxes,      &
       oceanFluxes,      &
       icebergFluxes,    &
@@ -2427,7 +2423,7 @@ contains
       call MPAS_pool_get_subpool(block_ptr % structs, "shortwave", shortwave)
       call MPAS_pool_get_subpool(block_ptr % structs, 'atmos_coupling', atmosCoupling)
       call MPAS_pool_get_subpool(block_ptr % structs, 'ocean_coupling', oceanCoupling)
-      !call MPAS_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
+      call MPAS_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
       call MPAS_pool_get_subpool(block_ptr % structs, "atmos_fluxes", atmosFluxes)
       call MPAS_pool_get_subpool(block_ptr % structs, "ocean_fluxes", oceanFluxes)
 
@@ -2463,6 +2459,8 @@ contains
       call MPAS_pool_get_array(atmosCoupling, 'atmosReferenceHumidity2m', atmosReferenceHumidity2m)
 
       call MPAS_pool_get_array(oceanCoupling, 'frazilMassAdjust', frazilMassAdjust)
+
+      call MPAS_pool_get_array(waveCoupling, 'iceFloeSize',iceFloeSize )
 
       call MPAS_pool_get_array(atmosFluxes, 'latentHeatFlux', latentHeatFlux)
       call MPAS_pool_get_array(atmosFluxes, 'sensibleHeatFlux', sensibleHeatFlux)
@@ -2570,10 +2568,7 @@ contains
             i2x_i % rAttr(index_i2x_Si_qref  ,n)  = atmosReferenceHumidity2m(i)
             i2x_i % rAttr(index_i2x_Si_snowh ,n)  = snowVolumeCell(i) / ailohi
             i2x_i % rAttr(index_i2x_Si_ithick,n)  = iceVolumeCell(i) / ailohi
-            
-            !i2x_i % rAttr(index_i2x_Si_ifloe,n)  = ICE FLOE SIZE !NOTE- need to obtain floe size dist from icepack before can send
-            !to coupler here.
-
+            i2x_i % rAttr(index_i2x_Si_ifloe, n)  = !ICE FLOE SIZE : need to obtain floe size dist from icepack before can send
 
             !--- a/i fluxes computed by ice
             i2x_i % rAttr(index_i2x_Faii_taux ,n) = tauxa

@@ -711,6 +711,10 @@
 			description="Run the ridging column physics calculation."
 			possible_values="true or false"
 		/>
+		<nml_option name="config_use_column_wavefracture" type="logical" default_value="true" units="unitless"
+			description="Run the ridging column physics calculation."
+			possible_values="true or false"
+		/>
 		<nml_option name="config_use_column_snow_tracers" type="logical" default_value="false" units="unitless"
 			description="Allow snow modifications plus additional snow tracers"
 			possible_values="true or false"
@@ -3799,6 +3803,22 @@
 		     dimensions="nCells Time"
 		/>
 	</var_struct>
+
+        <!--wave coupling -->
+	<var_struct name="wave_coupling" time_levs="1">
+		<var name="waveSpectra"
+		     type="real"
+		     dimensions="nCells nFreq Time"
+		     units=""
+		/>
+		<var name="iceFloeSize"
+		     type="real"
+		     dimensions="nCells Time"
+		     units=""
+		/>
+
+	</var_struct>
+
 
 	<!--ocean coupling -->
 	<var_struct name="ocean_coupling" time_levs="1">

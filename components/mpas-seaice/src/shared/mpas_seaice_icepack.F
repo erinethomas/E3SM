@@ -1162,6 +1162,7 @@ contains
     logical, pointer :: &
          config_use_column_package, &
          config_use_column_ridging, &
+         config_use_column_wavefracture, &
          config_use_vertical_tracers
 
     type(MPAS_pool_type), pointer :: &
@@ -1175,6 +1176,7 @@ contains
     if (config_use_column_package) then
 
        call MPAS_pool_get_config(domain % configs, "config_use_column_ridging", config_use_column_ridging)
+       call MPAS_pool_get_config(domain % configs, "config_use_column_wavefracture", config_use_column_wavefracture)
        call MPAS_pool_get_config(domain % configs, "config_use_vertical_tracers", config_use_vertical_tracers)
 
        call MPAS_pool_get_subpool(domain % blocklist % structs, "velocity_solver", velocitySolver)
@@ -1188,6 +1190,16 @@ contains
        if (config_use_vertical_tracers) &
             call column_combine_snow_ice_tracers(domain)
        call mpas_timer_stop("Column combine snow/ice tracers")
+
+
+       !-----------------------------------------------------------------
+       ! Wave fracturing  
+       !-----------------------------------------------------------------
+       call mpas_timer_start("Column wavefracture")
+       if (config_use_column_wavefracture) &
+            call column_wavefracture(domain)
+       call mpas_timer_stop("Column wavefracture")
+       
 
        !-----------------------------------------------------------------
        ! Ridging
@@ -3362,29 +3374,39 @@ contains
        mesh, &
        velocity_solver, &
        tracers_aggregate, &
+       wave_coupling, &
       
 
     ! configs
     logical, pointer :: &
 
+
+    character, pointer :: &
+         waveSpectraType  ! the wave spectra type 
+
     ! dimensions
     integer, pointer :: &
-         nCategories, &
+         nCategories, & !number of ice thicknes categories
+         nFloeCategories, & ! number of floe size categories
+         nWaveFrequencies   ! number of wave frequency bins
 
     ! variables
     real(kind=RKIND), dimension(:), pointer :: &
-         iceAreaCell, &
-         iceVolumeCell, &
+         iceAreaCell, & ! ice area fraction
+         iceVolumeCell, & ! ice volume per unit area
+         floeSizeBinLower, & ! fsd size bin lower bound in m (radius)
+         floeSizeBinCenter, & ! fsd size bin center in m (radius)
+         waveFrequencies, & ! wave frequencies
+         waveFreqBinWidths, & ! wave frequency bin widths
 
 
     real(kind=RKIND), dimension(:,:), pointer :: &
-
+         waveSpectrum, & ! ocean surface wave spectrum as a function of frequency
+         d_afsd_wave, & ! change in fsd due to waves
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
-         iceAreaCategory, &
-
-    real(kind=RKIND), dimension(:,:), pointer :: &
-    
+         iceAreaCategory, & ! ice area fraction per category
+         trcrn, & ! tracer array
 
     real(kind=RKIND), pointer :: &
          dynamicsTimeStep
@@ -3401,6 +3423,7 @@ contains
 
        !MPAS_pool_get* calls
        call MPAS_pool_get_subpool(block % structs, "tracers", tracers)
+       call MPAS_pool_get_subpool(block % structs, "wave_coupling", wave_coupling)
 
        call MPAS_pool_get_dimension(mesh, "nCategories", nCategories)
        call MPAS_pool_get_array(velocity_solver, "dynamicsTimeStep", dynamicsTimeStep)
@@ -3413,23 +3436,23 @@ contains
            file=__FILE__,line= __LINE__)
 
        do iCell = 1, nCellsSolve
-          d_afsd_wave(i,:) = c0
+          d_afsd_wave(:,iCell) = c0
           call icepack_step_wavefracture(&
-                  wave_spec_type=wave_spec_type, &
+                  wave_spec_type=waveSpectraType, &
                   dt=dynamicsTimeStep, &
                   ncat=nCategories, &
-                  nfsd=nfsd, &
-                  nfreq=nfreq, &
+                  nfsd=nFloeCategories, &
+                  nfreq=nWaveFrequencies, &
                   aice = iceAreaCell(iCell), &
                   vice = iceVolumeCell(iCell), &
                   aicen = iceAreaCategory(1,:,iCell), &
-                  floe_rad_l = floe_rad_l(:), &
-                  floe_rad_c = floe_rad_c(:), &
-                  wave_spectrum = wave_spectrum(i,:), &
-                  wavefreq = wavefreq(:), &
-                  dwavefreq = dwavefreq(:), &
-                  trcrn = trcrn(i,:,:), &
-                  d_afsd_wave = d_afsd_wave(i,:))
+                  floe_rad_l = floeSizeBinLower(:), &
+                  floe_rad_c = floeSizeBinCenter(:), &
+                  wave_spectrum = waveSpectrum(:,iCell), &
+                  wavefreq = waveFrequencies(:), &
+                  dwavefreq = waveFreqBinWidths(:), &
+                  trcrn = trcrn(:,:,iCell), &
+                  d_afsd_wave = d_afsd_wave(:,iCell))
 
 
         
@@ -3441,7 +3464,7 @@ contains
 
 
        block => block % next
-               enddo !do while
+    enddo !do while
   end subroutine column_wavefracture        
 
 
