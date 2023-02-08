@@ -274,6 +274,9 @@ contains
        ! initialize the itd thickness classes
        call init_column_itd(domain)
 
+       ! initalize fsd 
+       call init_column_fsd
+
        ! initialize thermodynamic tracer profiles
        call init_column_thermodynamic_profiles(domain)
 

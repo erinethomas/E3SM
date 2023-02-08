@@ -173,11 +173,6 @@
 <config_use_column_itd_thermodynamics>true</config_use_column_itd_thermodynamics>
 <config_use_column_itd_thermodynamics prognostic_mode="prescribed">false</config_use_column_itd_thermodynamics>
 <config_use_column_ridging>true</config_use_column_ridging>
-<config_use_column_wavefracture>false</config_use_column_wavefracture>
-<config_use_column_wavefracture ice_wavecoup="true">true</config_use_column_wavefracture>
-<config_nwavefreq ice_nwavefreq="25">25</config_nwavefreq>
-<config_nwavefreq ice_nwavefreq="36">36</config_nwavefreq>
-<config_nwavefreq ice_nwavefreq="50">50</config_nwavefreq>
 <config_use_column_snow_tracers>true</config_use_column_snow_tracers>
 
 <!-- column_tracers -->

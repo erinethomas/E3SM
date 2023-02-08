@@ -168,8 +168,6 @@ add_default($nl, 'config_use_column_vertical_thermodynamics');
 add_default($nl, 'config_use_column_biogeochemistry');
 add_default($nl, 'config_use_column_itd_thermodynamics');
 add_default($nl, 'config_use_column_ridging');
-add_default($nl, 'config_use_column_wavefracture');
-add_default($nl, 'config_nwavefreq');
 add_default($nl, 'config_use_column_snow_tracers');
 
 ##################################

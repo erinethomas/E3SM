@@ -829,22 +829,6 @@ Valid values: true or false
 Default: Defined in namelist_defaults.xml
 </entry>
 
-<entry id="config_use_column_wavefracture" type="logical"
-	category="column_package" group="column_package">
-Run ice floe fracture due to surface ocean waves.
-
-Valid values: true or false
-Default: Defined in namelist_defaults.xml
-</entry>
-
-<entry id="config_nwavefreq" type="integer"
-	category="column_package" group="column_package">
-Define number of ocean wave frequencies.
-
-Valid values: 25,36,50 
-Default: Defined in namelist_defaults.xml
-</entry>
-
 <entry id="config_use_column_snow_tracers" type="logical"
 	category="column_package" group="column_package">
 Allow snow modifications plus additional snow tracers
