@@ -133,7 +133,7 @@
       use w3gdatmd, only: dtmax, dtcfl, dtcfli, dtmin, &
                           nx, ny, nsea, nseal, mapsf, mapfs, mapsta, mapst2, x0, y0, sx, sy, xgrd, ygrd, &
                           w3nmod, w3setg, AnglD, &
-                          sig, nk, zb, dmin, &
+                          sig, nk, zb, dmin, xfr, fr1, &
                           usspf
       use w3wdatmd, only: time, w3ndat, w3setw, wlv, va, ust, ice 
       use w3adatmd, only: ussp, w3naux, w3seta, sxx, sxy, syy, fliwnd, flcold, dw, cg, wn, hs, fp0, thp0
@@ -839,7 +839,8 @@ CONTAINS
       ! wav_prognostic is set to .false. for debugging purposes only
 
       call seq_infodata_putdata(infodata, wav_present=.true., &
-           wav_prognostic=.true., wav_nx=nx, wav_ny=ny)
+           wav_prognostic=.true., wav_nx=nx, wav_ny=ny, &
+           wav_nfreq=nk, wav_freq1=fr1, wav_xfr=xfr)
 
       ! initialize mct attribute vectors
 

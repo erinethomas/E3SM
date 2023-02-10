@@ -12,6 +12,7 @@ module mpassi_cpl_indices
 
   integer :: index_i2x_Si_ifrac        ! fractional ice coverage wrt ocean
   integer :: index_i2x_Si_ithick       ! ice thickness (m)
+  integer :: index_i2x_Si_ifloe        ! mean ice floe diameter (m)
   integer :: index_i2x_Si_snowh        ! snow height (m)
   integer :: index_i2x_Si_t            ! temperature                     
   integer :: index_i2x_Si_bpress       ! basal pressure                  
@@ -22,7 +23,6 @@ module mpassi_cpl_indices
   integer :: index_i2x_Si_anidr        ! albedo: visible, diffuse        
   integer :: index_i2x_Si_anidf        ! albedo: near ir, diffuse        
   integer :: index_i2x_Si_u10          ! 10m wind
-  ! integer :: index_i2x_Si_ifloe       ! mean ice floe diameter (m)
   integer :: index_i2x_Faii_lwup       ! upward longwave heat flux  
   integer :: index_i2x_Faii_lat        ! latent          heat flux  
   integer :: index_i2x_Faii_sen        ! sensible        heat flux      
@@ -69,7 +69,7 @@ module mpassi_cpl_indices
   integer :: index_x2i_So_u            ! ocn u velocity
   integer :: index_x2i_So_v            ! ocn v velocity
   !integer :: index_x2i_Sw_Hs           ! wave significant wave height
-  !integer :: index_x2i_Sw_wavespec           ! wave spectrum
+  integer :: index_x2i_Sw_wavespec     ! wave spectrum
   integer :: index_x2i_Sa_z            ! bottom atm level height
   integer :: index_x2i_Sa_u            ! bottom atm level zon wind
   integer :: index_x2i_Sa_v            ! bottom atm level mer wind
@@ -151,7 +151,7 @@ contains
     index_i2x_Si_qref       = mct_avect_indexra(i2x,'Si_qref')
     index_i2x_Si_ifrac      = mct_avect_indexra(i2x,'Si_ifrac')
     index_i2x_Si_ithick     = mct_avect_indexra(i2x,'Si_ithick')
-    !index_i2x_Si_ifloe     = mct_avect_indexra(i2x,'Si_ifloe')
+    index_i2x_Si_ifloe      = mct_avect_indexra(i2x,'Si_ifloe')
     index_i2x_Si_avsdr      = mct_avect_indexra(i2x,'Si_avsdr')
     index_i2x_Si_anidr      = mct_avect_indexra(i2x,'Si_anidr')
     index_i2x_Si_avsdf      = mct_avect_indexra(i2x,'Si_avsdf')
@@ -200,7 +200,7 @@ contains
     index_x2i_So_u          = mct_avect_indexra(x2i,'So_u')
     index_x2i_So_v          = mct_avect_indexra(x2i,'So_v')
     !index_x2i_Sw_Hs          = mct_avect_indexra(x2i,'Sw_Hs')
-    !index_x2i_Sw_wavespec          = mct_avect_indexra(x2i,'Sw_wavespec')
+    index_x2i_Sw_wavespec   = mct_avect_indexra(x2i,'Sw_wavespec')
     index_x2i_Sa_z          = mct_avect_indexra(x2i,'Sa_z')
     index_x2i_Sa_u          = mct_avect_indexra(x2i,'Sa_u')
     index_x2i_Sa_v          = mct_avect_indexra(x2i,'Sa_v')

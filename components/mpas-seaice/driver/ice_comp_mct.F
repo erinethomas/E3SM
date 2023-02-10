@@ -212,6 +212,8 @@ contains
     real(kind=RKIND), pointer :: &
          dayOfNextShortwaveCalculation ! needed for CESM like coupled simulations
 
+    logical, pointer :: wav_present
+
     interface
        subroutine xml_stream_parser(xmlname, mgr_p, comm, ierr) bind(c)
           use iso_c_binding, only : c_char, c_ptr, c_int
@@ -685,6 +687,14 @@ contains
 !   initialize necessary  coupling info
 !
 !-----------------------------------------------------------------------
+
+    ! set wave frequencies information (if wave coupling is true)
+    call seq_infodata_getdata(infodata, wav_present=wav_present)
+    if ( wav_present ) then
+        call seq_infodata_getdata(infodata, wav_nfreq=nWaveFreq) !number of wave frequencies
+        call seq_infodata_getdata(infodata, wav_freq1=wav_freq1) ! first frequency
+        call seq_infodata_getdata(infodata, wav_xfr=wav_xfr) ! frequency factor
+    end if
 
     ! set ice_cpl_dt (coupling interval in integer seconds) from the EClock
     call seq_timemgr_EClockGetData(EClock, dtime=ice_cpl_dt)
@@ -1920,7 +1930,7 @@ contains
       call mpas_pool_get_subpool(block_ptr % structs, 'mesh', meshPool)
       call mpas_pool_get_subpool(block_ptr % structs, 'ocean_coupling', oceanCoupling)
       call mpas_pool_get_subpool(block_ptr % structs, 'atmos_coupling', atmosCoupling)
-      !call mpas_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
+      call mpas_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
 
       call mpas_pool_get_dimension(meshPool, 'nCellsSolve', nCellsSolve)
 
@@ -1996,7 +2006,7 @@ contains
         seaSurfaceTiltU(i)             = x2i_i % rAttr(index_x2i_So_dhdx, n)
         seaSurfaceTiltV(i)             = x2i_i % rAttr(index_x2i_So_dhdy, n)
 
-        waveSpectra(i)                 = x2i_i % rAttr(index_x2i_Sw_wavepec, n)
+        waveSpectra(:,i)               = x2i_i % rAttr(index_x2i_Sw_wavepec, n)
 
         if (trim(config_ocean_surface_type) == "free") then ! free surface (MPAS-O)
 
@@ -2159,7 +2169,7 @@ contains
 
    call mpas_pool_get_subpool(domain % blocklist % structs, 'ocean_coupling', oceanCoupling)
    call mpas_pool_get_subpool(domain % blocklist % structs, 'atmos_coupling', atmosCoupling)
-   !call mpas_pool_get_subpool(domain % blocklist % structs, 'wave_coupling', waveCoupling)
+   call mpas_pool_get_subpool(domain % blocklist % structs, 'wave_coupling', waveCoupling)
 
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceTemperature', seaSurfaceTemperatureField)
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceSalinity', seaSurfaceSalinityField)
@@ -2171,8 +2181,7 @@ contains
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceTiltU', seaSurfaceTiltUField)
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceTiltV', seaSurfaceTiltVField)
 
-   !call mpas_pool_get_field(waveCoupling, 'sigWaveHeight', sigWaveHeightField)
-   !call mpas_pool_get_field(waveCoupling, 'waveSpectra', waveSpectraField)
+   call mpas_pool_get_field(waveCoupling, 'waveSpectra', waveSpectraField)
 
    call mpas_pool_get_field(atmosCoupling, 'airLevelHeight', airLevelHeightField)
    call mpas_pool_get_field(atmosCoupling, 'airPotentialTemperature', airPotentialTemperatureField)
@@ -2227,8 +2236,7 @@ contains
    call mpas_dmpar_exch_halo_field(seaSurfaceTiltUField)
    call mpas_dmpar_exch_halo_field(seaSurfaceTiltVField)
 
-   !call mpas_dmpar_exch_halo_field(sigWaveHeightField)
-   !call mpas_dmpar_exch_halo_field(waveSpectraField)
+   call mpas_dmpar_exch_halo_field(waveSpectraField)
 
    call mpas_dmpar_exch_halo_field(airLevelHeightField)
    call mpas_dmpar_exch_halo_field(airPotentialTemperatureField)
