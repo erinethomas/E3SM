@@ -13,7 +13,7 @@ module ww3_cpl_indices
   integer :: index_x2w_Sa_tbot  
   integer :: index_x2w_Si_ifrac
   integer :: index_x2w_Si_ithick
-  integer :: index_x2w_Si_ifloe 
+!  integer :: index_x2w_Si_ifloe 
   integer :: index_x2w_So_t     
   integer :: index_x2w_So_u     
   integer :: index_x2w_So_v     

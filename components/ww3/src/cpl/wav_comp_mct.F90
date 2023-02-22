@@ -168,7 +168,7 @@
 
       use ww3_cpl_indices  , only : ww3_cpl_indices_set
       use ww3_cpl_indices  , only : index_x2w_Sa_u, index_x2w_Sa_v, index_x2w_Sa_tbot, & 
-                                    index_x2w_Si_ifrac, index_x2w_Si_ithick, index_x2w_Si_ifloe 
+                                    index_x2w_Si_ifrac, index_x2w_Si_ithick!, index_x2w_Si_ifloe 
       use ww3_cpl_indices  , only : index_x2w_So_t, index_x2w_So_u, index_x2w_So_v, index_x2w_So_bldepth, index_x2w_So_ssh
       use ww3_cpl_indices  , only : index_w2x_Sw_ustokes_wavenumber_1, index_w2x_Sw_vstokes_wavenumber_1, &
                                     index_w2x_Sw_ustokes_wavenumber_2, index_w2x_Sw_vstokes_wavenumber_2, &
@@ -838,9 +838,11 @@ CONTAINS
       ! set flags in infodata
       ! wav_prognostic is set to .false. for debugging purposes only
 
+      !call seq_infodata_putdata(infodata, wav_present=.true., &
+       !    wav_prognostic=.true., wav_nx=nx, wav_ny=ny, &
+        !   wav_nfreq=nk, wav_freq1=fr1, wav_xfr=xfr)
       call seq_infodata_putdata(infodata, wav_present=.true., &
-           wav_prognostic=.true., wav_nx=nx, wav_ny=ny, &
-           wav_nfreq=nk, wav_freq1=fr1, wav_xfr=xfr)
+           wav_prognostic=.true.)
 
       ! initialize mct attribute vectors
 
