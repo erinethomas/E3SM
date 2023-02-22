@@ -80,4 +80,4 @@
 	path = components/mpas-seaice/src/icepack
 	#url = git@github.com:E3SM-Project/Icepack.git
 	url = git@github.com:erinethomas/Icepack.git
-	branch = dev_WaveIceCoupling
+        branch = dev_WaveIceCoupling

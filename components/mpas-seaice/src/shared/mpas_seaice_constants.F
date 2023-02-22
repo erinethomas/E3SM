@@ -88,9 +88,9 @@ module seaice_constants
         gramsCarbonPerMolCarbon   ! g carbon per mol carbon
 
    ! Wave coupling constants
-   integer, public          :: nWaveFreq
-   real(kind=RKIND), public :: waveFreq1
-   real(kind=RKIND), public :: waveXfr
+   !integer, public          :: nWaveFreq
+   !real(kind=RKIND), public :: waveFreq1
+   !real(kind=RKIND), public :: waveXfr
 
 
 end module seaice_constants
