@@ -310,7 +310,8 @@
 			units="unitless"
 			description="The number of snow grain radius used in SNICAR model, radius are ranging from 30 to 150 microns with 1 micron interval"
 		/>
-		<dim name="nFrequency"
+	        <dim name="nFrequencies"
+	   	        definition="namelist:config_nFrequencies"
 			description="The number of frequencies in the wave model. Needed for FSD and ice breaking." 
 		/>
 

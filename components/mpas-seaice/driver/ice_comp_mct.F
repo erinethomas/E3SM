@@ -691,9 +691,10 @@ contains
     ! set wave frequencies information (if wave coupling is true)
     call seq_infodata_getdata(infodata, wav_present=wav_present)
     if ( wav_present ) then
-        call seq_infodata_getdata(infodata, wav_nfreq=nWaveFreq) !number of wave frequencies
-        call seq_infodata_getdata(infodata, wav_freq1=wav_freq1) ! first frequency
-        call seq_infodata_getdata(infodata, wav_xfr=wav_xfr) ! frequency factor
+        call mpas_log_write('Wave Coupling is "ON"')
+        !call seq_infodata_getdata(infodata, wav_nfreq=nWaveFreq) !number of wave frequencies
+        !call seq_infodata_getdata(infodata, wav_freq1=wav_freq1) ! first frequency
+        !call seq_infodata_getdata(infodata, wav_xfr=wav_xfr) ! frequency factor
     end if
 
     ! set ice_cpl_dt (coupling interval in integer seconds) from the EClock

@@ -274,8 +274,8 @@ contains
        ! initialize the itd thickness classes
        call init_column_itd(domain)
 
-       ! initalize fsd 
-       call init_column_fsd
+       ! initalize fsd - this is being written by Erin 
+       !if () call init_column_fsd(domain)
 
        ! initialize thermodynamic tracer profiles
        call init_column_thermodynamic_profiles(domain)
@@ -369,6 +369,63 @@ contains
     end do
 
   end subroutine init_column_itd
+
+
+
+!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+!
+!  init_column_fsd
+!
+!> \brief
+!> \author Erin E. Thomas, LANL
+!> \date Feb 2023
+!> \details
+!>
+!
+!-----------------------------------------------------------------------
+
+!  subroutine init_column_fsd(domain)
+!    
+!    use icepack_intfc, only: icepack_init_fsd_bounds
+!    use icedrv_arrays_column, only: wavefreq, dwavefreq, wave_sig_ht, &
+!            wave_spectrum, d_afsd_newi, d_afsd_latg, d_afsd_latm, &
+!            d_afsd_wave, d_afsd_weld
+
+!    call icepack_init_fsd_bounds(   &
+!      nfsd=nfsd,                   &  ! floe size distribution
+!      floe_rad_l=floe_rad_l,       &  ! fsd size lower bound in m (radius)
+!      floe_rad_c=floe_rad_c,       &  ! fsd size bin centre in m (radius)
+!      floe_binwidth=floe_binwidth, &  ! fsd size bin width in m (radius)
+!      c_fsd_range=c_fsd_range)        ! string for history output
+ 
+    ! initalize floe size distribution tracers - this is absically the contents of "init_fsd"
+!    wavefreq       (:)   = c0  !NOTE this comes from ww3?
+!    dwavefreq      (:)   = c0  
+!    wave_sig_ht    (:)   = c0
+!    wave_spectrum  (:,:) = c0
+!    d_afsd_newi    (:,:) = c0
+!    d_afsd_latg    (:,:) = c0
+!    d_afsd_latm    (:,:) = c0
+!    d_afsd_wave    (:,:) = c0
+!    d_afsd_weld    (:,:) = c0
+    
+!    call icepack_init_fsd()  
+
+!    wave_spectrum(:,:) = c0
+
+!    call icepack_init_wave(nfreq=nfreq,                 &
+!                           wave_spectrum_profile=wave_spectrum_profile, &
+!                           wavefreq=wavefreq, dwavefreq=dwavefreq)
+
+!    do k = 1, nfreq
+!       wave_spectrum(:,k) = wave_spectrum_profile(k)
+!    enddo
+                   
+!  end subroutine init_column_fsd
+
+
+
+
 
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 !
@@ -1165,7 +1222,7 @@ contains
     logical, pointer :: &
          config_use_column_package, &
          config_use_column_ridging, &
-         config_use_column_wavefracture, &
+!         config_use_column_wavefracture, &
          config_use_vertical_tracers
 
     type(MPAS_pool_type), pointer :: &
@@ -1179,7 +1236,7 @@ contains
     if (config_use_column_package) then
 
        call MPAS_pool_get_config(domain % configs, "config_use_column_ridging", config_use_column_ridging)
-       call MPAS_pool_get_config(domain % configs, "config_use_column_wavefracture", config_use_column_wavefracture)
+!       call MPAS_pool_get_config(domain % configs, "config_use_column_wavefracture", config_use_column_wavefracture)
        call MPAS_pool_get_config(domain % configs, "config_use_vertical_tracers", config_use_vertical_tracers)
 
        call MPAS_pool_get_subpool(domain % blocklist % structs, "velocity_solver", velocitySolver)
@@ -1198,10 +1255,10 @@ contains
        !-----------------------------------------------------------------
        ! Wave fracturing  
        !-----------------------------------------------------------------
-       call mpas_timer_start("Column wavefracture")
-       if (config_use_column_wavefracture) &
-            call column_wavefracture(domain)
-       call mpas_timer_stop("Column wavefracture")
+!       call mpas_timer_start("Column wavefracture")
+!       if (config_use_column_wavefracture) &
+!            call column_wavefracture(domain)
+!       call mpas_timer_stop("Column wavefracture")
        
 
        !-----------------------------------------------------------------
@@ -3360,115 +3417,120 @@ contains
 !
 !> \brief
 !> \author Erin E. Thomas, LANL
-!> \date 30 January 2023
+!> \date January 2023
 !> \details
 !>
 !
 !-----------------------------------------------------------------------
-  subroutine column_wavefracture(domain)
+!  subroutine column_wavefracture(domain)
 
-    use icepack_intfc, only: icepack_step_wavefracture
+!    use icepack_intfc, only: icepack_step_wavefracture
 
-    type(domain_type), intent(inout) :: domain
+!    use icedrv_arrays_column, only: wave_spectrum, wave_sig_ht, &
+!        d_afsd_wave, floe_rad_l, floe_rad_c, wavefreq, dwavefreq
+!    use icedrv_domain_size, only: ncat, nfsd, nfreq, nx
+!    use icedrv_state, only: trcrn, aicen, aice, vice
+
+!    type(domain_type), intent(inout) :: domain
     
-    type(block_type), pointer :: block
+!    type(block_type), pointer :: block
     
-    type(MPAS_pool_type), pointer :: &
-       mesh, &
-       velocity_solver, &
-       tracers_aggregate, &
-       wave_coupling, &
+!    type(MPAS_pool_type), pointer :: &
+!       mesh, &
+!       velocity_solver, &
+!       tracers_aggregate, &
+!       wave_coupling, &
       
 
     ! configs
-    logical, pointer :: &
+!    logical, pointer :: &
 
 
-    character, pointer :: &
-         waveSpectraType  ! the wave spectra type 
+!    character, pointer :: &
+!         waveSpectraType  ! the wave spectra type 
 
     ! dimensions
-    integer, pointer :: &
-         nCategories, & !number of ice thicknes categories
-         nFloeCategories, & ! number of floe size categories
-         nWaveFrequencies   ! number of wave frequency bins
+!    integer, pointer :: &
+!         nCategories, & !number of ice thicknes categories
+!         nFloeCategories, & ! number of floe size categories
+!         nWaveFrequencies   ! number of wave frequency bins
 
     ! variables
-    real(kind=RKIND), dimension(:), pointer :: &
-         iceAreaCell, & ! ice area fraction
-         iceVolumeCell, & ! ice volume per unit area
-         floeSizeBinLower, & ! fsd size bin lower bound in m (radius)
-         floeSizeBinCenter, & ! fsd size bin center in m (radius)
-         waveFrequencies, & ! wave frequencies
-         waveFreqBinWidths, & ! wave frequency bin widths
+!    real(kind=RKIND), dimension(:), pointer :: &
+!         iceAreaCell, & ! ice area fraction
+!         iceVolumeCell, & ! ice volume per unit area
+!         floeSizeBinLower, & ! fsd size bin lower bound in m (radius)
+!         floeSizeBinCenter, & ! fsd size bin center in m (radius)
+!         waveFrequencies, & ! wave frequencies
+!         waveFreqBinWidths, & ! wave frequency bin widths
 
 
-    real(kind=RKIND), dimension(:,:), pointer :: &
-         waveSpectrum, & ! ocean surface wave spectrum as a function of frequency
-         d_afsd_wave, & ! change in fsd due to waves
+!    real(kind=RKIND), dimension(:,:), pointer :: &
+!         waveSpectrum, & ! ocean surface wave spectrum as a function of frequency
+!         d_afsd_wave, & ! change in fsd due to waves
 
-    real(kind=RKIND), dimension(:,:,:), pointer :: &
-         iceAreaCategory, & ! ice area fraction per category
-         trcrn, & ! tracer array
+!    real(kind=RKIND), dimension(:,:,:), pointer :: &
+!         iceAreaCategory, & ! ice area fraction per category
+!         trcrn, & ! tracer array
 
-    real(kind=RKIND), pointer :: &
-         dynamicsTimeStep
+!    real(kind=RKIND), pointer :: &
+!         dynamicsTimeStep
     
     ! local
-    integer :: &
-         iCell, &
-         iCategory
+!    integer :: &
+!         iCell, &
+!         iCategory
     
     
     
-    block => domain % blocklist
-    do while (associated(block))
+!    block => domain % blocklist
+!    do while (associated(block))
 
        !MPAS_pool_get* calls
-       call MPAS_pool_get_subpool(block % structs, "tracers", tracers)
-       call MPAS_pool_get_subpool(block % structs, "wave_coupling", wave_coupling)
+!       call MPAS_pool_get_subpool(block % structs, "tracers", tracers)
+!       call MPAS_pool_get_subpool(block % structs, "wave_coupling", wave_coupling)
 
-       call MPAS_pool_get_dimension(mesh, "nCategories", nCategories)
-       call MPAS_pool_get_array(velocity_solver, "dynamicsTimeStep", dynamicsTimeStep)
+!       call MPAS_pool_get_dimension(mesh, "nCategories", nCategories)
+!       call MPAS_pool_get_array(velocity_solver, "dynamicsTimeStep", dynamicsTimeStep)
 
-       call MPAS_pool_get_array(tracers_aggregate, "iceAreaCell", iceAreaCell)
+!       call MPAS_pool_get_array(tracers_aggregate, "iceAreaCell", iceAreaCell)
 
        !not 100% sure where the warning stuff goes
-       call_icepack_warnings_flush(nu_diag)
-       if (icepack_warnings_aborted()) call icedrv_system_abort(string=subname, &
-           file=__FILE__,line= __LINE__)
+!       call_icepack_warnings_flush(nu_diag)
+!       if (icepack_warnings_aborted()) call icedrv_system_abort(string=subname, &
+!           file=__FILE__,line= __LINE__)
 
-       do iCell = 1, nCellsSolve
-          d_afsd_wave(:,iCell) = c0
-          call icepack_step_wavefracture(&
-                  wave_spec_type=waveSpectraType, &
-                  dt=dynamicsTimeStep, &
-                  ncat=nCategories, &
-                  nfsd=nFloeCategories, &
-                  nfreq=nWaveFrequencies, &
-                  aice = iceAreaCell(iCell), &
-                  vice = iceVolumeCell(iCell), &
-                  aicen = iceAreaCategory(1,:,iCell), &
-                  floe_rad_l = floeSizeBinLower(:), &
-                  floe_rad_c = floeSizeBinCenter(:), &
-                  wave_spectrum = waveSpectrum(:,iCell), &
-                  wavefreq = waveFrequencies(:), &
-                  dwavefreq = waveFreqBinWidths(:), &
-                  trcrn = trcrn(:,:,iCell), &
-                  d_afsd_wave = d_afsd_wave(:,iCell))
+!       do iCell = 1, nCellsSolve
+!          d_afsd_wave(:,iCell) = c0
+!          call icepack_step_wavefracture(&
+!                  wave_spec_type=waveSpectraType, &
+!                  dt=dynamicsTimeStep, &
+!                  ncat=nCategories, &
+!                  nfsd=nFloeCategories, &
+!                  nfreq=nWaveFrequencies, &
+!                  aice = iceAreaCell(iCell), &
+!                  vice = iceVolumeCell(iCell), &
+!                  aicen = iceAreaCategory(1,:,iCell), &
+!                  floe_rad_l = floeSizeBinLower(:), &
+!                  floe_rad_c = floeSizeBinCenter(:), &
+!                  wave_spectrum = waveSpectrum(:,iCell), &
+!                  wavefreq = waveFrequencies(:), &
+!                  dwavefreq = waveFreqBinWidths(:), &
+!                  trcrn = trcrn(:,:,iCell), &
+!                  d_afsd_wave = d_afsd_wave(:,iCell))
 
 
         
-       enddo !iCell
+!       enddo !iCell
 
-       call icepack_warnings_flush(nu_diag)
-       if (icepack_warnings_aborted()) call icedrv_system_abort(string=subname, &
-           file=__FILE__, line=__LINE__)
+!      call icepack_warnings_flush(nu_diag)
+!      if (icepack_warnings_aborted()) call icedrv_system_abort(string=subname, &
+!          file=__FILE__, line=__LINE__)
 
 
-       block => block % next
-    enddo !do while
-  end subroutine column_wavefracture        
+!       block => block % next
+!    enddo !do while
+!  end subroutine column_wavefracture        
 
 
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
