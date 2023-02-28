@@ -416,6 +416,7 @@ my $RUN_STARTDATE          = "$xmlvars{'RUN_STARTDATE'}";
 my $START_TOD              = "$xmlvars{'START_TOD'}";
 my $RUN_REFDATE            = "$xmlvars{'RUN_REFDATE'}";
 my $CONTINUE_RUN           = "$xmlvars{'CONTINUE_RUN'}";
+my $wave_spec              = $xmlvars{'WAV_SPEC'};
 
 my $SSTICE_GRID_FILENAME;
 my $SSTICE_DATA_FILENAME;
@@ -524,7 +525,16 @@ add_default($nl, 'config_restart_timestamp_name');
 add_default($nl, 'config_nCategories');
 add_default($nl, 'config_nIceLayers');
 add_default($nl, 'config_nSnowLayers');
-
+add_default($nl, 'config_nFloeCategories');
+if ($wave_spec eq 'sp25x36') {
+	add_default($nl, 'config_nFrequencies', 'val'=>"25");
+} elsif ($wave_spec eq 'sp36x36') {
+	add_default($nl, 'config_nFrequencies', 'val'=>"36");
+} elsif ($wave_spec eq 'sp50x36') {
+	add_default($nl, 'config_nFrequencies', 'val'=>"50");
+} else {
+	add_default($nl, 'config_nFrequencies');
+}
 ##############################
 # Namelist group: initialize #
 ##############################
@@ -628,6 +638,12 @@ if ($ice_bgc eq 'ice_bgc') {
 } else {
         add_default($nl, 'config_use_column_biogeochemistry', 'val'=>".false.");
 }
+
+if (($wave_spec eq 'sp25x36') or ($wave_spec eq 'sp36x36') or ($wave_spec eq 'sp50x36')) {
+	add_default($nl, 'config_use_column_wavebreak', 'val'=>".true.");
+} else {
+	add_default($nl, 'config_use_column_wavebreak');
+}
 add_default($nl, 'config_use_column_itd_thermodynamics');
 add_default($nl, 'config_use_column_ridging');
 add_default($nl, 'config_use_column_snow_tracers');
@@ -646,6 +662,7 @@ add_default($nl, 'config_use_aerosols');
 add_default($nl, 'config_use_effective_snow_density');
 add_default($nl, 'config_use_snow_grain_radius');
 add_default($nl, 'config_use_special_boundaries_tracers');
+
 
 ###################################
 # Namelist group: biogeochemistry #

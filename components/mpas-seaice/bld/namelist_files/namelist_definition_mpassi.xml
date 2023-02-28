@@ -304,6 +304,22 @@ Valid values: Any positive integer.
 Default: Defined in namelist_defaults.xml
 </entry>
 
+<entry id="config_nFloeCategories" type="integer"
+	category="dimensions" group="dimensions">
+The number of ice floe categories to use.
+
+Valid values: Any positive integer.
+Default: Defined in namelist_defaults.xml
+</entry>
+
+<entry id="config_nFrequencies" type="integer"
+	category="dimensions" group="dimensions">
+The number of frequencies used by the wave model.
+
+Valid values: 0 (no wave coupling) 25,36,50. Defined by WW3.
+Default: Defined in namelist_defaults.xml
+</entry>
+
 
 <!-- initialize -->
 
@@ -816,6 +832,14 @@ Default: Defined in namelist_defaults.xml
 <entry id="config_use_column_itd_thermodynamics" type="logical"
 	category="column_package" group="column_package">
 Run the ice thickness distribution thermodynamics column physics calculation.
+
+Valid values: true or false
+Default: Defined in namelist_defaults.xml
+</entry>
+
+<entry id="config_use_column_wavebreak" type="logical"
+	category="column_package" group="column_package">
+Use the wave breaking of ice floes
 
 Valid values: true or false
 Default: Defined in namelist_defaults.xml

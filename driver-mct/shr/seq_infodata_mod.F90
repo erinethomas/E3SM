@@ -230,11 +230,6 @@ MODULE seq_infodata_mod
      integer(SHR_KIND_IN)    :: iac_nx          ! nx, ny of "2d" grid
      integer(SHR_KIND_IN)    :: iac_ny          ! nx, ny of "2d" grid
 
-     integer(SHR_KIND_IN)    :: wav_nfreq       ! number of frequency categories set by wave model,needed by mpas-si. 
-     real(SHR_KIND_R8)       :: wav_freq1       ! first frequency set by wave model,needed by mpas-si. 
-     real(SHR_KIND_R8)       :: wav_xfr         ! frequency muliplication factor set by wave model,needed by mpas-si. 
-                                                ! only relevant if wav_present is .true.
-
      !--- set via components and may be time varying ---
      real(SHR_KIND_R8)       :: nextsw_cday     ! calendar of next atm shortwave
      real(SHR_KIND_R8)       :: precip_fact     ! precip factor
@@ -787,10 +782,6 @@ CONTAINS
        infodata%iac_nx = 0
        infodata%iac_ny = 0
 
-       infodata%wav_nfreq = 0
-       infodata%wav_freq1 = 0.0_SHR_KIND_R8
-       infodata%wav_xfr   = 0.0_SHR_KIND_R8
-
        infodata%nextsw_cday   = -1.0_SHR_KIND_R8
        infodata%precip_fact   =  1.0_SHR_KIND_R8
        infodata%atm_phase     = 1
@@ -1037,7 +1028,7 @@ CONTAINS
        reprosum_use_ddpdd, reprosum_allow_infnan,                         &
        reprosum_diffmax, reprosum_recompute,                              &
        mct_usealltoall, mct_usevector, max_cplstep_time, model_doi_url,   &
-       glc_valid_input, wav_nfreq, wav_freq1, wav_xfr)
+       glc_valid_input )
 
 
     implicit none
@@ -1223,9 +1214,6 @@ CONTAINS
     character(SHR_KIND_CL), optional, intent(OUT) :: model_doi_url
     logical,                optional, intent(OUT) :: glc_valid_input
     
-    integer(SHR_KIND_IN),   optional, intent(OUT) :: wav_nfreq
-    real(SHR_KIND_R8),      optional, intent(OUT) :: wav_freq1
-    integer(SHR_KIND_R8),   optional, intent(OUT) :: wav_xfr
 
     !----- local -----
     character(len=*), parameter :: subname = '(seq_infodata_GetData_explicit) '
@@ -1423,9 +1411,6 @@ CONTAINS
     if ( present(model_doi_url) ) model_doi_url = infodata%model_doi_url
 
     if ( present(glc_valid_input)) glc_valid_input = infodata%glc_valid_input
-    if ( present(wav_nfreq)      ) wav_nfreq      = infodata%wav_nfreq
-    if ( present(wav_freq1)      ) wav_freq1      = infodata%wav_freq1
-    if ( present(wav_xfr)        ) wav_xfr        = infodata%wav_xfr
 
   END SUBROUTINE seq_infodata_GetData_explicit
 
@@ -1593,8 +1578,7 @@ CONTAINS
        eps_agrid, eps_aarea, eps_omask, eps_ogrid, eps_oarea,             &
        reprosum_use_ddpdd, reprosum_allow_infnan,                         &
        reprosum_diffmax, reprosum_recompute,                              &
-       mct_usealltoall, mct_usevector, glc_valid_input,                   &
-       wav_nfreq, wav_freq1, wav_xfr        )
+       mct_usealltoall, mct_usevector, glc_valid_input)
 
 
     implicit none
@@ -1775,9 +1759,6 @@ CONTAINS
     logical,                optional, intent(IN) :: atm_aero              ! atm aerosols
     logical,                optional, intent(IN) :: glc_g2lupdate         ! update glc2lnd fields in lnd model
     logical,                optional, intent(IN) :: glc_valid_input
-    integer(SHR_KIND_IN),   optional, intent(IN)    :: wav_nfreq          ! number of frequencies used by WW3
-    real(SHR_KIND_R8),   optional, intent(IN)    :: wav_freq1             ! first frequencies used by WW3
-    real(SHR_KIND_R8),   optional, intent(IN)    :: wav_xfr               ! frequency factor used by WW3
 
     !EOP
 
@@ -1961,9 +1942,6 @@ CONTAINS
     if ( present(atm_aero)       ) infodata%atm_aero       = atm_aero
     if ( present(glc_g2lupdate)  ) infodata%glc_g2lupdate  = glc_g2lupdate
     if ( present(glc_valid_input) ) infodata%glc_valid_input = glc_valid_input
-    if ( present(wav_nfreq)      ) infodata%wav_nfreq      = wav_nfreq
-    if ( present(wav_freq1)      ) infodata%wav_freq1      = wav_freq1
-    if ( present(wav_xfr)        ) infodata%wav_xfr        = wav_xfr
 
   END SUBROUTINE seq_infodata_PutData_explicit
 
@@ -2273,9 +2251,6 @@ CONTAINS
     call shr_mpi_bcast(infodata%model_doi_url,           mpicom)
     call shr_mpi_bcast(infodata%constant_zenith_deg,     mpicom)
     
-    call shr_mpi_bcast(infodata%wav_nfreq,               mpicom)
-    call shr_mpi_bcast(infodata%wav_freq1,               mpicom)
-    call shr_mpi_bcast(infodata%wav_xfr,                 mpicom)
 
   end subroutine seq_infodata_bcast
 
@@ -2554,9 +2529,6 @@ CONTAINS
        call shr_mpi_bcast(infodata%wav_prognostic,     mpicom, pebcast=cmppe)
        call shr_mpi_bcast(infodata%wav_nx,             mpicom, pebcast=cmppe)
        call shr_mpi_bcast(infodata%wav_ny,             mpicom, pebcast=cmppe)
-       call shr_mpi_bcast(infodata%wav_nfreq,          mpicom, pebcast=cmppe)
-       call shr_mpi_bcast(infodata%wav_freq1,          mpicom, pebcast=cmppe)
-       call shr_mpi_bcast(infodata%wav_xfr,            mpicom, pebcast=cmppe)
        ! dead_comps is true if it's ever set to true
        deads = infodata%dead_comps
        call shr_mpi_bcast(deads,                       mpicom, pebcast=cmppe)
@@ -2988,9 +2960,6 @@ CONTAINS
     write(logunit,F0S) subname,'iac_phase                = ', infodata%iac_phase
 
     write(logunit,F0L) subname,'glc_g2lupdate            = ', infodata%glc_g2lupdate
-    write(logunit,F0I) subname,'wav_nfreq                = ', infodata%wav_nfreq
-    write(logunit,F0L) subname,'wav_freq1                = ', infodata%wav_freq1
-    write(logunit,F0L) subname,'wav_xfr                  = ', infodata%wav_xfr
     !     endif
 
   END SUBROUTINE seq_infodata_print

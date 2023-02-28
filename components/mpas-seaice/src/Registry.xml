@@ -52,6 +52,14 @@
 			definition="namelist:config_nSnowLayers"
 			description="The number of snow layers in the vertical direction."
 		/>
+		<dim name="nFloeCategories"
+			definition="namelist:config_nFloeCategories"
+			description="The number of ice floe size categories."
+		/>
+		<dim name="nFrequencies"
+			definition="namelist:config_nFrequencies"
+			description="The number of frequency bins used by WW3."
+		/>
 		<dim name="nHemispheres"
 			definition="3"
 			description="The number of hemispheres (global, north, south)."
@@ -441,6 +449,10 @@
 			description="The number of snow layers in the vertical direction to use."
 			possible_values="Any positive integer."
 		/>
+		<nml_option name="config_nFrequencies" type="integer" default_value="0" units="unitless"
+			description="The number of frequency bins used by wave model."
+			possible_values="25,36,50. Defined by WW3."
+		/>
 	</nml_record>
 	<nml_record name="initialize" in_defaults="true">
 		<nml_option name="config_earth_radius" type="real" default_value="6371229.0" units="m"
@@ -768,9 +780,17 @@
 		/>
 	</nml_record>
 
+	<nml_record name="wave_coupling" in_defaults="true">
+		<nml_option name="config_use_wavebreak" type="logical" default_value="false" units="unitless"
+			description="Use the wave breaking of ice floe routine"
+			possible_values="true or false"	
+		/>
+	
+	</nml_record>
+
 	<nml_record name="biogeochemistry" in_defaults="true">
 		<nml_option name="config_use_brine" type="logical" default_value="false" units="unitless"
-			description="Use the brine height tracer"
+			description="Use the brine height tracey2yr"
 			possible_values="true or false"
 			icepack_name="tr_brine"
 		/>

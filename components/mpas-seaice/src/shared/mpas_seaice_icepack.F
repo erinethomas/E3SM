@@ -386,17 +386,35 @@ contains
 
 !  subroutine init_column_fsd(domain)
 !    
-!    use icepack_intfc, only: icepack_init_fsd_bounds
-!    use icedrv_arrays_column, only: wavefreq, dwavefreq, wave_sig_ht, &
-!            wave_spectrum, d_afsd_newi, d_afsd_latg, d_afsd_latm, &
-!            d_afsd_wave, d_afsd_weld
+    use icepack_intfc, only: icepack_init_fsd_bounds
 
-!    call icepack_init_fsd_bounds(   &
-!      nfsd=nfsd,                   &  ! floe size distribution
-!      floe_rad_l=floe_rad_l,       &  ! fsd size lower bound in m (radius)
-!      floe_rad_c=floe_rad_c,       &  ! fsd size bin centre in m (radius)
-!      floe_binwidth=floe_binwidth, &  ! fsd size bin width in m (radius)
-!      c_fsd_range=c_fsd_range)        ! string for history output
+    use icedrv_arrays_column, only: wavefreq, dwavefreq, wave_sig_ht, &
+            wave_spectrum, d_afsd_newi, d_afsd_latg, d_afsd_latm, &
+            d_afsd_wave, d_afsd_weld
+
+    type(domain_type), intent(inout) :: domain
+
+    type(block_type), pointer :: &
+         block
+
+    real(kind=RKIND), dimension(:), pointer :: &
+         categoryThicknessLimits
+    
+    integer, pointer :: &
+         nFrequencies
+
+    call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nFrequencies", nFrequencies)
+    call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nFrequencies", nFrequencies)
+
+    block => domain % blocklist
+    do while (associated(block))
+
+    call icepack_init_fsd_bounds(   &
+      nfsd=nfsd,                   &  ! floe size distribution
+      floe_rad_l=floe_rad_l,       &  ! fsd size lower bound in m (radius)
+      floe_rad_c=floe_rad_c,       &  ! fsd size bin centre in m (radius)
+      floe_binwidth=floe_binwidth, &  ! fsd size bin width in m (radius)
+      c_fsd_range=c_fsd_range)        ! string for history output
  
     ! initalize floe size distribution tracers - this is absically the contents of "init_fsd"
 !    wavefreq       (:)   = c0  !NOTE this comes from ww3?
@@ -421,6 +439,8 @@ contains
 !       wave_spectrum(:,k) = wave_spectrum_profile(k)
 !    enddo
                    
+       block => block % next
+    end do
 !  end subroutine init_column_fsd
 
 

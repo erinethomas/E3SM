@@ -837,12 +837,8 @@ CONTAINS
 
       ! set flags in infodata
       ! wav_prognostic is set to .false. for debugging purposes only
-
-      !call seq_infodata_putdata(infodata, wav_present=.true., &
-       !    wav_prognostic=.true., wav_nx=nx, wav_ny=ny, &
-        !   wav_nfreq=nk, wav_freq1=fr1, wav_xfr=xfr)
       call seq_infodata_putdata(infodata, wav_present=.true., &
-           wav_prognostic=.true.)
+           wav_prognostic=.true.,wav_nx=nx, wav_ny=ny)
 
       ! initialize mct attribute vectors
 

@@ -688,14 +688,6 @@ contains
 !
 !-----------------------------------------------------------------------
 
-    ! set wave frequencies information (if wave coupling is true)
-    call seq_infodata_getdata(infodata, wav_present=wav_present)
-    if ( wav_present ) then
-        call mpas_log_write('Wave Coupling is "ON"')
-        !call seq_infodata_getdata(infodata, wav_nfreq=nWaveFreq) !number of wave frequencies
-        !call seq_infodata_getdata(infodata, wav_freq1=wav_freq1) ! first frequency
-        !call seq_infodata_getdata(infodata, wav_xfr=wav_xfr) ! frequency factor
-    end if
 
     ! set ice_cpl_dt (coupling interval in integer seconds) from the EClock
     call seq_timemgr_EClockGetData(EClock, dtime=ice_cpl_dt)
@@ -749,6 +741,11 @@ contains
     ! Coupling prep
     call seaice_column_coupling_prep(domain)
 
+    ! set wave frequencies information (if wave coupling is true)
+    !call mpas_pool_get_config(domain % configs, 'config_use_column_wavebreak', config_use_column_wavebreak)
+    !if ( config_use_column_wavebreak ) then
+    !   call mpas_log_write('Wave Coupling is ON-config_use_wavebreak = true')
+    !end if
 
 !-----------------------------------------------------------------------
 !
@@ -1058,6 +1055,7 @@ contains
       character (len=StrKIND), pointer :: config_restart_timestamp_name
       real(kind=RKIND), pointer :: &
             dayOfNextShortwaveCalculation ! needed for CESM like coupled simulations
+      logical, pointer :: config_use_wavebreak
 
       iam = domain % dminfo % my_proc_id
 
@@ -1076,6 +1074,7 @@ contains
       call shr_file_getLogUnit (shrlogunit)
       call shr_file_getLogLevel(shrloglev)
       call shr_file_setLogUnit (iceLogUnit)
+
 
       ! reinitialize fluxes
       call seaice_column_reinitialize_fluxes(domain)
