@@ -400,6 +400,8 @@ contains
          mesh, &
          floe_size_distribution
 
+    logical, pointer :: config_use_column_waves
+
     ! dimensions
     integer, pointer ::   &
          nCellsSolve,     &
@@ -412,7 +414,7 @@ contains
     real(kind=RKIND), dimension(:,:), pointer :: &
          FloeSizeBinLower,   &
          FloeSizeBinCenter,  &
-         FloeBinWidth
+         FloeSizeBinWidth
 
     !real(kind=RKIND), dimension(:,:,:), pointer :: &
 
