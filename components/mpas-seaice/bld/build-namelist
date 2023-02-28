@@ -640,9 +640,9 @@ if ($ice_bgc eq 'ice_bgc') {
 }
 
 if (($wave_spec eq 'sp25x36') or ($wave_spec eq 'sp36x36') or ($wave_spec eq 'sp50x36')) {
-	add_default($nl, 'config_use_column_wavebreak', 'val'=>".true.");
+	add_default($nl, 'config_use_column_waves', 'val'=>".true.");
 } else {
-	add_default($nl, 'config_use_column_wavebreak');
+	add_default($nl, 'config_use_column_waves');
 }
 add_default($nl, 'config_use_column_itd_thermodynamics');
 add_default($nl, 'config_use_column_ridging');

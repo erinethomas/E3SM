@@ -51,7 +51,7 @@
         <group>case_comp</group>
         <file>env_case.xml</file>
         <desc>Option to enable BGC in MPASSI</desc>
-</entry>
+ </entry>
 
   <entry id="MPASSI_PROGNOSTIC_MODE">
         <type>char</type>

@@ -308,7 +308,7 @@ Default: Defined in namelist_defaults.xml
 	category="dimensions" group="dimensions">
 The number of ice floe categories to use.
 
-Valid values: Any positive integer.
+Valid values: 1(default), 12, 16, 24.
 Default: Defined in namelist_defaults.xml
 </entry>
 
@@ -837,9 +837,9 @@ Valid values: true or false
 Default: Defined in namelist_defaults.xml
 </entry>
 
-<entry id="config_use_column_wavebreak" type="logical"
+<entry id="config_use_column_waves" type="logical"
 	category="column_package" group="column_package">
-Use the wave breaking of ice floes
+Use the wave coupling to allow breaking of ice floes
 
 Valid values: true or false
 Default: Defined in namelist_defaults.xml

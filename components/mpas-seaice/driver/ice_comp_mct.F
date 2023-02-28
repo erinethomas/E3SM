@@ -741,12 +741,6 @@ contains
     ! Coupling prep
     call seaice_column_coupling_prep(domain)
 
-    ! set wave frequencies information (if wave coupling is true)
-    !call mpas_pool_get_config(domain % configs, 'config_use_column_wavebreak', config_use_column_wavebreak)
-    !if ( config_use_column_wavebreak ) then
-    !   call mpas_log_write('Wave Coupling is ON-config_use_wavebreak = true')
-    !end if
-
 !-----------------------------------------------------------------------
 !
 !   send intial state to driver

@@ -172,7 +172,7 @@
 <config_use_column_shortwave>true</config_use_column_shortwave>
 <config_use_column_vertical_thermodynamics>true</config_use_column_vertical_thermodynamics>
 <config_use_column_biogeochemistry>false</config_use_column_biogeochemistry>
-<config_use_column_wavebreak>true</config_use_column_wavebreak>
+<config_use_column_waves>true</config_use_column_waves>
 <config_use_column_itd_thermodynamics>true</config_use_column_itd_thermodynamics>
 <config_use_column_itd_thermodynamics prognostic_mode="prescribed">false</config_use_column_itd_thermodynamics>
 <config_use_column_ridging>true</config_use_column_ridging>

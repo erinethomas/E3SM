@@ -275,7 +275,7 @@ contains
        call init_column_itd(domain)
 
        ! initalize fsd - this is being written by Erin 
-       !if () call init_column_fsd(domain)
+       call init_column_fsd(domain)
 
        ! initialize thermodynamic tracer profiles
        call init_column_thermodynamic_profiles(domain)
@@ -384,39 +384,69 @@ contains
 !
 !-----------------------------------------------------------------------
 
-!  subroutine init_column_fsd(domain)
+  subroutine init_column_fsd(domain)
 !    
     use icepack_intfc, only: icepack_init_fsd_bounds
 
-    use icedrv_arrays_column, only: wavefreq, dwavefreq, wave_sig_ht, &
-            wave_spectrum, d_afsd_newi, d_afsd_latg, d_afsd_latm, &
-            d_afsd_wave, d_afsd_weld
+    !use icedrv_arrays_column, only: wavefreq, dwavefreq, wave_sig_ht, &
+    !        wave_spectrum, d_afsd_newi, d_afsd_latg, d_afsd_latm, &
+    !        d_afsd_wave, d_afsd_weld
 
     type(domain_type), intent(inout) :: domain
 
-    type(block_type), pointer :: &
-         block
+    type(block_type), pointer :: block
 
-    real(kind=RKIND), dimension(:), pointer :: &
-         categoryThicknessLimits
-    
-    integer, pointer :: &
+    type(MPAS_pool_type), pointer :: &
+         mesh, &
+         floe_size_distribution
+
+    ! dimensions
+    integer, pointer ::   &
+         nCellsSolve,     &
+         nFloeCategories, &
          nFrequencies
 
-    call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nFrequencies", nFrequencies)
-    call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nFrequencies", nFrequencies)
+    !variables
+    !real(kind=RKIND), dimension(:), pointer :: &
 
+    real(kind=RKIND), dimension(:,:), pointer :: &
+         FloeSizeBinLower,   &
+         FloeSizeBinCenter,  &
+         FloeBinWidth
+
+    !real(kind=RKIND), dimension(:,:,:), pointer :: &
+
+    !local variables
+    integer :: iCell
+    character (len=35) :: c_fsd_range 
+
+    call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
+    
     block => domain % blocklist
     do while (associated(block))
+       call MPAS_pool_get_subpool(block % structs, "mesh", mesh)       
+       call MPAS_poll_get_subpool(block % structs, "floe_size_distribution", floe_size_distribution)
+       
+       call MPAS_pool_get_dimension(mesh, "nCellsSolve", nCellsSolve)
+       call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
+       call MPAS_pool_get_dimension(block % dimensions, "nFrequencies", nFrequencies)
 
-    call icepack_init_fsd_bounds(   &
-      nfsd=nfsd,                   &  ! floe size distribution
-      floe_rad_l=floe_rad_l,       &  ! fsd size lower bound in m (radius)
-      floe_rad_c=floe_rad_c,       &  ! fsd size bin centre in m (radius)
-      floe_binwidth=floe_binwidth, &  ! fsd size bin width in m (radius)
-      c_fsd_range=c_fsd_range)        ! string for history output
- 
-    ! initalize floe size distribution tracers - this is absically the contents of "init_fsd"
+
+       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinLower", FloeSizeBinLower)
+       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
+       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinWidth", FloeSizeBinWidth)
+
+       do iCell =1, nCellsSolve  
+
+          call icepack_init_fsd_bounds(   &
+               nfsd=nFloeCategories,        &  ! floe size distribution
+               floe_rad_l=FloeSizeBinLower(:,iCell),        &  ! fsd size lower bound in m (radius)
+               floe_rad_c=FloeSizeBinCenter(:,iCell),        &  ! fsd size bin centre in m (radius)
+               floe_binwidth=FloeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
+               c_fsd_range=c_fsd_range)        ! string for history output
+
+          if (config_use_column_waves) then   
+        ! initalize floe size distribution tracers - this is absically the contents of "init_fsd"
 !    wavefreq       (:)   = c0  !NOTE this comes from ww3?
 !    dwavefreq      (:)   = c0  
 !    wave_sig_ht    (:)   = c0
@@ -426,11 +456,13 @@ contains
 !    d_afsd_latm    (:,:) = c0
 !    d_afsd_wave    (:,:) = c0
 !    d_afsd_weld    (:,:) = c0
-    
+          endif
 !    call icepack_init_fsd()  
 
+ 
+          if (config_use_column_waves) then   
 !    wave_spectrum(:,:) = c0
-
+          endif 
 !    call icepack_init_wave(nfreq=nfreq,                 &
 !                           wave_spectrum_profile=wave_spectrum_profile, &
 !                           wavefreq=wavefreq, dwavefreq=dwavefreq)
@@ -438,10 +470,14 @@ contains
 !    do k = 1, nfreq
 !       wave_spectrum(:,k) = wave_spectrum_profile(k)
 !    enddo
-                   
+
+       enddo !iCell 
+
        block => block % next
-    end do
-!  end subroutine init_column_fsd
+    
+    end do !block
+
+  end subroutine init_column_fsd
 
 
 
@@ -1242,7 +1278,7 @@ contains
     logical, pointer :: &
          config_use_column_package, &
          config_use_column_ridging, &
-!         config_use_column_wavefracture, &
+         config_use_column_waves, &
          config_use_vertical_tracers
 
     type(MPAS_pool_type), pointer :: &
@@ -1256,7 +1292,7 @@ contains
     if (config_use_column_package) then
 
        call MPAS_pool_get_config(domain % configs, "config_use_column_ridging", config_use_column_ridging)
-!       call MPAS_pool_get_config(domain % configs, "config_use_column_wavefracture", config_use_column_wavefracture)
+!       call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
        call MPAS_pool_get_config(domain % configs, "config_use_vertical_tracers", config_use_vertical_tracers)
 
        call MPAS_pool_get_subpool(domain % blocklist % structs, "velocity_solver", velocitySolver)
@@ -1276,7 +1312,7 @@ contains
        ! Wave fracturing  
        !-----------------------------------------------------------------
 !       call mpas_timer_start("Column wavefracture")
-!       if (config_use_column_wavefracture) &
+!       if (config_use_column_waves) &
 !            call column_wavefracture(domain)
 !       call mpas_timer_stop("Column wavefracture")
        
