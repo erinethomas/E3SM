@@ -55,6 +55,7 @@
 		<dim name="nFloeCategories"
 			definition="namelist:config_nFloeCategories"
 			description="The number of ice floe size categories."
+		        icepack_name="nfsd"
 		/>
 		<dim name="nFrequencies"
 			definition="namelist:config_nFrequencies"
@@ -731,7 +732,7 @@
 			description="Allow snow modifications plus additional snow tracers"
 			possible_values="true or false"
 		/>
-		<nml_option name="config_use_column_wavebreak" type="logical" default_value="false" units="unitless"
+		<nml_option name="config_use_column_waves" type="logical" default_value="false" units="unitless"
 			description="Allow wavebreaking of ice floes. Requires coupling to WW3."
 			possible_values="true or false"
 		/>
@@ -782,6 +783,11 @@
 			description="Use prognosed snow grain radius aging"
 			possible_values="true or false"
 			icepack_name="tr_rsnw"
+		/>
+		<nml_option name="config_use_floe_size_distribution" type="logical" default_value="false" units="unitless"
+			description="If truew use floe size distribution"
+			possible_values="true or false"
+			icepack_name="tr_fsd"
 		/>
 		<nml_option name="config_use_special_boundaries_tracers" type="logical" default_value="false" units="unitless"
 			description="Modify tracers in given boundary cells."
@@ -3824,15 +3830,23 @@
 	<var_struct name="floe_size_distribution" time_levs="1">
 		<var name="FloeSizeBinLower"
 		     type="real"
-		     dimensions="nFrequencies nCells Time"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="floe_rad_l"
 		/>
 		<var name="FloeSizeBinCenter"
 		     type="real"
-		     dimensions="nFrequencies nCells Time"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="floe_rad_c"
 		/>
 		<var name="FloeSizeBinWidth"
 		     type="real"
-		     dimensions="nFrequencies nCells Time"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="floe_binwidth"
+		/>
+		<var name="FloeSizeFraction"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="afsd"
 		/>
 
 	</var_struct>
