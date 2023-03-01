@@ -427,7 +427,7 @@ contains
     block => domain % blocklist
     do while (associated(block))
        call MPAS_pool_get_subpool(block % structs, "mesh", mesh)       
-       call MPAS_poll_get_subpool(block % structs, "floe_size_distribution", floe_size_distribution)
+       call MPAS_pool_get_subpool(block % structs, "floe_size_distribution", floe_size_distribution)
        
        call MPAS_pool_get_dimension(mesh, "nCellsSolve", nCellsSolve)
        call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
@@ -444,11 +444,11 @@ contains
                nfsd=nFloeCategories,        &  ! floe size distribution
                floe_rad_l=FloeSizeBinLower(:,iCell),        &  ! fsd size lower bound in m (radius)
                floe_rad_c=FloeSizeBinCenter(:,iCell),        &  ! fsd size bin centre in m (radius)
-               floe_binwidth=FloeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
+               floe_binwidth=FloeSizeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
                c_fsd_range=c_fsd_range)        ! string for history output
 
           if (config_use_column_waves) then   
-        ! initalize floe size distribution tracers - this is absically the contents of "init_fsd"
+             ! initalize floe size distribution tracers - this is absically the contents of "init_fsd"
 !    wavefreq       (:)   = c0  !NOTE this comes from ww3?
 !    dwavefreq      (:)   = c0  
 !    wave_sig_ht    (:)   = c0

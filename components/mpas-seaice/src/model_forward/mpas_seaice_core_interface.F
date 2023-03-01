@@ -165,6 +165,8 @@ module seaice_core_interface
      !pkgWeak
      !pkgVariational
 
+     ierr = 0
+
      call MPAS_pool_get_config(configPool, "config_use_velocity_solver", config_use_velocity_solver)
      call MPAS_pool_get_config(configPool, "config_strain_scheme", config_strain_scheme)
      call MPAS_pool_get_config(configPool, "config_stress_divergence_scheme", config_stress_divergence_scheme)
