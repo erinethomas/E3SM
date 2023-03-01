@@ -265,6 +265,7 @@ contains
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_package", config_use_column_package)
     call MPAS_pool_get_config(domain % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
+    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
     if (config_use_column_package) then
 
@@ -275,7 +276,9 @@ contains
        call init_column_itd(domain)
 
        ! initalize fsd - this is being written by Erin 
-       call init_column_fsd(domain)
+       if (config_use_floe_size_distribution) then
+          call init_column_fsd(domain)
+       endif
 
        ! initialize thermodynamic tracer profiles
        call init_column_thermodynamic_profiles(domain)
@@ -449,13 +452,13 @@ contains
                floe_binwidth=FloeSizeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
                c_fsd_range=c_fsd_range)        ! string for history output
 
-          call icepack_init_fsd(        &
-                  nfsd=nFloeCategories, &  ! number of floe size categories 
-                  ice_ic=             , &  ! method of ice cover initialization 
-                  floe_rad_c=FloeSizeBinCenter(:,iCell), & ! fsd size bin centre in m (radius)
-                  floe_binwidth=FloeSizeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
-                  afsd=FloeSizeFraction(:,iCell)              ! floe size tracer: fraction distribution of floes
-                  )
+          !call icepack_init_fsd(        &
+           !       nfsd=nFloeCategories, &  ! number of floe size categories 
+            !      ice_ic=             , &  ! method of ice cover initialization 
+            !      floe_rad_c=FloeSizeBinCenter(:,iCell), & ! fsd size bin centre in m (radius)
+            !      floe_binwidth=FloeSizeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
+            !      afsd=FloeSizeFraction(:,iCell)              ! floe size tracer: fraction distribution of floes
+            !      )
 
           if (config_use_column_waves) then   
              ! initalize floe size distribution tracers
