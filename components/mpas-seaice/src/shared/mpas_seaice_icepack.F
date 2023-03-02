@@ -104,8 +104,8 @@ module seaice_icepack
           index_snowIceMass, &           ! nt_smice
           index_snowLiquidMass, &        ! nt_smliq
           index_snowGrainRadius, &       ! nt_rsnw
-          index_snowDensity              ! nt_rhos
-
+          index_snowDensity           ! nt_rhos
+          !index_floeSizeDistribution   !nt_fsd
      !-----------------------------------------------------------------------
      ! biogeochemistry
      !-----------------------------------------------------------------------
@@ -261,7 +261,8 @@ contains
          config_do_restart, &
          config_use_column_biogeochemistry, &
          config_use_column_shortwave, &
-         config_use_column_snow_tracers
+         config_use_column_snow_tracers, &
+         config_use_floe_size_distribution
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_package", config_use_column_package)
     call MPAS_pool_get_config(domain % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
@@ -389,7 +390,11 @@ contains
 
   subroutine init_column_fsd(domain)
 !    
-    use icepack_intfc, only: icepack_init_fsd_bounds
+    use icepack_intfc, only: &
+            icepack_init_fsd_bounds, &
+            icepack_init_fsd, &
+            icepack_init_wave
+
 
     !use icedrv_arrays_column, only: wavefreq, dwavefreq, wave_sig_ht, &
     !        wave_spectrum, d_afsd_newi, d_afsd_latg, d_afsd_latm, &
@@ -425,9 +430,12 @@ contains
     !local variables
     integer :: iCell
     character (len=35) :: c_fsd_range 
+    character (len=256) :: ice_init_type
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
-    
+   
+    ice_init_type='default'
+
     block => domain % blocklist
     do while (associated(block))
        call MPAS_pool_get_subpool(block % structs, "mesh", mesh)       
@@ -452,35 +460,34 @@ contains
                floe_binwidth=FloeSizeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
                c_fsd_range=c_fsd_range)        ! string for history output
 
-          !call icepack_init_fsd(        &
-           !       nfsd=nFloeCategories, &  ! number of floe size categories 
-            !      ice_ic=             , &  ! method of ice cover initialization 
-            !      floe_rad_c=FloeSizeBinCenter(:,iCell), & ! fsd size bin centre in m (radius)
-            !      floe_binwidth=FloeSizeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
-            !      afsd=FloeSizeFraction(:,iCell)              ! floe size tracer: fraction distribution of floes
-            !      )
+          call icepack_init_fsd(        &
+              nfsd=nFloeCategories, &  ! number of floe size categories 
+              ice_ic=ice_init_type   , &  ! method of ice cover initialization 
+              floe_rad_c=FloeSizeBinCenter(:,iCell), & ! fsd size bin centre in m (radius)
+              floe_binwidth=FloeSizeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
+              afsd=FloeSizeFraction(:,iCell))      ! floe size tracer: fraction distribution of floes 
 
           if (config_use_column_waves) then   
-             ! initalize floe size distribution tracers
-!    wavefreq       (:)   = c0  !NOTE this comes from ww3?
-!    dwavefreq      (:)   = c0  
-!    wave_sig_ht    (:)   = c0
-!    wave_spectrum  (:,:) = c0
-!    d_afsd_newi    (:,:) = c0
-!    d_afsd_latg    (:,:) = c0
-!    d_afsd_latm    (:,:) = c0
-!    d_afsd_wave    (:,:) = c0
-!    d_afsd_weld    (:,:) = c0
+          ! initalize floe size distribution tracers
+          !    wavefreq       (:)   = c0  
+          !    dwavefreq      (:)   = c0  
+          !    wave_sig_ht    (:)   = c0
+          !    wave_spectrum  (:,:) = c0
+          !    d_afsd_newi    (:,:) = c0
+          !    d_afsd_latg    (:,:) = c0
+          !    d_afsd_latm    (:,:) = c0
+          !    d_afsd_wave    (:,:) = c0
+          !    d_afsd_weld    (:,:) = c0
 
-!    wave_spectrum(:,:) = c0
+          !    wave_spectrum(:,:) = c0
 
-!    call icepack_init_wave(nfreq=nfreq,                 &
-!                           wave_spectrum_profile=wave_spectrum_profile, &
-!                           wavefreq=wavefreq, dwavefreq=dwavefreq)
+          !    call icepack_init_wave(nfreq=nfreq,                 &
+          !       wave_spectrum_profile=wave_spectrum_profile, &
+          !       wavefreq=wavefreq, dwavefreq=dwavefreq)
 
-!    do k = 1, nfreq
-!       wave_spectrum(:,k) = wave_spectrum_profile(k)
-!    enddo
+          !    do k = 1, nfreq
+          !       wave_spectrum(:,k) = wave_spectrum_profile(k)
+          !    enddo
 
           endif !use_column_waves 
        enddo !iCell 
@@ -6552,12 +6559,14 @@ contains
          nZBGCTracers
 
     logical, pointer :: &
-         config_use_column_biogeochemistry
+         config_use_column_biogeochemistry, &
+         config_use_floe_size_distribution
 
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nCategories", nCategories)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nZBGCTracers", nZBGCTracers)
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
+    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
     ! get the number of CICE tracers in trcrn
     call init_column_tracer_object_tracer_number(domain, tracerObject)
@@ -11195,7 +11204,7 @@ contains
          nt_smliq_in      = tracerObject % index_snowLiquidMass, &
          nt_rhos_in       = tracerObject % index_snowDensity, &
          nt_rsnw_in       = tracerObject % index_snowGrainRadius, &
-         nt_fsd           = tracerObject % index_floeSizeDistribution, &
+         !nt_fsd           = tracerObject % index_floeSizeDistribution, &
          !nt_isosno_in
          !nt_isoice_in
          nt_aero_in       = tracerObject % index_aerosols, &
