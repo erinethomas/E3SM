@@ -3830,23 +3830,68 @@
 	<var_struct name="floe_size_distribution" time_levs="1">
 		<var name="FloeSizeBinLower"
 		     type="real"
-		     dimensions="nFloeCategories nCells Time"
+		     dimensions="nFloeCategories"
 		     icepack_name="floe_rad_l"
 		/>
 		<var name="FloeSizeBinCenter"
 		     type="real"
-		     dimensions="nFloeCategories nCells Time"
+		     dimensions="nFloeCategories"
 		     icepack_name="floe_rad_c"
 		/>
 		<var name="FloeSizeBinWidth"
 		     type="real"
-		     dimensions="nFloeCategories nCells Time"
+		     dimensions="nFloeCategories"
 		     icepack_name="floe_binwidth"
 		/>
 		<var name="FloeSizeFraction"
 		     type="real"
 		     dimensions="nFloeCategories nCells Time"
 		     icepack_name="afsd"
+		/>
+		<var name="WaveFrequency"
+		     type="real"
+		     dimensions="nFrequencies"
+		     icepack_name="wavefreq"
+		/>
+		<var name="WaveFreqBinWidth"
+		     type="real"
+		     dimensions="nFrequencies"
+		     icepack_name="dwavefreq"
+		/>
+		<var name="SignificantWaveHeight"
+		     type="real"
+		     dimensions="nCells Time"
+		     icepack_name="wave_sig_ht"
+		/>
+		<var name="WaveSpectrum"
+		     type="real"
+		     dimensions="nFrequencies nCells Time"
+		     icepack_name="wave_spectrum"
+		/>
+		<var name="DFloeSizeNewIce"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_newi"
+		/>
+		<var name="DFloeSizeLateralGrowth"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_latg"
+		/>
+		<var name="DFloeSizeLateralMelt"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_latm"
+		/>
+		<var name="DFloeSizeWaves"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_wave"
+		/>
+		<var name="DFloeSizeWeld"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_weld"
 		/>
 
 	</var_struct>

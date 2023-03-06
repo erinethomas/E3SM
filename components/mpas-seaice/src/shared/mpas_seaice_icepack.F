@@ -393,12 +393,9 @@ contains
     use icepack_intfc, only: &
             icepack_init_fsd_bounds, &
             icepack_init_fsd, &
-            icepack_init_wave
-
-
-    !use icedrv_arrays_column, only: wavefreq, dwavefreq, wave_sig_ht, &
-    !        wave_spectrum, d_afsd_newi, d_afsd_latg, d_afsd_latm, &
-    !        d_afsd_wave, d_afsd_weld
+            icepack_init_wave, &
+            icepack_char_len_long, &
+            c0
 
     type(domain_type), intent(inout) :: domain
 
@@ -409,6 +406,7 @@ contains
          floe_size_distribution
 
     logical, pointer :: config_use_column_waves
+    logical, pointer :: config_use_floe_size_distribution
 
     ! dimensions
     integer, pointer ::   &
@@ -417,24 +415,34 @@ contains
          nFrequencies
 
     !variables
-    !real(kind=RKIND), dimension(:), pointer :: &
-
-    real(kind=RKIND), dimension(:,:), pointer :: &
+    real(kind=RKIND), dimension(:), pointer :: &
          FloeSizeBinLower,   &
          FloeSizeBinCenter,  &
          FloeSizeBinWidth,   &
-         FloeSizeFraction
+         FloeSizeFraction,   &
+         WaveFrequency,      &
+         WaveFreqBinWidth, &
+         SignificantWaveHeight
+
+    real(kind=RKIND), dimension(:,:), pointer :: &
+         WaveSpectrum, &
+         DFloeSizeNewIce, &
+         DFloeSizeLateralGrowth, &
+         DFloeSizeLateralMelt, &
+         DFloeSizeWaves, &
+         DFloeSizeWeld
 
     !real(kind=RKIND), dimension(:,:,:), pointer :: &
 
     !local variables
     integer :: iCell
     character (len=35) :: c_fsd_range 
-    character (len=256) :: ice_init_type
+    character (len=icepack_char_len_long) :: ice_init_type
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
+    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution",config_use_floe_size_distribution)
    
-    ice_init_type='default'
+    ice_init_type='default' ! NOTE: this should probably be a namelist setting? how to define for restarts?
 
     block => domain % blocklist
     do while (associated(block))
@@ -450,47 +458,57 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinWidth", FloeSizeBinWidth)
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeFraction", FloeSizeFraction)
+       call MPAS_pool_get_array(floe_size_distribution, "WaveFrequency", WaveFrequency)
+       call MPAS_pool_get_array(floe_size_distribution, "WaveFreqBinWidth", WaveFreqBinWidth)
+       call MPAS_pool_get_array(floe_size_distribution, "SignificantWaveHeight", SignificantWaveHeight)
+       call MPAS_pool_get_array(floe_size_distribution, "WaveSpectrum", WaveSpectrum)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeNewIce", DFloeSizeNewIce)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralGrowth", DFloeSizeLateralGrowth)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralMelt", DFloeSizeLateralMelt)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWeld", DFloeSizeWeld)
+
+
+       if (config_use_floe_size_distribution) then
+          call icepack_init_fsd_bounds(   &
+             nfsd=nFloeCategories,        &  ! number of floe size categories
+             floe_rad_l=FloeSizeBinLower(:),        &  ! fsd size lower bound in m (radius)
+             floe_rad_c=FloeSizeBinCenter(:),        &  ! fsd size bin centre in m (radius)
+             floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
+             c_fsd_range=c_fsd_range)        ! string for history output: fsd floe_rad bounds (m)
+       endif
+
+       ! initalize floe size distribution tracers
+       WaveFrequency(:)          = c0   ! wave frequencies 
+       WaveFreqBinWidth(:)       = c0   ! wave frequency bin widths
+       SignificantWaveHeight(:)  = c0   ! significant height of waves (m)
+       WaveSpectrum(:,:)         = c0   ! wave spectrum
+       DFloeSizeNewIce(:,:)      = c0   ! change in floe size distribution due to new ice
+       DFloeSizeLateralGrowth(:,:) = c0 ! change in floe size distribution due to lateral growth
+       DFloeSizeLateralMelt(:,:) = c0   ! change in floe size distribution due to lateral melt
+       DFloeSizeWaves(:,:)       = c0   ! change in floe size distribution due to wave breaking
+       DFloeSizeWeld(:,:)        = c0   ! change in floe size distribution due to welding
 
        do iCell =1, nCellsSolve  
-
-          call icepack_init_fsd_bounds(   &
-               nfsd=nFloeCategories,        &  ! number of floe size categories
-               floe_rad_l=FloeSizeBinLower(:,iCell),        &  ! fsd size lower bound in m (radius)
-               floe_rad_c=FloeSizeBinCenter(:,iCell),        &  ! fsd size bin centre in m (radius)
-               floe_binwidth=FloeSizeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
-               c_fsd_range=c_fsd_range)        ! string for history output
-
-          call icepack_init_fsd(        &
-              nfsd=nFloeCategories, &  ! number of floe size categories 
-              ice_ic=ice_init_type   , &  ! method of ice cover initialization 
-              floe_rad_c=FloeSizeBinCenter(:,iCell), & ! fsd size bin centre in m (radius)
-              floe_binwidth=FloeSizeBinWidth(:,iCell),  &  ! fsd size bin width in m (radius)
-              afsd=FloeSizeFraction(:,iCell))      ! floe size tracer: fraction distribution of floes 
-
-          if (config_use_column_waves) then   
-          ! initalize floe size distribution tracers
-          !    wavefreq       (:)   = c0  
-          !    dwavefreq      (:)   = c0  
-          !    wave_sig_ht    (:)   = c0
-          !    wave_spectrum  (:,:) = c0
-          !    d_afsd_newi    (:,:) = c0
-          !    d_afsd_latg    (:,:) = c0
-          !    d_afsd_latm    (:,:) = c0
-          !    d_afsd_wave    (:,:) = c0
-          !    d_afsd_weld    (:,:) = c0
-
-          !    wave_spectrum(:,:) = c0
-
-          !    call icepack_init_wave(nfreq=nfreq,                 &
-          !       wave_spectrum_profile=wave_spectrum_profile, &
-          !       wavefreq=wavefreq, dwavefreq=dwavefreq)
-
-          !    do k = 1, nfreq
-          !       wave_spectrum(:,k) = wave_spectrum_profile(k)
-          !    enddo
-
-          endif !use_column_waves 
+          if (config_use_floe_size_distribution) then
+                   !! NOT SURE IF THIS IS THE CORRECT PLACE FOR THIS CALL:
+                   !! where do all the other variables in 'set_state_var' get initialized??
+                   !! variable of concern = afsd/trcrn  
+             !call icepack_init_fsd(    &  
+             !   nfsd=nFloeCategories, &  ! number of floe size categories 
+             !   ice_ic=ice_init_type, &  ! method of ice cover initialization 
+             !   floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
+             !   floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
+             !   afsd=trcrn(:,:,:))      ! ******* ?? ****** floe size tracer: fraction distribution of floes 
+          endif
        enddo !iCell 
+
+       if (config_use_column_waves) then   
+              call icepack_init_wave(nfreq=nFrequencies,      &
+                 wavefreq=WaveFrequency(:), &
+                 dwavefreq=WaveFreqBinWidth)
+
+       endif !use_column_waves 
 
        block => block % next
     
@@ -1311,7 +1329,7 @@ contains
     if (config_use_column_package) then
 
        call MPAS_pool_get_config(domain % configs, "config_use_column_ridging", config_use_column_ridging)
-!       call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
+       call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
        call MPAS_pool_get_config(domain % configs, "config_use_vertical_tracers", config_use_vertical_tracers)
 
        call MPAS_pool_get_subpool(domain % blocklist % structs, "velocity_solver", velocitySolver)
@@ -1330,10 +1348,10 @@ contains
        !-----------------------------------------------------------------
        ! Wave fracturing  
        !-----------------------------------------------------------------
-!       call mpas_timer_start("Column wavefracture")
-!       if (config_use_column_waves) &
-!            call column_wavefracture(domain)
-!       call mpas_timer_stop("Column wavefracture")
+       call mpas_timer_start("Column wavefracture")
+       if (config_use_column_waves) &
+            call column_wavefracture(domain)
+       call mpas_timer_stop("Column wavefracture")
        
 
        !-----------------------------------------------------------------
@@ -3497,7 +3515,7 @@ contains
 !>
 !
 !-----------------------------------------------------------------------
-!  subroutine column_wavefracture(domain)
+  subroutine column_wavefracture(domain)
 
 !    use icepack_intfc, only: icepack_step_wavefracture
 
@@ -3506,7 +3524,7 @@ contains
 !    use icedrv_domain_size, only: ncat, nfsd, nfreq, nx
 !    use icedrv_state, only: trcrn, aicen, aice, vice
 
-!    type(domain_type), intent(inout) :: domain
+    type(domain_type), intent(inout) :: domain
     
 !    type(block_type), pointer :: block
     
@@ -3605,7 +3623,7 @@ contains
 
 !       block => block % next
 !    enddo !do while
-!  end subroutine column_wavefracture        
+  end subroutine column_wavefracture        
 
 
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
