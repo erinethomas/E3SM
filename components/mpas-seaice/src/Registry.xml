@@ -732,10 +732,6 @@
 			description="Allow snow modifications plus additional snow tracers"
 			possible_values="true or false"
 		/>
-		<nml_option name="config_use_column_waves" type="logical" default_value="false" units="unitless"
-			description="Allow wavebreaking of ice floes. Requires coupling to WW3."
-			possible_values="true or false"
-		/>
 	</nml_record>
 
 	<nml_record name="column_tracers" in_defaults="true">
@@ -785,7 +781,7 @@
 			icepack_name="tr_rsnw"
 		/>
 		<nml_option name="config_use_floe_size_distribution" type="logical" default_value="false" units="unitless"
-			description="If truew use floe size distribution"
+			description="If true use floe size distribution"
 			possible_values="true or false"
 			icepack_name="tr_fsd"
 		/>
@@ -795,6 +791,20 @@
 		/>
 	</nml_record>
 
+	<nml_record name="wave_config" in_defaults="true">
+		<nml_option name="config_use_column_waves" type="logical" default_value="false" units="unitless"
+			description="Allow wavebreaking of ice floes. Requires coupling to WW3."
+			possible_values="true or false"
+		/>
+		<nml_option name="config_xfreq" type="real" default_value="0.0" units="unitless"
+			description="Frequency multiplication factor used by wave model."
+			possible_values="Defined by WW3 component. Do not edit."
+		/>
+		<nml_option name="config_freq1" type="real" default_value="0.0" units="unitless"
+			description="The first frequency used by wave model."
+			possible_values="Defined by WW3 component. Do not edit."
+		/>
+	</nml_record>
 	<nml_record name="biogeochemistry" in_defaults="true">
 		<nml_option name="config_use_brine" type="logical" default_value="false" units="unitless"
 			description="Use the brine height tracer"
@@ -2704,6 +2714,16 @@
 		     units="kg m-3"
 		     packages="pkgColumnTracerEffectiveSnowDensity"
 		/>
+		<var name="FloeSizeDist"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     units=""
+		/>
+		<var name="FloeSizeDistCategory"
+		     type="real"
+		     dimensions="nFloeCategories nCategories nCells Time"
+		     units=""
+		/>
 		<var name="iceAge"
 		     type="real"
 		     dimensions="ONE nCategories nCells Time"
@@ -3895,6 +3915,30 @@
 		/>
 
 	</var_struct>
+
+        <!-- wave coupling -->
+	<var_struct name="wave_coupling" time_levs="1">
+		<var name="WaveFrequency"
+		     type="real"
+		     dimensions="nFrequencies Time"
+		     icepack_name="wavefreq"
+		/>
+		<var name="WaveFreqBinWidth"
+		     type="real"
+		     dimensions="nFrequencies Time"
+		     icepack_name="dwavefreq"
+		/>
+		<var name="SignificantWaveHeight"
+		     type="real"
+		     dimensions="nCells Time"
+		     icepack_name="wave_sig_ht"
+		/>
+		<var name="WaveSpectrum"
+		     type="real"
+		     dimensions="nFrequencies nCells Time"
+		     icepack_name="wave_spectrum"
+		/>
+        </var_struct>
 
 	<!--ocean coupling -->
 	<var_struct name="ocean_coupling" time_levs="1">

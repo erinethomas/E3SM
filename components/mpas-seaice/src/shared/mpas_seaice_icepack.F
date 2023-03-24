@@ -104,8 +104,8 @@ module seaice_icepack
           index_snowIceMass, &           ! nt_smice
           index_snowLiquidMass, &        ! nt_smliq
           index_snowGrainRadius, &       ! nt_rsnw
-          index_snowDensity           ! nt_rhos
-          !index_floeSizeDistribution   !nt_fsd
+          index_snowDensity, &           ! nt_rhos
+          index_floeSizeDist             ! nt_fsd
      !-----------------------------------------------------------------------
      ! biogeochemistry
      !-----------------------------------------------------------------------
@@ -403,6 +403,7 @@ contains
 
     type(MPAS_pool_type), pointer :: &
          mesh, &
+         tracers, &
          floe_size_distribution
 
     logical, pointer :: config_use_column_waves
@@ -432,7 +433,8 @@ contains
          DFloeSizeWaves, &
          DFloeSizeWeld
 
-    !real(kind=RKIND), dimension(:,:,:), pointer :: &
+    real(kind=RKIND), dimension(:,:,:), pointer :: &
+         FloeSizeDist
 
     !local variables
     integer :: iCell
@@ -462,6 +464,8 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "WaveFreqBinWidth", WaveFreqBinWidth)
        call MPAS_pool_get_array(floe_size_distribution, "SignificantWaveHeight", SignificantWaveHeight)
        call MPAS_pool_get_array(floe_size_distribution, "WaveSpectrum", WaveSpectrum)
+       call MPAS_pool_get_array(tracers, "FloeSizeDist", FloeSizeDist)
+
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeNewIce", DFloeSizeNewIce)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralGrowth", DFloeSizeLateralGrowth)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralMelt", DFloeSizeLateralMelt)
@@ -470,6 +474,7 @@ contains
 
 
        if (config_use_floe_size_distribution) then
+          call mpas_log_write("Erin Thomas before icepack_init_fsd_bounds")
           call icepack_init_fsd_bounds(   &
              nfsd=nFloeCategories,        &  ! number of floe size categories
              floe_rad_l=FloeSizeBinLower(:),        &  ! fsd size lower bound in m (radius)
@@ -477,6 +482,7 @@ contains
              floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
              c_fsd_range=c_fsd_range)        ! string for history output: fsd floe_rad bounds (m)
        endif
+          call mpas_log_write("Erin Thomas after icepack_init_fsd_bounds")
 
        ! initalize floe size distribution tracers
        WaveFrequency(:)          = c0   ! wave frequencies 
@@ -489,19 +495,21 @@ contains
        DFloeSizeWaves(:,:)       = c0   ! change in floe size distribution due to wave breaking
        DFloeSizeWeld(:,:)        = c0   ! change in floe size distribution due to welding
 
+             call mpas_log_write("Erin Thomas before icepack_init_fsd")
        do iCell =1, nCellsSolve  
           if (config_use_floe_size_distribution) then
                    !! NOT SURE IF THIS IS THE CORRECT PLACE FOR THIS CALL:
                    !! where do all the other variables in 'set_state_var' get initialized??
                    !! variable of concern = afsd/trcrn  
-             !call icepack_init_fsd(    &  
-             !   nfsd=nFloeCategories, &  ! number of floe size categories 
-             !   ice_ic=ice_init_type, &  ! method of ice cover initialization 
-             !   floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
-             !   floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
-             !   afsd=trcrn(:,:,:))      ! ******* ?? ****** floe size tracer: fraction distribution of floes 
+             call icepack_init_fsd(    &  
+                nfsd=nFloeCategories, &  ! number of floe size categories 
+                ice_ic=ice_init_type, &  ! method of ice cover initialization 
+                floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
+                floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
+                afsd=FloeSizeDist(:,iCell))      !floe size distribution tracer 
           endif
        enddo !iCell 
+             call mpas_log_write("Erin Thomas after icepack_init_fsd")
 
        if (config_use_column_waves) then   
               call icepack_init_wave(nfreq=nFrequencies,      &
@@ -518,7 +526,104 @@ contains
 
 
 
+!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+!
+!  init_column_waves
+!
+!> \brief
+!> \author Erin E. Thomas, LANL
+!> \date Feb 2023
+!> \details
+!>
+!
+!-----------------------------------------------------------------------
 
+  subroutine init_column_waves
+    use shr_wave_mod, only: shr_calc_wave_freq
+    
+    use icepack_intfc, only: &
+            c0, &
+            icepack_init_wave
+
+    type(domain_type), intent(inout) :: domain
+
+    type(block_type), pointer :: block
+
+    type(MPAS_pool_type), pointer :: &
+         mesh, &
+         wave_coupling
+
+    logical, pointer :: config_use_column_waves
+
+         ! dimensions
+    integer, pointer ::   &
+         nCellsSolve,     &
+         nFrequencies
+
+    real(kind=RKIND), pointer ::   &
+         config_freq1, &
+         config_xfreq
+
+    !variables
+    real(kind=RKIND), dimension(:), pointer :: &
+         WaveFrequency,      &
+         WaveFreqBinWidth,   &
+         SignificantWaveHeight
+
+    real(kind=RKIND), dimension(:), pointer :: &
+         WaveFrequency_TEMP,      &
+         WaveFreqBinWidth_TEMP
+
+    real(kind=RKIND), dimension(:,:), pointer :: &
+         WaveSpectrum
+    real(kind=RKIND), dimension(:), pointer :: &
+         WaveSPectrum_TEMP
+
+    !local variables
+    integer :: iCell
+    integer :: i
+
+   call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
+   call MPAS_pool_get_config(domain % configs, "config_xfreq", config_xfreq)
+   call MPAS_pool_get_config(domain % configs, "config_freq1", config_freq1)
+
+   block => domain % blocklist
+   do while (associated(block))
+
+      call MPAS_pool_get_subpool(block % structs, "mesh", mesh)       
+      call MPAS_pool_get_subpool(block % structs, "wave_coupling", wave_coupling)
+
+      call MPAS_pool_get_dimension(mesh, "nCellsSolve", nCellsSolve)
+      call MPAS_pool_get_dimension(block % dimensions, "nFrequencies", nFrequencies)
+      
+      call MPAS_pool_get_array(wave_coupling, "SignificantWaveHeight", SignificantWaveHeight)
+      call MPAS_pool_get_array(wave_coupling, "WaveSpectrum", WaveSpectrum)
+      call MPAS_pool_get_array(wave_coupling, "WaveFrequency", WaveFrequency)
+      call MPAS_pool_get_array(wave_coupling, "WaveFreqBinWidth", WaveFreqBinWidth)
+
+      call mpas_log_write("Erin Thomas before shr_calc_wave")
+      call shr_calc_wave_freq(nFrequencies, config_freq1, config_xfreq, &
+                              WaveFrequency, &
+                              WaveFreqBinWidth)
+      call mpas_log_write("Erin Thomas after shr_calc_wave")
+      ! test if icepack wavefreq init is same as WW3 freq: 
+      call icepack_init_wave(nfreq=nFrequencies, wave_spectrum_profile=WaveSpectrum_TEMP,&
+                             wavefreq=WaveFrequency_TEMP, dwavefreq=WaveFreqBinWidth_TEMP)
+      !call mpas_log_write("Erin Thomas after icepack_init_wave test")
+      
+      do i = 1:nFrequencies      
+         call mpas_log_write('ERIN THOMAS after init wavefreq INDEX: $i, Freq: $r',,intArgs=(/i/),realArgs=(/WaveFrequency(i)/)) 
+      enddo
+     ! do iCell =1, nCellsSolve  
+         ! initalize coupled wave variables to zero        
+         SignificantWaveHeight(:) = c0   
+         WaveSpectrum(:,:)        = c0
+     ! enddo
+      block => block % next
+    
+    end do !block
+
+  end subroutine init_column_waves
 
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 !
@@ -1316,6 +1421,7 @@ contains
          config_use_column_package, &
          config_use_column_ridging, &
          config_use_column_waves, &
+         config_use_floe_size_distribution, &
          config_use_vertical_tracers
 
     type(MPAS_pool_type), pointer :: &
@@ -1330,6 +1436,7 @@ contains
 
        call MPAS_pool_get_config(domain % configs, "config_use_column_ridging", config_use_column_ridging)
        call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
+       call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution",config_use_floe_size_distribution)
        call MPAS_pool_get_config(domain % configs, "config_use_vertical_tracers", config_use_vertical_tracers)
 
        call MPAS_pool_get_subpool(domain % blocklist % structs, "velocity_solver", velocitySolver)
@@ -1349,8 +1456,9 @@ contains
        ! Wave fracturing  
        !-----------------------------------------------------------------
        call mpas_timer_start("Column wavefracture")
-       if (config_use_column_waves) &
-            call column_wavefracture(domain)
+       if (config_use_column_waves .and. config_use_floe_size_distribution) &
+             call mpas_log_write("Erin Thomas before CALL column wavefracture")
+             call column_wavefracture(domain)
        call mpas_timer_stop("Column wavefracture")
        
 
@@ -3526,103 +3634,121 @@ contains
 
     type(domain_type), intent(inout) :: domain
     
-!    type(block_type), pointer :: block
-    
-!    type(MPAS_pool_type), pointer :: &
-!       mesh, &
-!       velocity_solver, &
-!       tracers_aggregate, &
-!       wave_coupling, &
-      
+    type(block_type), pointer :: block
+   
+    logical, pointer :: &
+       config_use_column_biogeochemistry
 
-    ! configs
-!    logical, pointer :: &
+    type(MPAS_pool_type), pointer :: &
+       mesh, &
+       velocity_solver, &
+       tracers, &
+       tracers_aggregate, &
+       floe_size_distribution, &
+       wave_coupling
 
-
-!    character, pointer :: &
-!         waveSpectraType  ! the wave spectra type 
+    character, pointer :: &
+         waveSpectraType  ! the wave spectra type 
 
     ! dimensions
-!    integer, pointer :: &
-!         nCategories, & !number of ice thicknes categories
-!         nFloeCategories, & ! number of floe size categories
-!         nWaveFrequencies   ! number of wave frequency bins
+    integer, pointer :: &
+         nCategories, & !number of ice thicknes categories
+         nFloeCategories, & ! number of floe size categories
+         nWaveFrequencies   ! number of wave frequency bins
 
     ! variables
-!    real(kind=RKIND), dimension(:), pointer :: &
-!         iceAreaCell, & ! ice area fraction
-!         iceVolumeCell, & ! ice volume per unit area
-!         floeSizeBinLower, & ! fsd size bin lower bound in m (radius)
-!         floeSizeBinCenter, & ! fsd size bin center in m (radius)
-!         waveFrequencies, & ! wave frequencies
-!         waveFreqBinWidths, & ! wave frequency bin widths
+    real(kind=RKIND), dimension(:), pointer :: &
+         iceAreaCell, & ! ice area fraction
+         iceVolumeCell, & ! ice volume per unit area
+         floeSizeBinLower, & ! fsd size bin lower bound in m (radius)
+         floeSizeBinCenter, & ! fsd size bin center in m (radius)
+         waveFrequencies, & ! wave frequencies
+         waveFreqBinWidths ! wave frequency bin widths
 
+    real(kind=RKIND), dimension(:,:), pointer :: &
+         waveSpectrum, & ! ocean surface wave spectrum as a function of frequency
+         d_afsd_wave ! change in fsd due to waves
 
-!    real(kind=RKIND), dimension(:,:), pointer :: &
-!         waveSpectrum, & ! ocean surface wave spectrum as a function of frequency
-!         d_afsd_wave, & ! change in fsd due to waves
-
-!    real(kind=RKIND), dimension(:,:,:), pointer :: &
-!         iceAreaCategory, & ! ice area fraction per category
-!         trcrn, & ! tracer array
-
-!    real(kind=RKIND), pointer :: &
-!         dynamicsTimeStep
+    real(kind=RKIND), dimension(:,:,:), pointer :: &
+         iceAreaCategory, & ! ice area fraction per category
+         TracerArrayCategory   ! tracer array
     
     ! local
-!    integer :: &
-!         iCell, &
-!         iCategory
+    logical :: &
+         setGetPhysicsTracers, &
+         setGetBGCTracers
+
+    integer :: &
+         iCell, &
+         iCategory
     
     
-    
-!    block => domain % blocklist
-!    do while (associated(block))
+    block => domain % blocklist
+    do while (associated(block))
 
        !MPAS_pool_get* calls
-!       call MPAS_pool_get_subpool(block % structs, "tracers", tracers)
-!       call MPAS_pool_get_subpool(block % structs, "wave_coupling", wave_coupling)
+       call MPAS_pool_get_config(block % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
 
-!       call MPAS_pool_get_dimension(mesh, "nCategories", nCategories)
-!       call MPAS_pool_get_array(velocity_solver, "dynamicsTimeStep", dynamicsTimeStep)
+       call MPAS_pool_get_subpool(block % structs, "mesh", mesh)
+       call MPAS_pool_get_subpool(block % structs, "tracers", tracers)
+       call MPAS_pool_get_subpool(block % structs, "tracers_aggregate", tracers_aggregate)
+       call MPAS_pool_get_subpool(block % structs, "floe_size_distribution", floe_size_distribution)
+       call MPAS_pool_get_subpool(block % structs, "wave_coupling", wave_coupling)
+       call MPAS_pool_get_subpool(block % structs, "velocity_solver", velocity_solver)
 
-!       call MPAS_pool_get_array(tracers_aggregate, "iceAreaCell", iceAreaCell)
+       call MPAS_pool_get_dimension(mesh, "nCategories", nCategories)
+       call MPAS_pool_get_array(velocity_solver, "dynamicsTimeStep", dynamicsTimeStep)
 
-       !not 100% sure where the warning stuff goes
-!       call_icepack_warnings_flush(nu_diag)
-!       if (icepack_warnings_aborted()) call icedrv_system_abort(string=subname, &
-!           file=__FILE__,line= __LINE__)
+       call MPAS_pool_get_array(tracers_aggregate, "iceAreaCell", iceAreaCell)
+       call MPAS_pool_get_array(tracers_aggregate, "iceVolumeCell", iceVolumeCell)
+       
+       call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
 
-!       do iCell = 1, nCellsSolve
-!          d_afsd_wave(:,iCell) = c0
-!          call icepack_step_wavefracture(&
-!                  wave_spec_type=waveSpectraType, &
-!                  dt=dynamicsTimeStep, &
-!                  ncat=nCategories, &
-!                  nfsd=nFloeCategories, &
-!                  nfreq=nWaveFrequencies, &
-!                  aice = iceAreaCell(iCell), &
-!                  vice = iceVolumeCell(iCell), &
-!                  aicen = iceAreaCategory(1,:,iCell), &
-!                  floe_rad_l = floeSizeBinLower(:), &
-!                  floe_rad_c = floeSizeBinCenter(:), &
-!                  wave_spectrum = waveSpectrum(:,iCell), &
-!                  wavefreq = waveFrequencies(:), &
-!                  dwavefreq = waveFreqBinWidths(:), &
-!                  trcrn = trcrn(:,:,iCell), &
-!                  d_afsd_wave = d_afsd_wave(:,iCell))
+       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinLower", FloeSizeBinLower)
+       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
+       call MPAS_pool_get_array(wave_coupling, "WaveSpectrum", WaveSpectrum)
+       call MPAS_pool_get_array(wave_coupling, "WaveFrequency", WaveFrequency)
+       call MPAS_pool_get_array(wave_coupling, "WaveFreqBinWidth", WaveFreqBinWidth)
 
+       setGetPhysicsTracers = .true.
+       setGetBGCTracers     = config_use_column_biogeochemistry
 
-        
-!       enddo !iCell
+       do iCell = 1, nCellsSolve
+          DFloeSizeWaves(:,iCell) = c0
+          
+          call set_cice_tracer_array_category(block, ciceTracerObject, &
+                 tracerArrayCategory, iCell, setGetPhysicsTracers, setGetBGCTracers)
+          
+          call mpas_log_write("Erin Thomas before icepack_step_wavefracture")
+          call icepack_step_wavefracture(&
+                  wave_spec_type = waveSpectraType, &
+                  dt = dynamicsTimeStep, &
+                  ncat = nCategories, &
+                  nfsd = nFloeCategories, &
+                  nfreq = nFrequencies, &
+                  aice = iceAreaCell(iCell), &
+                  vice = iceVolumeCell(iCell), &
+                  aicen = iceAreaCategory(1,:,iCell), &
+                  floe_rad_l = floeSizeBinLower(:), &
+                  floe_rad_c = floeSizeBinCenter(:), &
+                  wave_spectrum = waveSpectrum(:,iCell), &
+                  wavefreq = waveFrequency(:), &
+                  dwavefreq = waveFreqBinWidth(:), &
+                  trcrn = tracerArrayCategory, &
+                  d_afsd_wave = DFloeSizeWaves(:,iCell))
+          
+          call get_cice_tracer_array_category(block, ciceTracerObject, &
+                 tracerArrayCategory, iCell, setGetPhysicsTracers, setGetBGCTracers)
+       enddo !iCell
 
 !      call icepack_warnings_flush(nu_diag)
 !      if (icepack_warnings_aborted()) call icedrv_system_abort(string=subname, &
 !          file=__FILE__, line=__LINE__)
 
 
-!       block => block % next
-!    enddo !do while
+       block => block % next
+    enddo !do while
   end subroutine column_wavefracture        
 
 
@@ -6697,11 +6823,13 @@ contains
          config_use_iron, &
          config_use_zaerosols, &
          config_use_effective_snow_density, &
-         config_use_snow_grain_radius
+         config_use_snow_grain_radius, &
+         config_use_floe_size_distribution
 
     integer, pointer :: &
          nIceLayers, &
          nSnowLayers, &
+         nFloeCategories, &
          nAerosols, &
          nBioLayers, &
          nBioLayersP3, &
@@ -6727,6 +6855,7 @@ contains
     call MPAS_pool_get_config(domain % configs, "config_use_aerosols", config_use_aerosols)
     call MPAS_pool_get_config(domain % configs, "config_use_effective_snow_density", config_use_effective_snow_density)
     call MPAS_pool_get_config(domain % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
+    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
     call MPAS_pool_get_config(domain % configs, "config_use_brine", config_use_brine)
@@ -6748,6 +6877,7 @@ contains
 
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nIceLayers", nIceLayers)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nSnowLayers", nSnowLayers)
+    call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nFloeCategories", nFloeCategories)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nAerosols", nAerosols)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nBioLayers", nBioLayers)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nBioLayersP3", nBioLayersP3)
@@ -6806,6 +6936,11 @@ contains
     ! snow grain radius (ice mass, liquid mass, and snow grain radius)
     if (config_use_snow_grain_radius) then
        tracerObject % nTracers = tracerObject % nTracers + nSnowLayers*3
+    endif
+
+    !floe size distribution
+    if (config_use_floe_size_distribution) then
+       tracerObject % nTracers = tracerObject % nTracers + nFloeCategories
     endif
 
     ! aerosols
@@ -6971,14 +7106,16 @@ contains
          config_use_topo_meltponds, &
          config_use_aerosols, &
          config_use_effective_snow_density, &
-         config_use_snow_grain_radius
+         config_use_snow_grain_radius, &
+         config_use_floe_size_distribution
 
     integer :: &
          nTracers
 
     integer, pointer :: &
          nIceLayers, &
-         nSnowLayers
+         nSnowLayers, &
+         nFloeCategories
 
     integer, parameter :: indexMissingValue = 0
 
@@ -6991,9 +7128,12 @@ contains
     call MPAS_pool_get_config(domain % configs, "config_use_aerosols", config_use_aerosols)
     call MPAS_pool_get_config(domain % configs, "config_use_effective_snow_density", config_use_effective_snow_density)
     call MPAS_pool_get_config(domain % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
+    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nIceLayers", nIceLayers)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nSnowLayers", nSnowLayers)
+    call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nFloeCategories", nFloeCategories)
+
 
     ! ice/snow surface temperature
     tracerObject % index_surfaceTemperature = 1
@@ -7076,6 +7216,13 @@ contains
        tracerObject % index_snowGrainRadius = nTracers + 1
        nTracers = nTracers + nSnowLayers
     endif
+    
+    ! floe size distrbution
+    tracerObject % index_floeSizeDist = indexMissingValue
+    if (config_use_floe_size_distribution) then
+       tracerObject % index_floeSizeDist = nTracers + 1
+       nTracers = nTracers + nFloeCategories
+    endif
 
     ! aerosols
     tracerObject % index_aerosols = indexMissingValue
@@ -7118,16 +7265,19 @@ contains
          config_use_topo_meltponds, &
          config_use_aerosols, &
          config_use_effective_snow_density, &
-         config_use_snow_grain_radius
+         config_use_snow_grain_radius, &
+         config_use_floe_size_distribution
 
     integer :: &
          iIceLayer, &
          iSnowLayer, &
+         iFloeSize, &
          iAerosol
 
     integer, pointer :: &
          nIceLayers, &
          nSnowLayers, &
+         nFloeCategories, &
          nAerosols
 
     call MPAS_pool_get_config(domain % configs, "config_use_ice_age", config_use_ice_age)
@@ -7139,9 +7289,11 @@ contains
     call MPAS_pool_get_config(domain % configs, "config_use_aerosols", config_use_aerosols)
     call MPAS_pool_get_config(domain % configs, "config_use_effective_snow_density", config_use_effective_snow_density)
     call MPAS_pool_get_config(domain % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
+    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nIceLayers", nIceLayers)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nSnowLayers", nSnowLayers)
+    call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nFloeCategories", nFloeCategories)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nAerosols", nAerosols)
 
     ! ice/snow surface temperature
@@ -7206,6 +7358,13 @@ contains
           tracerObject % parentIndex(tracerObject % index_snowLiquidMass + iSnowLayer - 1) = 2
           tracerObject % parentIndex(tracerObject % index_snowGrainRadius + iSnowLayer - 1) = 2
        enddo ! iSnowLayer
+    endif
+
+    ! Floe size distribution
+    if (config_use_floe_size_distribution) then
+       do iFloeSize = 1, nFloeCategories
+          tracerObject % parentIndex(tracerObject % index_floeSizeDist + iFloeSize - 1) = 2 ! WHAT VALUE SHOULD THIS BE SET TO ????
+       enddo ! iFloeSize
     endif
 
     ! aerosols
@@ -7385,7 +7544,7 @@ contains
          tracerObject
 
     real(kind=RKIND), dimension(:,:), intent(inout) :: &
-         tracerArrayCategory
+         tracerArrayCategor SET TO y
 
     integer, intent(in) :: &
          iCell
@@ -7556,12 +7715,14 @@ contains
          config_use_topo_meltponds, &
          config_use_aerosols, &
          config_use_effective_snow_density, &
-         config_use_snow_grain_radius
+         config_use_snow_grain_radius, &
+         config_use_floe_size_distribution
 
     integer, pointer :: &
          nIceLayers, &
          nSnowLayers, &
-         nAerosols
+         nAerosols, &
+         nFloeCategories
 
     type(MPAS_pool_type), pointer :: &
          tracers
@@ -7585,7 +7746,8 @@ contains
          snowIceMass, &
          snowLiquidMass, &
          snowGrainRadius, &
-         snowDensity
+         snowDensity, &
+         floeSizeDist
 
     integer :: &
          nTracers, &
@@ -7600,10 +7762,12 @@ contains
     call MPAS_pool_get_config(block % configs, "config_use_aerosols", config_use_aerosols)
     call MPAS_pool_get_config(block % configs, "config_use_effective_snow_density", config_use_effective_snow_density)
     call MPAS_pool_get_config(block % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
+    call MPAS_pool_get_config(block % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
     call MPAS_pool_get_dimension(block % dimensions, "nIceLayers", nIceLayers)
     call MPAS_pool_get_dimension(block % dimensions, "nSnowLayers", nSnowLayers)
     call MPAS_pool_get_dimension(block % dimensions, "nAerosols", nAerosols)
+    call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
 
     call MPAS_pool_get_subpool(block % structs, "tracers", tracers)
 
@@ -7626,6 +7790,8 @@ contains
     call MPAS_pool_get_array(tracers, "snowLiquidMass", snowLiquidMass, 1)
     call MPAS_pool_get_array(tracers, "snowDensity", snowDensity, 1)
     call MPAS_pool_get_array(tracers, "snowGrainRadius", snowGrainRadius, 1)
+    call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
+    
 
     nTracers = 1
 
@@ -7698,6 +7864,12 @@ contains
        nTracers = nTracers + nSnowLayers
     endif
 
+    ! floe size distribution
+    if (config_use_floe_size_distribution) then
+       tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:) = floeSizeDist(:,:,iCell)
+       nTracers = nTracers + nFloeCatagories
+    endif
+    
     ! aerosols
     if (config_use_aerosols) then
        do iAerosol = 1, nAerosols
@@ -7744,13 +7916,15 @@ contains
          config_use_topo_meltponds, &
          config_use_aerosols, &
          config_use_effective_snow_density, &
-         config_use_snow_grain_radius
+         config_use_snow_grain_radius, &
+         config_use_floe_size_distribution
 
 
     integer, pointer :: &
          nIceLayers, &
          nSnowLayers, &
-         nAerosols
+         nAerosols, &
+         nFloeCategories
 
     type(MPAS_pool_type), pointer :: &
          tracers
@@ -7774,7 +7948,8 @@ contains
          snowIceMass, &
          snowLiquidMass, &
          snowGrainRadius, &
-         snowDensity
+         snowDensity, &
+         floeSizeDist
 
     integer :: &
          nTracers, &
@@ -7789,10 +7964,12 @@ contains
     call MPAS_pool_get_config(block % configs, "config_use_aerosols", config_use_aerosols)
     call MPAS_pool_get_config(block % configs, "config_use_effective_snow_density", config_use_effective_snow_density)
     call MPAS_pool_get_config(block % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
+    call MPAS_pool_get_config(block % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
     call MPAS_pool_get_dimension(block % dimensions, "nIceLayers", nIceLayers)
     call MPAS_pool_get_dimension(block % dimensions, "nSnowLayers", nSnowLayers)
     call MPAS_pool_get_dimension(block % dimensions, "nAerosols", nAerosols)
+    call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
 
     call MPAS_pool_get_subpool(block % structs, "tracers", tracers)
 
@@ -7815,6 +7992,7 @@ contains
     call MPAS_pool_get_array(tracers, "snowLiquidMass", snowLiquidMass, 1)
     call MPAS_pool_get_array(tracers, "snowDensity", snowDensity, 1)
     call MPAS_pool_get_array(tracers, "snowGrainRadius", snowGrainRadius, 1)
+    call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
 
     nTracers = 1
 
@@ -7885,6 +8063,12 @@ contains
        nTracers = nTracers + nSnowLayers
        snowGrainRadius(:,:,iCell) = tracerArrayCategory(nTracers:nTracers+nSnowLayers-1,:)
        nTracers = nTracers + nSnowLayers
+    endif
+
+    ! floe size dist
+    if (config_use_floe_size_distribution) then
+       floeSizeDist(:,:,iCell) = tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:)
+       nTracers = nTracers + nFloeCategories
     endif
 
     ! aerosols
@@ -11222,7 +11406,7 @@ contains
          nt_smliq_in      = tracerObject % index_snowLiquidMass, &
          nt_rhos_in       = tracerObject % index_snowDensity, &
          nt_rsnw_in       = tracerObject % index_snowGrainRadius, &
-         !nt_fsd           = tracerObject % index_floeSizeDistribution, &
+         nt_fsd           = tracerObject % index_floeSizeDistribution, &
          !nt_isosno_in
          !nt_isoice_in
          nt_aero_in       = tracerObject % index_aerosols, &

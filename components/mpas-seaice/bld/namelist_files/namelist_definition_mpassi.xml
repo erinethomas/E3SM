@@ -320,7 +320,6 @@ Valid values: 0 (no wave coupling) 25,36,50. Defined by WW3.
 Default: Defined in namelist_defaults.xml
 </entry>
 
-
 <!-- initialize -->
 
 <entry id="config_earth_radius" type="real"
@@ -837,14 +836,6 @@ Valid values: true or false
 Default: Defined in namelist_defaults.xml
 </entry>
 
-<entry id="config_use_column_waves" type="logical"
-	category="column_package" group="column_package">
-Use the wave coupling to allow breaking of ice floes
-
-Valid values: true or false
-Default: Defined in namelist_defaults.xml
-</entry>
-
 <entry id="config_use_column_ridging" type="logical"
 	category="column_package" group="column_package">
 Run the ridging column physics calculation.
@@ -951,6 +942,29 @@ Use floe size distribution. Requires Icepack column package.
 Valid values: true or false
 Default: Defined in namelist_defaults.xml
 </entry>
+
+
+<!-- wave_config -->
+<entry id="config_use_column_waves" type="logical"
+	category="wave_config" group="wave_config">
+Use the wave coupling to allow breaking of ice floes
+
+Valid values: true or false
+Default: Defined in namelist_defaults.xml
+</entry>
+
+<entry id="config_xfreq" type="real"
+	category="wave_config" group="wave_config">
+Frequency mulitpilcation factor used by the wave model.
+Default: Defined in namelist_defaults.xml
+</entry>
+
+<entry id="config_freq1" type="real"
+	category="wave_config" group="wave_config">
+First frequency used by the wave model.
+Default: Defined in namelist_defaults.xml
+</entry>
+
 
 
 <!-- biogeochemistry -->

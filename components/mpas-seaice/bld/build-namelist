@@ -638,12 +638,6 @@ if ($ice_bgc eq 'ice_bgc') {
 } else {
         add_default($nl, 'config_use_column_biogeochemistry', 'val'=>".false.");
 }
-
-if (($wave_spec eq 'sp25x36') or ($wave_spec eq 'sp36x36') or ($wave_spec eq 'sp50x36')) {
-	add_default($nl, 'config_use_column_waves', 'val'=>".true.");
-} else {
-	add_default($nl, 'config_use_column_waves', 'val'=>".false.");
-}
 add_default($nl, 'config_use_column_itd_thermodynamics');
 add_default($nl, 'config_use_column_ridging');
 add_default($nl, 'config_use_column_snow_tracers');
@@ -664,6 +658,29 @@ add_default($nl, 'config_use_snow_grain_radius');
 add_default($nl, 'config_use_special_boundaries_tracers');
 add_default($nl, 'config_use_floe_size_distribution');
 
+##################################
+# Namelist group: wave_config #
+##################################
+if (($wave_spec eq 'sp25x36') or ($wave_spec eq 'sp36x36') or ($wave_spec eq 'sp50x36')) {
+	add_default($nl, 'config_use_column_waves', 'val'=>".true.");
+} else {
+	add_default($nl, 'config_use_column_waves', 'val'=>".false.");
+}
+# define wave-dependent variables
+# Note: these are also defined in ww3/bld/build-namelist script
+if ($wave_spec eq 'sp25x36') {
+	add_default($nl, 'config_xfreq', 'val'=>"1.147");
+	add_default($nl, 'config_freq1', 'val'=>"0.035");
+} elsif ($wave_spec eq 'sp36x36') {
+	add_default($nl, 'config_xfreq', 'val'=>"1.10");
+	add_default($nl, 'config_freq1', 'val'=>"0.035");
+} elsif ($wave_spec eq 'sp50x36') {
+	add_default($nl, 'config_xfreq', 'val'=>"1.07");
+	add_default($nl, 'config_freq1', 'val'=>"0.035");
+} else {
+	add_default($nl, 'config_xfreq', 'val'=>"0.0");
+	add_default($nl, 'config_freq1', 'val'=>"0.0");
+}
 
 ###################################
 # Namelist group: biogeochemistry #
@@ -1253,6 +1270,7 @@ my @groups = qw(seaice_model
                 advection
                 column_package
                 column_tracers
+		wave_config
                 biogeochemistry
                 shortwave
                 snow
