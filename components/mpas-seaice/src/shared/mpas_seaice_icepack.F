@@ -434,7 +434,7 @@ contains
          DFloeSizeWeld
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
-         FloeSizeDist
+         floeSizeDist
 
     !local variables
     integer :: iCell
@@ -464,7 +464,7 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "WaveFreqBinWidth", WaveFreqBinWidth)
        call MPAS_pool_get_array(floe_size_distribution, "SignificantWaveHeight", SignificantWaveHeight)
        call MPAS_pool_get_array(floe_size_distribution, "WaveSpectrum", WaveSpectrum)
-       call MPAS_pool_get_array(tracers, "FloeSizeDist", FloeSizeDist)
+       call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist)
 
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeNewIce", DFloeSizeNewIce)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralGrowth", DFloeSizeLateralGrowth)
@@ -506,7 +506,7 @@ contains
                 ice_ic=ice_init_type, &  ! method of ice cover initialization 
                 floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
                 floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
-                afsd=FloeSizeDist(:,iCell))      !floe size distribution tracer 
+                afsd=floeSizeDist(:,iCell))      !floe size distribution tracer 
           endif
        enddo !iCell 
              call mpas_log_write("Erin Thomas after icepack_init_fsd")
@@ -611,9 +611,9 @@ contains
                              wavefreq=WaveFrequency_TEMP, dwavefreq=WaveFreqBinWidth_TEMP)
       !call mpas_log_write("Erin Thomas after icepack_init_wave test")
       
-      do i = 1:nFrequencies      
+      do i = 1,nFrequencies      
          call mpas_log_write('ERIN THOMAS after init wavefreq INDEX: $i, Freq: $r',,intArgs=(/i/),realArgs=(/WaveFrequency(i)/)) 
-      enddo
+      end do
      ! do iCell =1, nCellsSolve  
          ! initalize coupled wave variables to zero        
          SignificantWaveHeight(:) = c0   
@@ -7363,7 +7363,7 @@ contains
     ! Floe size distribution
     if (config_use_floe_size_distribution) then
        do iFloeSize = 1, nFloeCategories
-          tracerObject % parentIndex(tracerObject % index_floeSizeDist + iFloeSize - 1) = 2 ! WHAT VALUE SHOULD THIS BE SET TO ????
+          tracerObject % parentIndex(tracerObject % index_floeSizeDist + iFloeSize - 1) = 1 ! WHAT VALUE SHOULD THIS BE SET TO ????
        enddo ! iFloeSize
     endif
 
@@ -7544,7 +7544,7 @@ contains
          tracerObject
 
     real(kind=RKIND), dimension(:,:), intent(inout) :: &
-         tracerArrayCategor SET TO y
+         tracerArrayCategory
 
     integer, intent(in) :: &
          iCell
@@ -11406,7 +11406,7 @@ contains
          nt_smliq_in      = tracerObject % index_snowLiquidMass, &
          nt_rhos_in       = tracerObject % index_snowDensity, &
          nt_rsnw_in       = tracerObject % index_snowGrainRadius, &
-         nt_fsd           = tracerObject % index_floeSizeDistribution, &
+         nt_fsd           = tracerObject % index_floeSizeDist, &
          !nt_isosno_in
          !nt_isoice_in
          nt_aero_in       = tracerObject % index_aerosols, &
