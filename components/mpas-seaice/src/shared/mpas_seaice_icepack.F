@@ -7867,7 +7867,7 @@ contains
     ! floe size distribution
     if (config_use_floe_size_distribution) then
        tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:) = floeSizeDist(:,:,iCell)
-       nTracers = nTracers + nFloeCatagories
+       nTracers = nTracers + nFloeCategories
     endif
     
     ! aerosols
@@ -11406,7 +11406,7 @@ contains
          nt_smliq_in      = tracerObject % index_snowLiquidMass, &
          nt_rhos_in       = tracerObject % index_snowDensity, &
          nt_rsnw_in       = tracerObject % index_snowGrainRadius, &
-         nt_fsd           = tracerObject % index_floeSizeDist, &
+         nt_fsd_in        = tracerObject % index_floeSizeDist, &
          !nt_isosno_in
          !nt_isoice_in
          nt_aero_in       = tracerObject % index_aerosols, &
