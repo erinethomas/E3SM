@@ -433,7 +433,7 @@ contains
          DFloeSizeWaves, &
          DFloeSizeWeld
 
-    real(kind=RKIND), dimension(:,:,:), pointer :: &
+    real(kind=RKIND), dimension(:,:), pointer :: &
          floeSizeDist
 
     !local variables
@@ -607,8 +607,8 @@ contains
                               WaveFreqBinWidth)
       call mpas_log_write("Erin Thomas after shr_calc_wave")
       ! test if icepack wavefreq init is same as WW3 freq: 
-      call icepack_init_wave(nfreq=nFrequencies, wave_spectrum_profile=WaveSpectrum_TEMP,&
-                             wavefreq=WaveFrequency_TEMP, dwavefreq=WaveFreqBinWidth_TEMP)
+      !call icepack_init_wave(nfreq=nFrequencies, wave_spectrum_profile=WaveSpectrum_TEMP,&
+       !                      wavefreq=WaveFrequency_TEMP, dwavefreq=WaveFreqBinWidth_TEMP)
       !call mpas_log_write("Erin Thomas after icepack_init_wave test")
       
       do i = 1,nFrequencies      
@@ -7727,6 +7727,8 @@ contains
     type(MPAS_pool_type), pointer :: &
          tracers
 
+    real(kind=RKIND), dimension(:,:), pointer :: &
+         floeSizeDist
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          surfaceTemperature, &
          iceAge, &
@@ -7746,8 +7748,8 @@ contains
          snowIceMass, &
          snowLiquidMass, &
          snowGrainRadius, &
-         snowDensity, &
-         floeSizeDist
+         snowDensity!, &
+         !floeSizeDist
 
     integer :: &
          nTracers, &
@@ -7866,7 +7868,7 @@ contains
 
     ! floe size distribution
     if (config_use_floe_size_distribution) then
-       tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:) = floeSizeDist(:,:,iCell)
+       tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:) = floeSizeDist(:,iCell)
        nTracers = nTracers + nFloeCategories
     endif
     
@@ -8067,7 +8069,7 @@ contains
 
     ! floe size dist
     if (config_use_floe_size_distribution) then
-       floeSizeDist(:,:,iCell) = tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:)
+       floeSizeDist(:,iCell) = tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:)
        nTracers = nTracers + nFloeCategories
     endif
 

@@ -2714,12 +2714,12 @@
 		     units="kg m-3"
 		     packages="pkgColumnTracerEffectiveSnowDensity"
 		/>
-		<var name="FloeSizeDist"
+		<var name="floeSizeDist"
 		     type="real"
-		     dimensions="nFloeCategories nCells Time"
+		     dimensions="ONE nFloeCategories nCells Time"
 		     units=""
 		/>
-		<var name="FloeSizeDistCategory"
+		<var name="floeSizeDistCategory"
 		     type="real"
 		     dimensions="nFloeCategories nCategories nCells Time"
 		     units=""
