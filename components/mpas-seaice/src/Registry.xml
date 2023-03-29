@@ -2716,7 +2716,7 @@
 		/>
 		<var name="floeSizeDist"
 		     type="real"
-		     dimensions="ONE nFloeCategories nCells Time"
+		     dimensions="nFloeCategories nCells Time"
 		     units=""
 		/>
 		<var name="floeSizeDistCategory"

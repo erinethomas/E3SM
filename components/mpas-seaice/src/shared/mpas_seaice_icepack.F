@@ -612,7 +612,7 @@ contains
       !call mpas_log_write("Erin Thomas after icepack_init_wave test")
       
       do i = 1,nFrequencies      
-         call mpas_log_write('ERIN THOMAS after init wavefreq INDEX: $i, Freq: $r',,intArgs=(/i/),realArgs=(/WaveFrequency(i)/)) 
+         call mpas_log_write('ERIN THOMAS after init wavefreq INDEX: $i, Freq: $r',intArgs=(/i/),realArgs=(/WaveFrequency(i)/)) 
       end do
      ! do iCell =1, nCellsSolve  
          ! initalize coupled wave variables to zero        
@@ -3671,7 +3671,7 @@ contains
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          iceAreaCategory, & ! ice area fraction per category
-         TracerArrayCategory   ! tracer array
+         tracerArrayCategory   ! tracer array
     
     ! local
     logical :: &
