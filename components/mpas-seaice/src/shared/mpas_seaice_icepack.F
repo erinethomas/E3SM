@@ -395,7 +395,8 @@ contains
             icepack_init_fsd, &
             icepack_init_wave, &
             icepack_char_len_long, &
-            c0
+            c0, &
+            c1
 
     type(domain_type), intent(inout) :: domain
 
@@ -412,12 +413,13 @@ contains
     ! dimensions
     integer, pointer ::   &
          nCellsSolve,     &
-         nFloeCategories, &
-         nFrequencies
+         nFrequencies, &
+         nCategories, &
+         nFloeCategories
 
     !variables
     real(kind=RKIND), dimension(:), pointer :: &
-         FloeSizeBinLower,   &
+         FloeSizeBinLower,   & !ndim = nFloeCat
          FloeSizeBinCenter,  &
          FloeSizeBinWidth,   &
          FloeSizeFraction,   &
@@ -433,13 +435,17 @@ contains
          DFloeSizeWaves, &
          DFloeSizeWeld
 
-    real(kind=RKIND), dimension(:,:), pointer :: &
-         floeSizeDist
+    real(kind=RKIND), dimension(:,:,:), pointer :: &
+         iceAreaCategory, &
+         floeSizeDist !ndim = nFloeCat,nCat,NCells
 
     !local variables
     integer :: iCell
     character (len=35) :: c_fsd_range 
     character (len=icepack_char_len_long) :: ice_init_type
+    real, dimension(:) :: afsd_init
+    real, dimension(:,:) :: afsdn
+
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
     call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution",config_use_floe_size_distribution)
@@ -454,7 +460,7 @@ contains
        call MPAS_pool_get_dimension(mesh, "nCellsSolve", nCellsSolve)
        call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
        call MPAS_pool_get_dimension(block % dimensions, "nFrequencies", nFrequencies)
-
+       call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nCategories", nCategories)
 
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinLower", FloeSizeBinLower)
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
@@ -464,7 +470,9 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "WaveFreqBinWidth", WaveFreqBinWidth)
        call MPAS_pool_get_array(floe_size_distribution, "SignificantWaveHeight", SignificantWaveHeight)
        call MPAS_pool_get_array(floe_size_distribution, "WaveSpectrum", WaveSpectrum)
+       
        call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist)
+       call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
 
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeNewIce", DFloeSizeNewIce)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralGrowth", DFloeSizeLateralGrowth)
@@ -495,19 +503,30 @@ contains
        DFloeSizeWaves(:,:)       = c0   ! change in floe size distribution due to wave breaking
        DFloeSizeWeld(:,:)        = c0   ! change in floe size distribution due to welding
 
-             call mpas_log_write("Erin Thomas before icepack_init_fsd")
-       do iCell =1, nCellsSolve  
-          if (config_use_floe_size_distribution) then
-                   !! NOT SURE IF THIS IS THE CORRECT PLACE FOR THIS CALL:
-                   !! where do all the other variables in 'set_state_var' get initialized??
-                   !! variable of concern = afsd/trcrn  
-             call icepack_init_fsd(    &  
-                nfsd=nFloeCategories, &  ! number of floe size categories 
-                ice_ic=ice_init_type, &  ! method of ice cover initialization 
-                floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
-                floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
-                afsd=floeSizeDist(:,iCell))      !floe size distribution tracer 
-          endif
+       ! default: floes occupy the smallest floe size category in all thickness categories
+       afsdn(:,:) = c0
+       afsdn(1,:) = c1
+       floeSizeDist(:,:,:) = c0
+       floeSizeDist(1,:,:) = c1
+       call icepack_init_fsd(    &  
+            nfsd=nFloeCategories, &  ! number of floe size categories 
+            ice_ic=ice_init_type, &  ! method of ice cover initialization 
+            floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
+            floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
+            afsd=afsd)      !floe size distribution initalization tracer 
+
+       do iCell =1, nCellsSolve 
+          do iCategory =1,nCategories
+             do iFloeCategory = 1,nFloeCategories
+                if (iceAreaCategory(1,iCategory,iCell) > puny) afsdn(iFloeCategory,iCategory) = afsd(iFloeCategory)
+             enddo
+          enddo
+          call icepack_cleanup_fsd (ncat=nCategories, nfsd=nFloeCategories, afsdn) ! renormalize ??  
+          do iCategory =1,nCategories
+             do iFloeCategory = 1,nFloeCategories
+                floeSizeDist(iFloeCategory,iCategory,iCell) = afsdn(iFloeCategory,iCategory)
+             enddo
+          enddo
        enddo !iCell 
              call mpas_log_write("Erin Thomas after icepack_init_fsd")
 
@@ -3667,11 +3686,11 @@ contains
 
     real(kind=RKIND), dimension(:,:), pointer :: &
          waveSpectrum, & ! ocean surface wave spectrum as a function of frequency
-         d_afsd_wave ! change in fsd due to waves
+         DFloeSizeWaves , & ! change in fsd due to waves
+         tracerArrayCategory   ! tracer array
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
-         iceAreaCategory, & ! ice area fraction per category
-         tracerArrayCategory   ! tracer array
+         iceAreaCategory ! ice area fraction per category
     
     ! local
     logical :: &
@@ -7727,8 +7746,6 @@ contains
     type(MPAS_pool_type), pointer :: &
          tracers
 
-    real(kind=RKIND), dimension(:,:), pointer :: &
-         floeSizeDist
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          surfaceTemperature, &
          iceAge, &
@@ -7748,8 +7765,8 @@ contains
          snowIceMass, &
          snowLiquidMass, &
          snowGrainRadius, &
-         snowDensity!, &
-         !floeSizeDist
+         snowDensity, &
+         floeSizeDist
 
     integer :: &
          nTracers, &
@@ -7868,7 +7885,7 @@ contains
 
     ! floe size distribution
     if (config_use_floe_size_distribution) then
-       tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:) = floeSizeDist(:,iCell)
+       tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:) = floeSizeDist(:,:,iCell)
        nTracers = nTracers + nFloeCategories
     endif
     
@@ -8069,7 +8086,7 @@ contains
 
     ! floe size dist
     if (config_use_floe_size_distribution) then
-       floeSizeDist(:,iCell) = tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:)
+       floeSizeDist(:,:,iCell) = tracerArrayCategory(nTracers:nTracers+nFloeCategories-1,:)
        nTracers = nTracers + nFloeCategories
     endif
 
