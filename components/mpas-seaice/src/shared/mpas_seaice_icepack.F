@@ -398,6 +398,9 @@ contains
             c0, &
             c1
 
+    use seaice_constants, only: &
+         seaicePuny
+
     type(domain_type), intent(inout) :: domain
 
     type(block_type), pointer :: block
@@ -443,7 +446,7 @@ contains
     integer :: iCell
     character (len=35) :: c_fsd_range 
     character (len=icepack_char_len_long) :: ice_init_type
-    real, dimension(:) :: afsd_init
+    real, dimension(:) :: afsd
     real, dimension(:,:) :: afsdn
 
 
@@ -518,7 +521,7 @@ contains
        do iCell =1, nCellsSolve 
           do iCategory =1,nCategories
              do iFloeCategory = 1,nFloeCategories
-                if (iceAreaCategory(1,iCategory,iCell) > puny) afsdn(iFloeCategory,iCategory) = afsd(iFloeCategory)
+                if (iceAreaCategory(1,iCategory,iCell) > seaicePuny) afsdn(iFloeCategory,iCategory) = afsd(iFloeCategory)
              enddo
           enddo
           call icepack_cleanup_fsd (ncat=nCategories, nfsd=nFloeCategories, afsdn) ! renormalize ??  
@@ -6521,7 +6524,7 @@ contains
 
     liquidusTemperature = colpkg_liquidus_temperature(salinity)
 
-  end function seaice_icepack_liquidus_temperature
+  end funcseaice_init_icepack_constantstion seaice_icepack_liquidus_temperature
 
   !-----------------------------------------------------------------------
 
