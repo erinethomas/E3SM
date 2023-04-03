@@ -393,7 +393,7 @@ contains
     use icepack_intfc, only: &
             icepack_init_fsd_bounds, &
             icepack_init_fsd, &
-            icepack_init_wave, &
+            icepack_cleanup_fsd, &
             icepack_char_len_long, &
             c0, &
             c1
@@ -428,7 +428,8 @@ contains
          FloeSizeFraction,   &
          WaveFrequency,      &
          WaveFreqBinWidth, &
-         SignificantWaveHeight
+         SignificantWaveHeight, &
+         FloeDist
 
     real(kind=RKIND), dimension(:,:), pointer :: &
          WaveSpectrum, &
@@ -436,19 +437,17 @@ contains
          DFloeSizeLateralGrowth, &
          DFloeSizeLateralMelt, &
          DFloeSizeWaves, &
-         DFloeSizeWeld
+         DFloeSizeWeld, &
+         FloeDistCat
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          iceAreaCategory, &
          floeSizeDist !ndim = nFloeCat,nCat,NCells
 
     !local variables
-    integer :: iCell
+    integer :: iCell, iCategory, iFloeCategory
     character (len=35) :: c_fsd_range 
     character (len=icepack_char_len_long) :: ice_init_type
-    real, dimension(:) :: afsd
-    real, dimension(:,:) :: afsdn
-
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
     call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution",config_use_floe_size_distribution)
@@ -507,8 +506,8 @@ contains
        DFloeSizeWeld(:,:)        = c0   ! change in floe size distribution due to welding
 
        ! default: floes occupy the smallest floe size category in all thickness categories
-       afsdn(:,:) = c0
-       afsdn(1,:) = c1
+       FloeDistCat(:,:) = c0
+       FloeDistCat(1,:) = c1
        floeSizeDist(:,:,:) = c0
        floeSizeDist(1,:,:) = c1
        call icepack_init_fsd(    &  
@@ -516,22 +515,24 @@ contains
             ice_ic=ice_init_type, &  ! method of ice cover initialization 
             floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
             floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
-            afsd=afsd)      !floe size distribution initalization tracer 
+            afsd=FloeDist)      !floe size distribution initalization tracer 
 
        do iCell =1, nCellsSolve 
           do iCategory =1,nCategories
              do iFloeCategory = 1,nFloeCategories
-                if (iceAreaCategory(1,iCategory,iCell) > seaicePuny) afsdn(iFloeCategory,iCategory) = afsd(iFloeCategory)
+                if (iceAreaCategory(1,iCategory,iCell) > seaicePuny) FloeDistCat(iFloeCategory,iCategory) = FloeDist(iFloeCategory)
              enddo
           enddo
-          call icepack_cleanup_fsd (ncat=nCategories, nfsd=nFloeCategories, afsdn) ! renormalize ??  
+
+          call icepack_cleanup_fsd(nCategories, nFloeCategories, FloeDistCat) ! renormalize ??  
+          
           do iCategory =1,nCategories
              do iFloeCategory = 1,nFloeCategories
-                floeSizeDist(iFloeCategory,iCategory,iCell) = afsdn(iFloeCategory,iCategory)
+                floeSizeDist(iFloeCategory,iCategory,iCell) = FloeDistCat(iFloeCategory,iCategory)
              enddo
           enddo
        enddo !iCell 
-             call mpas_log_write("Erin Thomas after icepack_init_fsd")
+       call mpas_log_write("Erin Thomas after icepack_init_fsd")
 
        if (config_use_column_waves) then   
               call icepack_init_wave(nfreq=nFrequencies,      &
@@ -6524,7 +6525,7 @@ contains
 
     liquidusTemperature = colpkg_liquidus_temperature(salinity)
 
-  end funcseaice_init_icepack_constantstion seaice_icepack_liquidus_temperature
+  end function seaice_icepack_liquidus_temperature
 
   !-----------------------------------------------------------------------
 
