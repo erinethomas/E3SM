@@ -483,12 +483,38 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWeld", DFloeSizeWeld)
 
 
-       if (config_use_floe_size_distribution) then
-          call mpas_log_write("Erin Thomas before icepack_init_fsd_bounds")
-          call icepack_init_fsd_bounds(   &
-             nfsd=nFloeCategories,        &  ! number of floe size categories
-             floe_rad_l=FloeSizeBinLower(:),        &  ! fsd size lower bound in m (radius)
-             floe_rad_c=FloeSizeBinCenter(:),        &  ! fsd size bin centre in m (radius)
+       call mpas_log_write("Erin Thomas before icepack_init_fsd_bounds")
+       call icepack_init_fsd_bounds(   &
+          nfsd=nFloeCategories,        &  ! number of floe size categories
+          floe_rad_l=FloeSizeBinLower(:),        &  ! fsd size lower bound in m (radius)
+          floe_rad_c=FloeSizeBinCenter(:),        &  ! fsd size bin centre in m (radius)
+          floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
+          c_fsd_range=c_fsd_range)        ! string for history output: fsd floe_rad bounds (m)
+       call mpas_log_write("Erin Thomas after icepack_init_fsd_bounds", c_fsd_range)
+       
+       if (trim(runtype) == 'continue') restart_fsd = .true.
+       
+       if (restart_fsd) then
+            ! initalize vars from restart file??? 
+       else ! initalize vars for cold start/hybrid start runs 
+
+          ! initalize floe size distribution tracers
+          DFloeSizeNewIce(:,:)      = c0   ! change in floe size distribution due to new ice
+          DFloeSizeLateralGrowth(:,:) = c0 ! change in floe size distribution due to lateral growth
+          DFloeSizeLateralMelt(:,:) = c0   ! change in floe size distribution due to lateral melt
+          DFloeSizeWeld(:,:)        = c0   ! change in floe size distribution due to welding
+          DFloeSizeWaves(:,:)       = c0   ! change in floe size distribution due to wave breaking
+
+          ! default: floes occupy the smallest floe size category in all thickness categories
+          FloeDistCat(:,:) = c0
+          FloeDistCat(1,:) = c1
+          floeSizeDist(:,:,:) = c0
+          floeSizeDist(1,:,:) = c1
+
+          call icepack_init_fsd(    &  
+             nfsd=nFloeCategories, &  ! number of floe size categories 
+             ice_ic=ice_init_type, &  ! method of ice cover initialization 
+             floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
              floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
              c_fsd_range=c_fsd_range)        ! string for history output: fsd floe_rad bounds (m)
        endif
@@ -522,17 +548,14 @@ contains
              do iFloeCategory = 1,nFloeCategories
                 if (iceAreaCategory(1,iCategory,iCell) > seaicePuny) FloeDistCat(iFloeCategory,iCategory) = FloeDist(iFloeCategory)
              enddo
-          enddo
-
-          call icepack_cleanup_fsd(nCategories, nFloeCategories, FloeDistCat) ! renormalize ??  
-          
-          do iCategory =1,nCategories
-             do iFloeCategory = 1,nFloeCategories
-                floeSizeDist(iFloeCategory,iCategory,iCell) = FloeDistCat(iFloeCategory,iCategory)
+             call icepack_cleanup_fsd(nCategories, nFloeCategories, FloeDistCat) ! renormalize ?? 
+             do iCategory =1,nCategories
+                do iFloeCategory = 1,nFloeCategories
+                   floeSizeDist(iFloeCategory,iCategory,iCell) = FloeDistCat(iFloeCategory,iCategory)
+                enddo
              enddo
-          enddo
-       enddo !iCell 
-       call mpas_log_write("Erin Thomas after icepack_init_fsd")
+          enddo !iCell
+       endif ! restart variable initalization   
 
        if (config_use_column_waves) then   
               call icepack_init_wave(nfreq=nFrequencies,      &
@@ -629,21 +652,15 @@ contains
                               WaveFrequency, &
                               WaveFreqBinWidth)
       call mpas_log_write("Erin Thomas after shr_calc_wave")
-      ! test if icepack wavefreq init is same as WW3 freq: 
-      !call icepack_init_wave(nfreq=nFrequencies, wave_spectrum_profile=WaveSpectrum_TEMP,&
-       !                      wavefreq=WaveFrequency_TEMP, dwavefreq=WaveFreqBinWidth_TEMP)
-      !call mpas_log_write("Erin Thomas after icepack_init_wave test")
       
       do i = 1,nFrequencies      
          call mpas_log_write('ERIN THOMAS after init wavefreq INDEX: $i, Freq: $r',intArgs=(/i/),realArgs=(/WaveFrequency(i)/)) 
       end do
-     ! do iCell =1, nCellsSolve  
-         ! initalize coupled wave variables to zero        
-         SignificantWaveHeight(:) = c0   
-         WaveSpectrum(:,:)        = c0
-     ! enddo
-      block => block % next
     
+      SignificantWaveHeight(:) = c0   
+      WaveSpectrum(:,:)        = c0
+      
+      block => block % next
     end do !block
 
   end subroutine init_column_waves
