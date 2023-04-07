@@ -397,7 +397,6 @@ contains
             icepack_char_len_long, &
             c0, &
             c1
-
     use seaice_constants, only: &
          seaicePuny
 
@@ -445,7 +444,7 @@ contains
          floeSizeDist !ndim = nFloeCat,nCat,NCells
 
     !local variables
-    integer :: iCell, iCategory, iFloeCategory
+    integer :: i,iCell, iCategory, iFloeCategory
     character (len=35) :: c_fsd_range 
     character (len=icepack_char_len_long) :: ice_init_type
 
@@ -458,6 +457,7 @@ contains
     do while (associated(block))
        call MPAS_pool_get_subpool(block % structs, "mesh", mesh)       
        call MPAS_pool_get_subpool(block % structs, "floe_size_distribution", floe_size_distribution)
+       call MPAS_pool_get_subpool(block % structs, "tracers", tracers)
        
        call MPAS_pool_get_dimension(mesh, "nCellsSolve", nCellsSolve)
        call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
@@ -484,15 +484,19 @@ contains
 
 
        call mpas_log_write("Erin Thomas before icepack_init_fsd_bounds")
+
        call icepack_init_fsd_bounds(   &
           nfsd=nFloeCategories,        &  ! number of floe size categories
           floe_rad_l=FloeSizeBinLower(:),        &  ! fsd size lower bound in m (radius)
           floe_rad_c=FloeSizeBinCenter(:),        &  ! fsd size bin centre in m (radius)
           floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
           c_fsd_range=c_fsd_range)        ! string for history output: fsd floe_rad bounds (m)
-       call mpas_log_write("Erin Thomas after icepack_init_fsd_bounds", c_fsd_range)
        
-       if (trim(runtype) == 'continue') restart_fsd = .true.
+       call mpas_log_write("Erin Thomas after icepack_init_fsd_bounds"//trim(c_fsd_range))
+       do i = 1,nFloeCategories      
+          call mpas_log_write('Erin Thomas TEST: floe category INDEX: $i, FlowBincenter: $r', &
+                                   intArgs=(/i/), realArgs=(/FloeSizeBinCenter(i)/)) 
+       end do
        
        if (restart_fsd) then
             ! initalize vars from restart file??? 
@@ -536,33 +540,28 @@ contains
        FloeDistCat(1,:) = c1
        floeSizeDist(:,:,:) = c0
        floeSizeDist(1,:,:) = c1
+       
        call icepack_init_fsd(    &  
             nfsd=nFloeCategories, &  ! number of floe size categories 
             ice_ic=ice_init_type, &  ! method of ice cover initialization 
             floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
             floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
             afsd=FloeDist)      !floe size distribution initalization tracer 
+       call mpas_log_write("Erin Thomas after icepack_init_fsd")
 
        do iCell =1, nCellsSolve 
           do iCategory =1,nCategories
              do iFloeCategory = 1,nFloeCategories
                 if (iceAreaCategory(1,iCategory,iCell) > seaicePuny) FloeDistCat(iFloeCategory,iCategory) = FloeDist(iFloeCategory)
              enddo
-             call icepack_cleanup_fsd(nCategories, nFloeCategories, FloeDistCat) ! renormalize ?? 
-             do iCategory =1,nCategories
-                do iFloeCategory = 1,nFloeCategories
-                   floeSizeDist(iFloeCategory,iCategory,iCell) = FloeDistCat(iFloeCategory,iCategory)
-                enddo
+          enddo
+          call icepack_cleanup_fsd(nCategories, nFloeCategories, FloeDistCat) ! renormalize ?? 
+          do iCategory =1,nCategories
+             do iFloeCategory = 1,nFloeCategories
+                floeSizeDist(iFloeCategory,iCategory,iCell) = FloeDistCat(iFloeCategory,iCategory)
              enddo
-          enddo !iCell
-       endif ! restart variable initalization   
-
-       if (config_use_column_waves) then   
-              call icepack_init_wave(nfreq=nFrequencies,      &
-                 wavefreq=WaveFrequency(:), &
-                 dwavefreq=WaveFreqBinWidth)
-
-       endif !use_column_waves 
+          enddo
+       enddo !iCell
 
        block => block % next
     
@@ -3700,6 +3699,7 @@ contains
     real(kind=RKIND), dimension(:), pointer :: &
          iceAreaCell, & ! ice area fraction
          iceVolumeCell, & ! ice volume per unit area
+<<<<<<< HEAD
          floeSizeBinLower, & ! fsd size bin lower bound in m (radius)
          floeSizeBinCenter, & ! fsd size bin center in m (radius)
          waveFrequencies, & ! wave frequencies
@@ -3709,6 +3709,18 @@ contains
          waveSpectrum, & ! ocean surface wave spectrum as a function of frequency
          DFloeSizeWaves , & ! change in fsd due to waves
          tracerArrayCategory   ! tracer array
+=======
+         FloeSizeBinLower, & ! fsd size bin lower bound in m (radius)
+         FloeSizeBinCenter, & ! fsd size bin center in m (radius)
+         WaveFrequency, & ! wave frequencies
+         WaveFreqBinWidth   ! wave frequency bin widths
+
+
+    real(kind=RKIND), dimension(:,:), pointer :: &
+         WaveSpectrum, & ! ocean surface wave spectrum as a function of frequency
+         DFloeSizeWaves !, & ! change in fsd due to waves
+         !tracerArrayCategory   ! tracer array
+>>>>>>> 6c1a72b414... minor corrections to match variable names in registry.
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          iceAreaCategory ! ice area fraction per category
@@ -3770,11 +3782,11 @@ contains
                   aice = iceAreaCell(iCell), &
                   vice = iceVolumeCell(iCell), &
                   aicen = iceAreaCategory(1,:,iCell), &
-                  floe_rad_l = floeSizeBinLower(:), &
-                  floe_rad_c = floeSizeBinCenter(:), &
-                  wave_spectrum = waveSpectrum(:,iCell), &
-                  wavefreq = waveFrequency(:), &
-                  dwavefreq = waveFreqBinWidth(:), &
+                  floe_rad_l = FloeSizeBinLower(:), &
+                  floe_rad_c = FloeSizeBinCenter(:), &
+                  wave_spectrum = WaveSpectrum(:,iCell), &
+                  wavefreq = WaveFrequency(:), &
+                  dwavefreq = WaveFreqBinWidth(:), &
                   trcrn = tracerArrayCategory, &
                   d_afsd_wave = DFloeSizeWaves(:,iCell))
           
