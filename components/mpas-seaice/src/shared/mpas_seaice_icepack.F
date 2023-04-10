@@ -473,7 +473,7 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "SignificantWaveHeight", SignificantWaveHeight)
        call MPAS_pool_get_array(floe_size_distribution, "WaveSpectrum", WaveSpectrum)
        
-       call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist)
+       call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist,1)
        call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
 
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeNewIce", DFloeSizeNewIce)
@@ -494,7 +494,7 @@ contains
        
        call mpas_log_write("Erin Thomas after icepack_init_fsd_bounds"//trim(c_fsd_range))
        do i = 1,nFloeCategories      
-          call mpas_log_write('Erin Thomas TEST: floe category INDEX: $i, FlowBincenter: $r', &
+          call mpas_log_write('Erin Thomas TEST: floe category INDEX: $i, FloeBincenter: $r', &
                                    intArgs=(/i/), realArgs=(/FloeSizeBinCenter(i)/)) 
        end do
        
@@ -542,12 +542,15 @@ contains
        floeSizeDist(1,:,:) = c1
        
        call icepack_init_fsd(    &  
-            nfsd=nFloeCategories, &  ! number of floe size categories 
-            ice_ic=ice_init_type, &  ! method of ice cover initialization 
-            floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
-            floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
-            afsd=FloeDist)      !floe size distribution initalization tracer 
-       call mpas_log_write("Erin Thomas after icepack_init_fsd")
+          nfsd=nFloeCategories, &  ! number of floe size categories 
+          ice_ic=ice_init_type, &  ! method of ice cover initialization 
+          floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
+          floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
+          afsd=FloeDist)      !floe size distribution initalization tracer 
+       do i = 1,nFloeCategories      
+          call mpas_log_write('Erin Thomas TEST: floe category INDEX: $i, FloeDist: $r', &
+                                   intArgs=(/i/), realArgs=(/FloeDist(i)/)) 
+       end do
 
        do iCell =1, nCellsSolve 
           do iCategory =1,nCategories
@@ -562,6 +565,7 @@ contains
              enddo
           enddo
        enddo !iCell
+       call mpas_log_write("Erin Thomas: end of init_column_fsd subroutine")
 
        block => block % next
     
@@ -3699,17 +3703,6 @@ contains
     real(kind=RKIND), dimension(:), pointer :: &
          iceAreaCell, & ! ice area fraction
          iceVolumeCell, & ! ice volume per unit area
-<<<<<<< HEAD
-         floeSizeBinLower, & ! fsd size bin lower bound in m (radius)
-         floeSizeBinCenter, & ! fsd size bin center in m (radius)
-         waveFrequencies, & ! wave frequencies
-         waveFreqBinWidths ! wave frequency bin widths
-
-    real(kind=RKIND), dimension(:,:), pointer :: &
-         waveSpectrum, & ! ocean surface wave spectrum as a function of frequency
-         DFloeSizeWaves , & ! change in fsd due to waves
-         tracerArrayCategory   ! tracer array
-=======
          FloeSizeBinLower, & ! fsd size bin lower bound in m (radius)
          FloeSizeBinCenter, & ! fsd size bin center in m (radius)
          WaveFrequency, & ! wave frequencies
@@ -3720,7 +3713,6 @@ contains
          WaveSpectrum, & ! ocean surface wave spectrum as a function of frequency
          DFloeSizeWaves !, & ! change in fsd due to waves
          !tracerArrayCategory   ! tracer array
->>>>>>> 6c1a72b414... minor corrections to match variable names in registry.
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          iceAreaCategory ! ice area fraction per category
@@ -7415,7 +7407,7 @@ contains
     ! Floe size distribution
     if (config_use_floe_size_distribution) then
        do iFloeSize = 1, nFloeCategories
-          tracerObject % parentIndex(tracerObject % index_floeSizeDist + iFloeSize - 1) = 1 ! WHAT VALUE SHOULD THIS BE SET TO ????
+          tracerObject % parentIndex(tracerObject % index_floeSizeDist + iFloeSize - 1) = 0
        enddo ! iFloeSize
     endif
 

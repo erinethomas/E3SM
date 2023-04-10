@@ -955,7 +955,7 @@ Default: Defined in namelist_defaults.xml
 
 <entry id="config_xfreq" type="real"
 	category="wave_config" group="wave_config">
-Frequency mulitpilcation factor used by the wave model.
+Frequency multiplication factor used by the wave model.
 Default: Defined in namelist_defaults.xml
 </entry>
 
