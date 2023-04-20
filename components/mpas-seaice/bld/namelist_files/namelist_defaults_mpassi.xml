@@ -168,14 +168,14 @@
 <config_recover_tracer_means_check>false</config_recover_tracer_means_check>
 
 <!-- column_package -->
-<config_column_physics_type>'icepack'</config_column_physics_type>
+<config_column_physics_type>'column_package'</config_column_physics_type>
 <config_use_column_shortwave>true</config_use_column_shortwave>
 <config_use_column_vertical_thermodynamics>true</config_use_column_vertical_thermodynamics>
 <config_use_column_biogeochemistry>false</config_use_column_biogeochemistry>
 <config_use_column_itd_thermodynamics>true</config_use_column_itd_thermodynamics>
 <config_use_column_itd_thermodynamics prognostic_mode="prescribed">false</config_use_column_itd_thermodynamics>
 <config_use_column_ridging>true</config_use_column_ridging>
-<config_use_column_snow_tracers>false</config_use_column_snow_tracers>
+<config_use_column_snow_tracers>true</config_use_column_snow_tracers>
 
 <!-- column_tracers -->
 <config_use_ice_age>true</config_use_ice_age>
@@ -185,13 +185,13 @@
 <config_use_level_meltponds>true</config_use_level_meltponds>
 <config_use_topo_meltponds>false</config_use_topo_meltponds>
 <config_use_aerosols>false</config_use_aerosols>
-<config_use_effective_snow_density>false</config_use_effective_snow_density>
-<config_use_snow_grain_radius>false</config_use_snow_grain_radius>
+<config_use_effective_snow_density>true</config_use_effective_snow_density>
+<config_use_snow_grain_radius>true</config_use_snow_grain_radius>
 <config_use_special_boundaries_tracers>false</config_use_special_boundaries_tracers>
 <config_use_floe_size_distribution>true</config_use_floe_size_distribution>
 
 <!-- wave_config -->
-<config_use_column_waves>true</config_use_column_waves>
+<config_use_column_waves>false</config_use_column_waves>
 <config_xfreq>0.0</config_xfreq>
 <config_freq1>0.0</config_freq1>
 
@@ -344,7 +344,7 @@
 <!-- shortwave -->
 <config_shortwave_type>'dEdd'</config_shortwave_type>
 <config_albedo_type>'ccsm3'</config_albedo_type>
-<config_use_snicar_ad>false</config_use_snicar_ad>
+<config_use_snicar_ad>true</config_use_snicar_ad>
 <config_visible_ice_albedo>0.78</config_visible_ice_albedo>
 <config_infrared_ice_albedo>0.36</config_infrared_ice_albedo>
 <config_visible_snow_albedo>0.98</config_visible_snow_albedo>
@@ -360,7 +360,7 @@
 <!-- snow -->
 <config_snow_redistribution_scheme>'ITDrdg'</config_snow_redistribution_scheme>
 <config_fallen_snow_radius>54.526</config_fallen_snow_radius>
-<config_use_snow_liquid_ponds>false</config_use_snow_liquid_ponds>
+<config_use_snow_liquid_ponds>true</config_use_snow_liquid_ponds>
 <config_new_snow_density>100.0</config_new_snow_density>
 <config_max_snow_density>450.0</config_max_snow_density>
 <config_minimum_wind_compaction>10.0</config_minimum_wind_compaction>

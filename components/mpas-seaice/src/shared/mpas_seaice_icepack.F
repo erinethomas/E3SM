@@ -485,23 +485,13 @@ contains
 
        call mpas_log_write("Erin Thomas before icepack_init_fsd_bounds")
 
-       call icepack_init_fsd_bounds(   &
-          nfsd=nFloeCategories,        &  ! number of floe size categories
-          floe_rad_l=FloeSizeBinLower(:),        &  ! fsd size lower bound in m (radius)
-          floe_rad_c=FloeSizeBinCenter(:),        &  ! fsd size bin centre in m (radius)
+       call icepack_init_fsd_bounds(          &
+          nfsd=nFloeCategories,               &  ! number of floe size categories
+          floe_rad_l=FloeSizeBinLower(:),     &  ! fsd size lower bound in m (radius)
+          floe_rad_c=FloeSizeBinCenter(:),    &  ! fsd size bin centre in m (radius)
           floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
-          c_fsd_range=c_fsd_range)        ! string for history output: fsd floe_rad bounds (m)
+          c_fsd_range=c_fsd_range)               ! string for history output: fsd floe_rad bounds (m)
        
-       call mpas_log_write("Erin Thomas after icepack_init_fsd_bounds"//trim(c_fsd_range))
-       do i = 1,nFloeCategories      
-          call mpas_log_write('Erin Thomas TEST: floe category INDEX: $i, FloeBincenter: $r', &
-                                   intArgs=(/i/), realArgs=(/FloeSizeBinCenter(i)/)) 
-       end do
-       
-       if (restart_fsd) then
-            ! initalize vars from restart file??? 
-       else ! initalize vars for cold start/hybrid start runs 
-
           ! initalize floe size distribution tracers
           DFloeSizeNewIce(:,:)      = c0   ! change in floe size distribution due to new ice
           DFloeSizeLateralGrowth(:,:) = c0 ! change in floe size distribution due to lateral growth
@@ -515,38 +505,13 @@ contains
           floeSizeDist(:,:,:) = c0
           floeSizeDist(1,:,:) = c1
 
-          call icepack_init_fsd(    &  
-             nfsd=nFloeCategories, &  ! number of floe size categories 
-             ice_ic=ice_init_type, &  ! method of ice cover initialization 
-             floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
-             floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
-             c_fsd_range=c_fsd_range)        ! string for history output: fsd floe_rad bounds (m)
-       endif
-          call mpas_log_write("Erin Thomas after icepack_init_fsd_bounds")
-
-       ! initalize floe size distribution tracers
-       WaveFrequency(:)          = c0   ! wave frequencies 
-       WaveFreqBinWidth(:)       = c0   ! wave frequency bin widths
-       SignificantWaveHeight(:)  = c0   ! significant height of waves (m)
-       WaveSpectrum(:,:)         = c0   ! wave spectrum
-       DFloeSizeNewIce(:,:)      = c0   ! change in floe size distribution due to new ice
-       DFloeSizeLateralGrowth(:,:) = c0 ! change in floe size distribution due to lateral growth
-       DFloeSizeLateralMelt(:,:) = c0   ! change in floe size distribution due to lateral melt
-       DFloeSizeWaves(:,:)       = c0   ! change in floe size distribution due to wave breaking
-       DFloeSizeWeld(:,:)        = c0   ! change in floe size distribution due to welding
-
-       ! default: floes occupy the smallest floe size category in all thickness categories
-       FloeDistCat(:,:) = c0
-       FloeDistCat(1,:) = c1
-       floeSizeDist(:,:,:) = c0
-       floeSizeDist(1,:,:) = c1
+       call icepack_init_fsd(                &  
+          nfsd=nFloeCategories,              & ! number of floe size categories 
+          ice_ic=ice_init_type,              & ! method of ice cover initialization 
+          floe_rad_c=FloeSizeBinCenter(:),   & ! fsd size bin centre in m (radius)
+          floe_binwidth=FloeSizeBinWidth(:), & ! fsd size bin width in m (radius)
+          afsd=FloeDist)                       !floe size distribution initalization tracer 
        
-       call icepack_init_fsd(    &  
-          nfsd=nFloeCategories, &  ! number of floe size categories 
-          ice_ic=ice_init_type, &  ! method of ice cover initialization 
-          floe_rad_c=FloeSizeBinCenter(:), & ! fsd size bin centre in m (radius)
-          floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
-          afsd=FloeDist)      !floe size distribution initalization tracer 
        do i = 1,nFloeCategories      
           call mpas_log_write('Erin Thomas TEST: floe category INDEX: $i, FloeDist: $r', &
                                    intArgs=(/i/), realArgs=(/FloeDist(i)/)) 
@@ -562,6 +527,8 @@ contains
           do iCategory =1,nCategories
              do iFloeCategory = 1,nFloeCategories
                 floeSizeDist(iFloeCategory,iCategory,iCell) = FloeDistCat(iFloeCategory,iCategory)
+                call mpas_log_write('Erin Thomas TEST: FLOESIZEDIST: $r', &
+                                      realArgs=(/FloeSizeDist(iFloeCategory,iCategory,iCell)/)) 
              enddo
           enddo
        enddo !iCell
