@@ -1195,7 +1195,6 @@ CONTAINS
     integer(SHR_KIND_IN),   optional, intent(OUT) :: wav_ny
     integer(SHR_KIND_IN),   optional, intent(OUT) :: iac_nx
     integer(SHR_KIND_IN),   optional, intent(OUT) :: iac_ny
-
     real(SHR_KIND_R8),      optional, intent(OUT) :: nextsw_cday             ! calendar of next atm shortwave
     real(SHR_KIND_R8),      optional, intent(OUT) :: precip_fact             ! precip factor
     real(SHR_KIND_R8),      optional, intent(OUT) :: flux_epbalfact          ! adjusted precip factor
@@ -1214,7 +1213,6 @@ CONTAINS
     character(SHR_KIND_CL), optional, intent(OUT) :: model_doi_url
     logical,                optional, intent(OUT) :: glc_valid_input
     
-
     !----- local -----
     character(len=*), parameter :: subname = '(seq_infodata_GetData_explicit) '
 
@@ -1380,7 +1378,6 @@ CONTAINS
     if ( present(wav_ny)         ) wav_ny         = infodata%wav_ny
     if ( present(iac_nx)         ) iac_nx         = infodata%iac_nx
     if ( present(iac_ny)         ) iac_ny         = infodata%iac_ny
-
     if ( present(nextsw_cday)    ) nextsw_cday    = infodata%nextsw_cday
     if ( present(precip_fact)    ) precip_fact    = infodata%precip_fact
     if ( present(flux_epbalfact) ) then
@@ -1927,7 +1924,6 @@ CONTAINS
     if ( present(wav_ny)         ) infodata%wav_ny         = wav_ny
     if ( present(iac_nx)         ) infodata%iac_nx         = iac_nx
     if ( present(iac_ny)         ) infodata%iac_ny         = iac_ny
-
     if ( present(nextsw_cday)    ) infodata%nextsw_cday    = nextsw_cday
     if ( present(precip_fact)    ) infodata%precip_fact    = precip_fact
     if ( present(atm_phase)      ) infodata%atm_phase      = atm_phase
@@ -2234,7 +2230,6 @@ CONTAINS
     call shr_mpi_bcast(infodata%wav_ny,                  mpicom)
     call shr_mpi_bcast(infodata%iac_nx,                  mpicom)
     call shr_mpi_bcast(infodata%iac_ny,                  mpicom)
-
     call shr_mpi_bcast(infodata%nextsw_cday,             mpicom)
     call shr_mpi_bcast(infodata%precip_fact,             mpicom)
     call shr_mpi_bcast(infodata%atm_phase,               mpicom)
@@ -2250,7 +2245,6 @@ CONTAINS
     call shr_mpi_bcast(infodata%glc_valid_input,         mpicom)
     call shr_mpi_bcast(infodata%model_doi_url,           mpicom)
     call shr_mpi_bcast(infodata%constant_zenith_deg,     mpicom)
-    
 
   end subroutine seq_infodata_bcast
 

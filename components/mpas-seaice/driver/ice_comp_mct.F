@@ -212,8 +212,6 @@ contains
     real(kind=RKIND), pointer :: &
          dayOfNextShortwaveCalculation ! needed for CESM like coupled simulations
 
-    logical, pointer :: wav_present
-
     interface
        subroutine xml_stream_parser(xmlname, mgr_p, comm, ierr) bind(c)
           use iso_c_binding, only : c_char, c_ptr, c_int
@@ -688,7 +686,6 @@ contains
 !
 !-----------------------------------------------------------------------
 
-
     ! set ice_cpl_dt (coupling interval in integer seconds) from the EClock
     call seq_timemgr_EClockGetData(EClock, dtime=ice_cpl_dt)
     ! convert this dt to a time interval
@@ -740,6 +737,7 @@ contains
 
     ! Coupling prep
     call seaice_column_coupling_prep(domain)
+
 
 !-----------------------------------------------------------------------
 !
@@ -1068,7 +1066,6 @@ contains
       call shr_file_getLogUnit (shrlogunit)
       call shr_file_getLogLevel(shrloglev)
       call shr_file_setLogUnit (iceLogUnit)
-
 
       ! reinitialize fluxes
       call seaice_column_reinitialize_fluxes(domain)
