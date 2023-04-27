@@ -168,7 +168,7 @@
 
       use ww3_cpl_indices  , only : ww3_cpl_indices_set
       use ww3_cpl_indices  , only : index_x2w_Sa_u, index_x2w_Sa_v, index_x2w_Sa_tbot, & 
-                                    index_x2w_Si_ifrac, index_x2w_Si_ithick!, index_x2w_Si_ifloe 
+                                    index_x2w_Si_ifrac, index_x2w_Si_ithick, index_x2w_Si_ifloe 
       use ww3_cpl_indices  , only : index_x2w_So_t, index_x2w_So_u, index_x2w_So_v, index_x2w_So_bldepth, index_x2w_So_ssh
       use ww3_cpl_indices  , only : index_w2x_Sw_ustokes_wavenumber_1, index_w2x_Sw_vstokes_wavenumber_1, &
                                     index_w2x_Sw_ustokes_wavenumber_2, index_w2x_Sw_vstokes_wavenumber_2, &
@@ -177,6 +177,7 @@
                                     index_w2x_Sw_ustokes_wavenumber_5, index_w2x_Sw_vstokes_wavenumber_5, &
                                     index_w2x_Sw_ustokes_wavenumber_6, index_w2x_Sw_vstokes_wavenumber_6, &
                                     index_w2x_Sw_Hs, index_w2x_Sw_Fp, index_w2x_Sw_Dp
+      use ww3_cpl_indices  , only : index_w2x_Sw_wavespec
 
 
       use shr_sys_mod      , only : shr_sys_flush, shr_sys_abort
@@ -1175,8 +1176,7 @@ CONTAINS
          if (inflags1(4)) then
             ICEI(IX,IY) = x2w0%rattr(index_x2w_Si_ifrac,gindex)
             ICEP1(IX,IY) = x2w0%rattr(index_x2w_Si_ithick,gindex)
-            !ICEP5(IX,IY) = x2w0%rattr(index_x2w_Si_ifloe,gindex)
-
+            ICEP5(IX,IY) = x2w0%rattr(index_x2w_Si_ifloe,gindex)
          endif
 
       enddo
@@ -1203,7 +1203,8 @@ CONTAINS
              w2x_w%rattr(index_w2x_Sw_Hs,jsea) = HS(jsea)
              w2x_w%rattr(index_w2x_Sw_Fp,jsea) = FP0(jsea)
              w2x_w%rattr(index_w2x_Sw_Dp,jsea) = THP0(jsea)
-             !w2x_w%rattr(index_w2x_Sw_wavespec) = EF(jsea,:)
+             ! Erin Thomas : wave spectra should be summed over all direction befopre sending to ice model
+             w2x_w%rattr(index_w2x_Sw_wavespec,jsea) = EF(jsea,:)
 
 
              w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = USSP(jsea,1)
@@ -1226,7 +1227,7 @@ CONTAINS
           else
 
              w2x_w%rattr(index_w2x_Sw_Hs,jsea) = 0.0
-             !w2x_w%rattr(index_w2x_Sw_wavespec,jsea) = 0.0
+             w2x_w%rattr(index_w2x_Sw_wavespec,jsea) = 0.0
             
              w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = 0.0
              w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = 0.0

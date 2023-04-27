@@ -2097,6 +2097,24 @@ contains
     units    = 'm'
     attname  = 'Si_ithick'
     call metadata_set(attname, longname, stdname, units)
+    
+    ! Sea ice floe Size
+    call seq_flds_add(i2x_states,"Si_ifloe")
+    call seq_flds_add(x2w_states,"Si_ifloe")
+    longname = 'Sea ice floe size'
+    stdname  = 'sea_ice_floe_size'
+    units    = 'm'
+    attname  = 'Si_ifloe'
+    call metadata_set(attname, longname, stdname, units)
+    
+    ! Wave spectra
+    call seq_flds_add(w2x_states,'Sw_wavespec')
+    call seq_flds_add(x2i_states,'Sw_wavespec')
+    longname = 'Wave Spectra'
+    stdname  = 'wave_specrta'
+    units    = ''
+    attname  = 'Sw_wavespec'
+    call metadata_set(attname, longname, stdname, units)
 
 
     !-----------------------------
@@ -2516,6 +2534,7 @@ contains
 
     call seq_flds_add(w2x_states,'Sw_Hs')
     call seq_flds_add(x2o_states,'Sw_Hs')
+    call seq_flds_add(x2i_states,'Sw_Hs')
     longname = 'Significant wave height'
     stdname  = 'significant_wave_height'
     units    = 'm'

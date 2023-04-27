@@ -1844,8 +1844,8 @@ contains
       oceanZAerosolConcField,           &
       atmosAerosolFluxField,            &
       atmosBlackCarbonFluxField,        &
-      atmosDustFluxField!,               &
-      !waveSpectraField
+      atmosDustFluxField,               &
+      waveSpectraField
 
    real (kind=RKIND), dimension(:), pointer :: &
       seaSurfaceTemperature,       &
@@ -1891,8 +1891,8 @@ contains
       oceanZAerosolConc,           &
       atmosAerosolFlux,            &
       atmosBlackCarbonFlux,        &
-      atmosDustFlux!,               &
-      !waveSpectra
+      atmosDustFlux,               &
+      waveSpectra
 
 !-----------------------------------------------------------------------
 !
@@ -1997,7 +1997,10 @@ contains
         seaSurfaceTiltU(i)             = x2i_i % rAttr(index_x2i_So_dhdx, n)
         seaSurfaceTiltV(i)             = x2i_i % rAttr(index_x2i_So_dhdy, n)
 
-        !waveSpectra(:,i)               = x2i_i % rAttr(index_x2i_Sw_wavepec, n)
+        if (config_use_column_waves) then
+          SignificantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
+          waveSpectra(:,i)             = x2i_i % rAttr(index_x2i_Sw_wavespec, n)
+        endif
 
         if (trim(config_ocean_surface_type) == "free") then ! free surface (MPAS-O)
 

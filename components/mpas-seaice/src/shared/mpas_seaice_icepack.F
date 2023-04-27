@@ -409,13 +409,12 @@ contains
          tracers, &
          floe_size_distribution
 
-    logical, pointer :: config_use_column_waves
     logical, pointer :: config_use_floe_size_distribution
+    character, pointer :: config_initial_condition_type
 
     ! dimensions
     integer, pointer ::   &
          nCellsSolve,     &
-         nFrequencies, &
          nCategories, &
          nFloeCategories
 
@@ -423,21 +422,14 @@ contains
     real(kind=RKIND), dimension(:), pointer :: &
          FloeSizeBinLower,   & !ndim = nFloeCat
          FloeSizeBinCenter,  &
-         FloeSizeBinWidth,   &
-         FloeSizeFraction,   &
-         WaveFrequency,      &
-         WaveFreqBinWidth, &
-         SignificantWaveHeight, &
-         FloeDist
+         FloeSizeBinWidth
 
     real(kind=RKIND), dimension(:,:), pointer :: &
-         WaveSpectrum, &
          DFloeSizeNewIce, &
          DFloeSizeLateralGrowth, &
          DFloeSizeLateralMelt, &
          DFloeSizeWaves, &
-         DFloeSizeWeld, &
-         FloeDistCat
+         DFloeSizeWeld
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          iceAreaCategory, &
@@ -446,12 +438,10 @@ contains
     !local variables
     integer :: i,iCell, iCategory, iFloeCategory
     character (len=35) :: c_fsd_range 
-    character (len=icepack_char_len_long) :: ice_init_type
+    real(kind=RKIND), dimension(:),allocatable :: FloeDist
+    real(kind=RKIND), dimension(:,:),allocatable :: FloeDistCat
 
-    call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
     call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution",config_use_floe_size_distribution)
-   
-    ice_init_type='default' ! NOTE: this should probably be a namelist setting? how to define for restarts?
 
     block => domain % blocklist
     do while (associated(block))
@@ -483,7 +473,8 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWeld", DFloeSizeWeld)
 
 
-       call mpas_log_write("Erin Thomas before icepack_init_fsd_bounds")
+       allocate(FloeDist(nFloeCategories))
+       allocate(FloeDistCat(nFloeCategories,nCategories))
 
        call icepack_init_fsd_bounds(          &
           nfsd=nFloeCategories,               &  ! number of floe size categories
@@ -511,11 +502,6 @@ contains
           floe_rad_c=FloeSizeBinCenter(:),   & ! fsd size bin centre in m (radius)
           floe_binwidth=FloeSizeBinWidth(:), & ! fsd size bin width in m (radius)
           afsd=FloeDist)                       !floe size distribution initalization tracer 
-       
-       do i = 1,nFloeCategories      
-          call mpas_log_write('Erin Thomas TEST: floe category INDEX: $i, FloeDist: $r', &
-                                   intArgs=(/i/), realArgs=(/FloeDist(i)/)) 
-       end do
 
        do iCell =1, nCellsSolve 
           do iCategory =1,nCategories
@@ -527,12 +513,10 @@ contains
           do iCategory =1,nCategories
              do iFloeCategory = 1,nFloeCategories
                 floeSizeDist(iFloeCategory,iCategory,iCell) = FloeDistCat(iFloeCategory,iCategory)
-                call mpas_log_write('Erin Thomas TEST: FLOESIZEDIST: $r', &
-                                      realArgs=(/FloeSizeDist(iFloeCategory,iCategory,iCell)/)) 
              enddo
           enddo
        enddo !iCell
-       call mpas_log_write("Erin Thomas: end of init_column_fsd subroutine")
+!       call mpas_log_write("Erin Thomas: end of init_column_fsd subroutine")
 
        block => block % next
     
