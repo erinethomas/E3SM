@@ -1203,9 +1203,8 @@ CONTAINS
              w2x_w%rattr(index_w2x_Sw_Hs,jsea) = HS(jsea)
              w2x_w%rattr(index_w2x_Sw_Fp,jsea) = FP0(jsea)
              w2x_w%rattr(index_w2x_Sw_Dp,jsea) = THP0(jsea)
-             ! Erin Thomas : wave spectra should be summed over all direction befopre sending to ice model
-             w2x_w%rattr(index_w2x_Sw_wavespec,jsea) = EF(jsea,:)
-
+             
+             w2x_w%rattr(index_w2x_Sw_wavespec(1:nk),jsea) = EF(jsea,1:nk)
 
              w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = USSP(jsea,1)
              w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = USSP(jsea,nk+1)
@@ -1227,7 +1226,7 @@ CONTAINS
           else
 
              w2x_w%rattr(index_w2x_Sw_Hs,jsea) = 0.0
-             w2x_w%rattr(index_w2x_Sw_wavespec,jsea) = 0.0
+             w2x_w%rattr(index_w2x_Sw_wavespec(1:nk),jsea) = 0.0
             
              w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = 0.0
              w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = 0.0

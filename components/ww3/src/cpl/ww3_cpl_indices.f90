@@ -2,11 +2,13 @@ module ww3_cpl_indices
   
   use seq_flds_mod
   use mct_mod
+  use w3gdatmd, only : nk
 
   implicit none
 
   SAVE
   public                               ! By default make data private
+
 
   integer :: index_x2w_Sa_u     
   integer :: index_x2w_Sa_v     
@@ -33,7 +35,7 @@ module ww3_cpl_indices
   integer :: index_w2x_Sw_ustokes_wavenumber_6
   integer :: index_w2x_Sw_vstokes_wavenumber_6
   integer :: index_w2x_Sw_Hs
-  integer :: index_w2x_Sw_wavespec
+  integer :: index_w2x_Sw_wavespec(1:nk) = 0
   integer :: index_w2x_Sw_Fp
   integer :: index_w2x_Sw_Dp
 
@@ -43,6 +45,8 @@ contains
 
     type(mct_aVect) :: w2x      ! temporary
     type(mct_aVect) :: x2w      ! temporary
+
+    integer :: nFrequencies
 
     ! Determine attribute vector indices
 
@@ -65,8 +69,13 @@ contains
     index_w2x_Sw_Hs = mct_avect_indexra(w2x,'Sw_Hs') ! Significant wave height
     index_w2x_Sw_Fp = mct_avect_indexra(w2x,'Sw_Fp') ! Peak wave freqency  
     index_w2x_Sw_Dp = mct_avect_indexra(w2x,'Sw_Dp') ! Peak wave direction
-    index_w2x_Sw_wavespec = mct_avect_indexra(w2x,'Sw_wavespec') ! full wave spectrum (fcn of frq)
 
+    do i = 1,nk
+       write(freqnum,'(i2.2)') i
+       name = 'Sw_wavespec' // freqnum
+       index_w2x_Sw_wavespec(i) = mct_avect_indexra(w2x,trim(name)) ! full wave spectrum (fcn of frq)
+    enddo 
+    
     index_w2x_Sw_ustokes_wavenumber_1 = mct_avect_indexra(w2x,'Sw_ustokes_wavenumber_1') ! partitioned Stokes drift u 1
     index_w2x_Sw_vstokes_wavenumber_1 = mct_avect_indexra(w2x,'Sw_vstokes_wavenumber_1') ! partitioned Stokes drift v 1
     index_w2x_Sw_ustokes_wavenumber_2 = mct_avect_indexra(w2x,'Sw_ustokes_wavenumber_2') ! partitioned Stokes drift u 2
