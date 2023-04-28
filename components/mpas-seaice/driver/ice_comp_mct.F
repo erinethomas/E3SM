@@ -1935,7 +1935,10 @@ contains
       call mpas_pool_get_array(oceanCoupling, 'seaSurfaceTiltU', seaSurfaceTiltU)
       call mpas_pool_get_array(oceanCoupling, 'seaSurfaceTiltV', seaSurfaceTiltV)
 
-      !call mpas_pool_get_array(waveCoupling, 'waveSpectra', waveSpectra)
+      if (config_use_column_waves) then
+         call mpas_pool_get_array(floe_size_distribution, 'SignificantWaveHeight', SignificantWaveHeight)
+         call mpas_pool_get_array(waveCoupling, 'waveSpectra', waveSpectra)
+      endif
 
       call mpas_pool_get_array(atmosCoupling, 'airLevelHeight', airLevelHeight)
       call mpas_pool_get_array(atmosCoupling, 'airPotentialTemperature', airPotentialTemperature)
@@ -2174,8 +2177,11 @@ contains
    call mpas_pool_get_field(oceanCoupling, 'vOceanVelocity', vOceanVelocityField)
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceTiltU', seaSurfaceTiltUField)
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceTiltV', seaSurfaceTiltVField)
-
-   !call mpas_pool_get_field(waveCoupling, 'waveSpectra', waveSpectraField)
+   
+   if(config_use_column_waves) then
+     call mpas_pool_get_field(floe_size_distribution, 'SignificantWaveHeight', SignificantWaveHeightField)
+     call mpas_pool_get_field(waveCoupling, 'waveSpectra', waveSpectraField)
+   endif
 
    call mpas_pool_get_field(atmosCoupling, 'airLevelHeight', airLevelHeightField)
    call mpas_pool_get_field(atmosCoupling, 'airPotentialTemperature', airPotentialTemperatureField)
@@ -2230,7 +2236,10 @@ contains
    call mpas_dmpar_exch_halo_field(seaSurfaceTiltUField)
    call mpas_dmpar_exch_halo_field(seaSurfaceTiltVField)
 
-   !call mpas_dmpar_exch_halo_field(waveSpectraField)
+   if (config_use_column_waves) then
+      call mpas_dmpar_exch_halo_field(SignificantWaveHeightField)
+      call mpas_dmpar_exch_halo_field(waveSpectraField)
+   endif
 
    call mpas_dmpar_exch_halo_field(airLevelHeightField)
    call mpas_dmpar_exch_halo_field(airPotentialTemperatureField)
@@ -2310,6 +2319,9 @@ contains
 
    integer ::  &
       i, n
+   
+   integer ::  &
+      iCategory, iFloeCategory
 
    real(kind=RKIND) :: &
       ailohi,          &
@@ -2331,21 +2343,28 @@ contains
       shortwave,        &
       atmosCoupling,    &
       oceanCoupling,    &
-      !waveCoupling,    &
+      waveCoupling,     &
+      floe_size_distribution, &
+      icestate,         &
+      tracers,          &
       atmosFluxes,      &
       oceanFluxes,      &
       icebergFluxes,    &
       biogeochemistry
 
    integer, pointer :: &
-      nCellsSolve
+      nCellsSolve, &
+      nCategories, &
+      nFloeCategories
 
    logical, pointer :: &
       config_rotate_cartesian_grid,      &
       config_use_topo_meltponds,         &
       config_use_column_biogeochemistry, &
       config_use_column_shortwave,       &
-      config_use_data_icebergs
+      config_use_data_icebergs,          &
+      config_use_column_waves,           &
+      config_use_floe_size_distribution
 
    real(kind=RKIND), pointer :: &
       sphere_radius
@@ -2394,7 +2413,8 @@ contains
       oceanDMSPdFlux,              &
       oceanHumicsFlux,             &
       carbonToNitrogenRatioAlgae,  &
-      carbonToNitrogenRatioDON
+      carbonToNitrogenRatioDON, &
+      FloeSizeBinCenter
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeFlux,              &
@@ -2402,8 +2422,11 @@ contains
       oceanDICFlux,                &
       oceanDONFlux,                &
       oceanParticulateIronFlux,    &
-      oceanDissolvedIronFlux
+      oceanDissolvedIronFlux, &
+      iceAreaCategoryInitial
 
+   real (kind=RKIND), dimension(:,:,:), pointer :: &
+      floeSizeDist
 !-----------------------------------------------------------------------
 
    errorCode = 0
@@ -2418,6 +2441,7 @@ contains
       call MPAS_pool_get_config(configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
       call MPAS_pool_get_config(configs, "config_use_column_shortwave", config_use_column_shortwave)
       call MPAS_pool_get_config(configs, "config_use_data_icebergs", config_use_data_icebergs)
+      call MPAS_pool_get_config(configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
       call MPAS_pool_get_subpool(block_ptr % structs, 'mesh', meshPool)
       call MPAS_pool_get_subpool(block_ptr % structs, "tracers_aggregate", tracersAggregate)
@@ -2425,7 +2449,6 @@ contains
       call MPAS_pool_get_subpool(block_ptr % structs, "shortwave", shortwave)
       call MPAS_pool_get_subpool(block_ptr % structs, 'atmos_coupling', atmosCoupling)
       call MPAS_pool_get_subpool(block_ptr % structs, 'ocean_coupling', oceanCoupling)
-      !call MPAS_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
       call MPAS_pool_get_subpool(block_ptr % structs, "atmos_fluxes", atmosFluxes)
       call MPAS_pool_get_subpool(block_ptr % structs, "ocean_fluxes", oceanFluxes)
 
@@ -2461,9 +2484,22 @@ contains
       call MPAS_pool_get_array(atmosCoupling, 'atmosReferenceHumidity2m', atmosReferenceHumidity2m)
 
       call MPAS_pool_get_array(oceanCoupling, 'frazilMassAdjust', frazilMassAdjust)
-
-      !call MPAS_pool_get_array(waveCoupling, 'iceFloeSize',iceFloeSize )
-
+      
+      if (config_use_floe_size_distribution) then
+         call MPAS_pool_get_dimension(block_ptr % dimensions, "nCategories", nCategories)
+         call MPAS_pool_get_dimension(block_ptr % dimensions, "nFloeCategories", nFloeCategories)
+         
+         call MPAS_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
+         call MPAS_pool_get_subpool(block_ptr % structs, "floe_size_distribution", floe_size_distribution)
+         call MPAS_pool_get_subpool(block_ptr % structs, "icestate", icestate)
+         call MPAS_pool_get_subpool(block_ptr % structs, "tracers", tracers)
+         
+         call MPAS_pool_get_array(icestate, "iceAreaCategoryInitial", iceAreaCategoryInitial)
+         call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
+         call MPAS_pool_get_array(waveCoupling, 'iceFloeDiam',iceFloeDiam)
+         call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
+      endif
+      
       call MPAS_pool_get_array(atmosFluxes, 'latentHeatFlux', latentHeatFlux)
       call MPAS_pool_get_array(atmosFluxes, 'sensibleHeatFlux', sensibleHeatFlux)
       call MPAS_pool_get_array(atmosFluxes, 'longwaveUp', longwaveUp)
@@ -2570,7 +2606,19 @@ contains
             i2x_i % rAttr(index_i2x_Si_qref  ,n)  = atmosReferenceHumidity2m(i)
             i2x_i % rAttr(index_i2x_Si_snowh ,n)  = snowVolumeCell(i) / ailohi
             i2x_i % rAttr(index_i2x_Si_ithick,n)  = iceVolumeCell(i) / ailohi
-         !   i2x_i % rAttr(index_i2x_Si_ifloe, n)  = !ICE FLOE SIZE : need to obtain floe size dist from icepack before can send
+
+            if (config_use_floe_size_distrubution) then 
+               workx = 0.0_RKIND
+               worky = 0.0_RKIND
+               do iCategory=1,nCategories
+                  do iFloeCategory=1,nFloeCateogries
+                     workx = workx + FloeSizeBinCenter(iFloeCategory) * iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
+                     worky = worky + iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
+                  enddo
+               enddo     
+               if (worky > c0) workx = c2*workx / worky 
+               i2x_i % rAttr(index_i2x_Si_ifloe, n)  = MAX(c2*FloeSizeBinCenter(1),workx)
+       endif ! end floe size distribution
 
             !--- a/i fluxes computed by ice
             i2x_i % rAttr(index_i2x_Faii_taux ,n) = tauxa
