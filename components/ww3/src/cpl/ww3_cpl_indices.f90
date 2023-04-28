@@ -33,6 +33,7 @@ module ww3_cpl_indices
   integer :: index_w2x_Sw_ustokes_wavenumber_6
   integer :: index_w2x_Sw_vstokes_wavenumber_6
   integer :: index_w2x_Sw_Hs
+  integer :: index_w2x_Sw_wavespec
   integer :: index_w2x_Sw_Fp
   integer :: index_w2x_Sw_Dp
 
