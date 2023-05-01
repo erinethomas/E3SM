@@ -2,7 +2,6 @@ module ww3_cpl_indices
   
   use seq_flds_mod
   use mct_mod
-  use w3gdatmd, only : nk
 
   implicit none
 
@@ -35,18 +34,23 @@ module ww3_cpl_indices
   integer :: index_w2x_Sw_ustokes_wavenumber_6
   integer :: index_w2x_Sw_vstokes_wavenumber_6
   integer :: index_w2x_Sw_Hs
-  integer :: index_w2x_Sw_wavespec(1:nk) = 0
   integer :: index_w2x_Sw_Fp
   integer :: index_w2x_Sw_Dp
+
+  integer , parameter, private:: nk_max = 100
+  integer :: index_w2x_Sw_wavespec(1:nk_max) = 0
 
 contains
 
   subroutine ww3_cpl_indices_set( )
 
+    use w3gdatmd, only : nk
     type(mct_aVect) :: w2x      ! temporary
     type(mct_aVect) :: x2w      ! temporary
 
-    integer :: nFrequencies
+    integer :: i
+    character(len= 2) :: freqnum
+    character(len=64) :: name
 
     ! Determine attribute vector indices
 

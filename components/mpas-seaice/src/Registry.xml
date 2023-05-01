@@ -3908,6 +3908,10 @@
 		     dimensions="nFloeCategories nCells Time"
 		     icepack_name="d_afsd_weld"
 		/>
+		<var name="FloeSizeDiameter"
+		     type="real"
+		     dimensions="nCells Time"
+		/>
 
 	</var_struct>
 
@@ -3928,10 +3932,10 @@
 		     dimensions="nCells Time"
 		     icepack_name="wave_sig_ht"
 		/>
-		<var name="WaveSpectrum"
+		<var name="WaveSpectra"
 		     type="real"
 		     dimensions="nFrequencies nCells Time"
-		     icepack_name="wave_spectrum"
+		     icepack_name="wave_spectra"
 		/>
         </var_struct>
 

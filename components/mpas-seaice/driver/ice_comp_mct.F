@@ -1788,7 +1788,7 @@ contains
       aerosols,       &
       atmosCoupling,  &
       oceanCoupling,  &
-      !waveCoupling,  &
+      waveCoupling,  &
       biogeochemistry
 
    integer, pointer :: nCellsSolve
@@ -1832,7 +1832,8 @@ contains
       oceanAmmoniumConcField,           &
       oceanDMSConcField,                &
       oceanDMSPConcField,               &
-      oceanHumicsConcField
+      oceanHumicsConcField, &
+      SignificantWaveHeightField
 
    type (field2DReal), pointer ::       &
       oceanAlgaeConcField,              &
@@ -1845,7 +1846,7 @@ contains
       atmosAerosolFluxField,            &
       atmosBlackCarbonFluxField,        &
       atmosDustFluxField,               &
-      waveSpectraField
+      WaveSpectraField
 
    real (kind=RKIND), dimension(:), pointer :: &
       seaSurfaceTemperature,       &
@@ -1892,7 +1893,7 @@ contains
       atmosAerosolFlux,            &
       atmosBlackCarbonFlux,        &
       atmosDustFlux,               &
-      waveSpectra
+      WaveSpectra
 
 !-----------------------------------------------------------------------
 !
@@ -1921,7 +1922,7 @@ contains
       call mpas_pool_get_subpool(block_ptr % structs, 'mesh', meshPool)
       call mpas_pool_get_subpool(block_ptr % structs, 'ocean_coupling', oceanCoupling)
       call mpas_pool_get_subpool(block_ptr % structs, 'atmos_coupling', atmosCoupling)
-      !call mpas_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
+      call mpas_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
 
       call mpas_pool_get_dimension(meshPool, 'nCellsSolve', nCellsSolve)
 
@@ -1936,8 +1937,10 @@ contains
       call mpas_pool_get_array(oceanCoupling, 'seaSurfaceTiltV', seaSurfaceTiltV)
 
       if (config_use_column_waves) then
-         call mpas_pool_get_array(floe_size_distribution, 'SignificantWaveHeight', SignificantWaveHeight)
-         call mpas_pool_get_array(waveCoupling, 'waveSpectra', waveSpectra)
+         call mpas_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
+         call mpas_pool_get_subpool(block_ptr % structs, 'floe_size_distribution', floe_size_distribution)
+         call mpas_pool_get_array(waveCoupling, 'SignificantWaveHeight', SignificantWaveHeight)
+         call mpas_pool_get_array(waveCoupling, 'WaveSpectra', WaveSpectra)
       endif
 
       call mpas_pool_get_array(atmosCoupling, 'airLevelHeight', airLevelHeight)
@@ -2002,7 +2005,7 @@ contains
 
         if (config_use_column_waves) then
           SignificantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
-          waveSpectra(:,i)             = x2i_i % rAttr(index_x2i_Sw_wavespec, n)
+          WaveSpectra(:,i)             = x2i_i % rAttr(index_x2i_Sw_wavespec, n)
         endif
 
         if (trim(config_ocean_surface_type) == "free") then ! free surface (MPAS-O)
@@ -2166,7 +2169,7 @@ contains
 
    call mpas_pool_get_subpool(domain % blocklist % structs, 'ocean_coupling', oceanCoupling)
    call mpas_pool_get_subpool(domain % blocklist % structs, 'atmos_coupling', atmosCoupling)
-   !call mpas_pool_get_subpool(domain % blocklist % structs, 'wave_coupling', waveCoupling)
+   call mpas_pool_get_subpool(domain % blocklist % structs, 'wave_coupling', waveCoupling)
 
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceTemperature', seaSurfaceTemperatureField)
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceSalinity', seaSurfaceSalinityField)
@@ -2179,8 +2182,9 @@ contains
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceTiltV', seaSurfaceTiltVField)
    
    if(config_use_column_waves) then
-     call mpas_pool_get_field(floe_size_distribution, 'SignificantWaveHeight', SignificantWaveHeightField)
-     call mpas_pool_get_field(waveCoupling, 'waveSpectra', waveSpectraField)
+     call mpas_pool_get_subpool(domain % blocklist % structs, 'wave_coupling', waveCoupling)
+     call mpas_pool_get_field(waveCoupling, 'SignificantWaveHeight', SignificantWaveHeightField)
+     call mpas_pool_get_field(waveCoupling, 'WaveSpectra', WaveSpectraField)
    endif
 
    call mpas_pool_get_field(atmosCoupling, 'airLevelHeight', airLevelHeightField)
@@ -2331,6 +2335,8 @@ contains
       tauxo,           &
       tauyo,           &
       basalPressure
+   
+   real(kind=RKIND) :: workx, worky
 
    type (block_type), pointer :: &
       block_ptr
@@ -2343,7 +2349,6 @@ contains
       shortwave,        &
       atmosCoupling,    &
       oceanCoupling,    &
-      waveCoupling,     &
       floe_size_distribution, &
       icestate,         &
       tracers,          &
@@ -2363,7 +2368,6 @@ contains
       config_use_column_biogeochemistry, &
       config_use_column_shortwave,       &
       config_use_data_icebergs,          &
-      config_use_column_waves,           &
       config_use_floe_size_distribution
 
    real(kind=RKIND), pointer :: &
@@ -2413,8 +2417,9 @@ contains
       oceanDMSPdFlux,              &
       oceanHumicsFlux,             &
       carbonToNitrogenRatioAlgae,  &
-      carbonToNitrogenRatioDON, &
-      FloeSizeBinCenter
+      carbonToNitrogenRatioDON,    &
+      FloeSizeBinCenter,           &
+      FloeSizeDiameter
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeFlux,              &
@@ -2489,14 +2494,12 @@ contains
          call MPAS_pool_get_dimension(block_ptr % dimensions, "nCategories", nCategories)
          call MPAS_pool_get_dimension(block_ptr % dimensions, "nFloeCategories", nFloeCategories)
          
-         call MPAS_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
          call MPAS_pool_get_subpool(block_ptr % structs, "floe_size_distribution", floe_size_distribution)
          call MPAS_pool_get_subpool(block_ptr % structs, "icestate", icestate)
          call MPAS_pool_get_subpool(block_ptr % structs, "tracers", tracers)
-         
          call MPAS_pool_get_array(icestate, "iceAreaCategoryInitial", iceAreaCategoryInitial)
          call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
-         call MPAS_pool_get_array(waveCoupling, 'iceFloeDiam',iceFloeDiam)
+         call MPAS_pool_get_array(floe_size_distribution, 'FloeSizeDiameter',FloeSizeDiameter)
          call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
       endif
       
@@ -2611,14 +2614,15 @@ contains
                workx = 0.0_RKIND
                worky = 0.0_RKIND
                do iCategory=1,nCategories
-                  do iFloeCategory=1,nFloeCateogries
+                  do iFloeCategory=1,nFloeCategories
                      workx = workx + FloeSizeBinCenter(iFloeCategory) * iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
                      worky = worky + iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
                   enddo
                enddo     
-               if (worky > c0) workx = c2*workx / worky 
-               i2x_i % rAttr(index_i2x_Si_ifloe, n)  = MAX(c2*FloeSizeBinCenter(1),workx)
-       endif ! end floe size distribution
+               if (worky > 0.0_RKIND ) workx = 2.0_RKIND*workx / worky
+               FloeSizeDiameter(i) = MAX(2.0_RKIND*FloeSizeBinCenter(1),workx) 
+               i2x_i % rAttr(index_i2x_Si_ifloe, n)  = FloeSizeDiameter(i)
+            endif ! end floe size distribution
 
             !--- a/i fluxes computed by ice
             i2x_i % rAttr(index_i2x_Faii_taux ,n) = tauxa
