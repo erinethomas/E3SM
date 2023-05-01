@@ -998,6 +998,7 @@ CONTAINS
       integer :: tod              ! current time of day (sec)
       integer :: hh,mm,ss
       integer :: n,jsea,isea
+      integer :: ifreq
       integer :: mpi_comm
       integer :: gindex
       integer :: nu
@@ -1203,8 +1204,10 @@ CONTAINS
              w2x_w%rattr(index_w2x_Sw_Hs,jsea) = HS(jsea)
              w2x_w%rattr(index_w2x_Sw_Fp,jsea) = FP0(jsea)
              w2x_w%rattr(index_w2x_Sw_Dp,jsea) = THP0(jsea)
-             
-             w2x_w%rattr(index_w2x_Sw_wavespec(1:nk),jsea) = EF(jsea,1:nk)
+            
+             do ifreq=1,nk 
+                w2x_w%rattr(index_w2x_Sw_wavespec(ifreq),jsea) = EF(jsea,ifreq)
+             enddo
 
              w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = USSP(jsea,1)
              w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = USSP(jsea,nk+1)
@@ -1226,7 +1229,10 @@ CONTAINS
           else
 
              w2x_w%rattr(index_w2x_Sw_Hs,jsea) = 0.0
-             w2x_w%rattr(index_w2x_Sw_wavespec(1:nk),jsea) = 0.0
+             
+             do ifreq=1,nk 
+                w2x_w%rattr(index_w2x_Sw_wavespec(ifreq),jsea) = 0.0
+             enddo
             
              w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = 0.0
              w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = 0.0
