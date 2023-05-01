@@ -2610,7 +2610,7 @@ contains
             i2x_i % rAttr(index_i2x_Si_snowh ,n)  = snowVolumeCell(i) / ailohi
             i2x_i % rAttr(index_i2x_Si_ithick,n)  = iceVolumeCell(i) / ailohi
 
-            if (config_use_floe_size_distrubution) then 
+            if (config_use_floe_size_distribution) then 
                workx = 0.0_RKIND
                worky = 0.0_RKIND
                do iCategory=1,nCategories
