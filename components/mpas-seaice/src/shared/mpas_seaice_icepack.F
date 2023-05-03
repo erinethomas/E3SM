@@ -575,7 +575,7 @@ contains
          WaveFreqBinWidth_TEMP
 
     real(kind=RKIND), dimension(:,:), pointer :: &
-         WaveSpectrum
+         WaveSpectra
     real(kind=RKIND), dimension(:), pointer :: &
          WaveSPectrum_TEMP
 
@@ -597,7 +597,7 @@ contains
       call MPAS_pool_get_dimension(block % dimensions, "nFrequencies", nFrequencies)
       
       call MPAS_pool_get_array(wave_coupling, "SignificantWaveHeight", SignificantWaveHeight)
-      call MPAS_pool_get_array(wave_coupling, "WaveSpectrum", WaveSpectrum)
+      call MPAS_pool_get_array(wave_coupling, "WaveSpectra", WaveSpectra)
       call MPAS_pool_get_array(wave_coupling, "WaveFrequency", WaveFrequency)
       call MPAS_pool_get_array(wave_coupling, "WaveFreqBinWidth", WaveFreqBinWidth)
 
@@ -612,7 +612,7 @@ contains
       end do
     
       SignificantWaveHeight(:) = c0   
-      WaveSpectrum(:,:)        = c0
+      WaveSpectra(:,:)        = c0
       
       block => block % next
     end do !block
@@ -3661,7 +3661,7 @@ contains
 
 
     real(kind=RKIND), dimension(:,:), pointer :: &
-         WaveSpectrum, & ! ocean surface wave spectrum as a function of frequency
+         WaveSpectra, & ! ocean surface wave spectrum as a function of frequency
          DFloeSizeWaves !, & ! change in fsd due to waves
          !tracerArrayCategory   ! tracer array
 
@@ -3702,7 +3702,7 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinLower", FloeSizeBinLower)
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
-       call MPAS_pool_get_array(wave_coupling, "WaveSpectrum", WaveSpectrum)
+       call MPAS_pool_get_array(wave_coupling, "WaveSpectra", WaveSpectra)
        call MPAS_pool_get_array(wave_coupling, "WaveFrequency", WaveFrequency)
        call MPAS_pool_get_array(wave_coupling, "WaveFreqBinWidth", WaveFreqBinWidth)
 
@@ -3727,7 +3727,7 @@ contains
                   aicen = iceAreaCategory(1,:,iCell), &
                   floe_rad_l = FloeSizeBinLower(:), &
                   floe_rad_c = FloeSizeBinCenter(:), &
-                  wave_spectrum = WaveSpectrum(:,iCell), &
+                  wave_spectrum = WaveSpectra(:,iCell), &
                   wavefreq = WaveFrequency(:), &
                   dwavefreq = WaveFreqBinWidth(:), &
                   trcrn = tracerArrayCategory, &

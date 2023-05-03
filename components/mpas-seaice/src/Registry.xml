@@ -3935,7 +3935,7 @@
 		<var name="WaveSpectra"
 		     type="real"
 		     dimensions="nFrequencies nCells Time"
-		     icepack_name="wave_spectra"
+		     icepack_name="wave_spectrum"
 		/>
         </var_struct>
 
