@@ -136,7 +136,7 @@
                           sig, nk, zb, dmin, xfr, fr1, &
                           usspf
       use w3wdatmd, only: time, w3ndat, w3setw, wlv, va, ust, ice 
-      use w3adatmd, only: ussp, w3naux, w3seta, sxx, sxy, syy, fliwnd, flcold, dw, cg, wn, hs, fp0, thp0
+      use w3adatmd, only: ef, ussp, w3naux, w3seta, sxx, sxy, syy, fliwnd, flcold, dw, cg, wn, hs, fp0, thp0
       use w3idatmd, only: inflags1, inflags2,w3seti, w3ninp
       USE W3IDATMD, ONLY: TC0, CX0, CY0, TCN, CXN, CYN, ICEP1, ICEP5, TI1, TI5
       USE W3IDATMD, ONLY: TW0, WX0, WY0, DT0, TWN, WXN, WYN, DTN
@@ -326,7 +326,7 @@ CONTAINS
       call shr_file_getLogUnit (shrlogunit)
       call shr_file_getLogLevel(shrloglev)
       call shr_file_setLogUnit(stdout)
-    
+ 
       !--------------------------------------------------------------------
       ! Initialize WW3 grid
       !--------------------------------------------------------------------
@@ -797,12 +797,11 @@ CONTAINS
       flagstidein = .false.
       call w3init ( imod, IsMulti, fext, nds, ntrace, odat, flgrd, flgrd2, flgd, flgd2, npts, x, y,   &
            pnames, iprt, prtfrm, mpi_comm, flagstidein)
-
+      
       if ( iaproc .eq. napout ) then
         write (ndso,*) 'after w3init'
         call shr_sys_flush(ndso)
       endif
-
 
       ! overwrite dt values with variables from coupler
       ! is this a problem with any things being set in w3init?
