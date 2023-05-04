@@ -37,8 +37,7 @@ module ww3_cpl_indices
   integer :: index_w2x_Sw_Fp
   integer :: index_w2x_Sw_Dp
 
-  integer , parameter, private:: nk_max = 100
-  integer :: index_w2x_Sw_wavespec(1:nk_max) = 0
+  integer,dimension(:),allocatable :: index_w2x_Sw_wavespec
 
 contains
 
@@ -74,10 +73,12 @@ contains
     index_w2x_Sw_Fp = mct_avect_indexra(w2x,'Sw_Fp') ! Peak wave freqency  
     index_w2x_Sw_Dp = mct_avect_indexra(w2x,'Sw_Dp') ! Peak wave direction
 
+    allocate(index_w2x_Sw_wavespec(1:nk))
     do i = 1,nk
        write(freqnum,'(i2.2)') i
        name = 'Sw_wavespec' // freqnum
        index_w2x_Sw_wavespec(i) = mct_avect_indexra(w2x,trim(name)) ! full wave spectrum (fcn of frq)
+     !  if ( index_w2x_Sw_wavespec(i) == 0) exit
     enddo 
     
     index_w2x_Sw_ustokes_wavenumber_1 = mct_avect_indexra(w2x,'Sw_ustokes_wavenumber_1') ! partitioned Stokes drift u 1

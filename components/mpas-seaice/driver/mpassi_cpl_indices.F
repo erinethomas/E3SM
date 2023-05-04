@@ -69,7 +69,6 @@ module mpassi_cpl_indices
   integer :: index_x2i_So_u            ! ocn u velocity
   integer :: index_x2i_So_v            ! ocn v velocity
   integer :: index_x2i_Sw_Hs           ! wave significant wave height
-  integer :: index_x2i_Sw_wavespec     ! wave spectrum
   integer :: index_x2i_Sa_z            ! bottom atm level height
   integer :: index_x2i_Sa_u            ! bottom atm level zon wind
   integer :: index_x2i_Sa_v            ! bottom atm level mer wind
@@ -131,13 +130,19 @@ module mpassi_cpl_indices
   integer :: index_x2i_So_zaer4        !
   integer :: index_x2i_So_zaer5        !
   integer :: index_x2i_So_zaer6        !
+  
+  integer,dimension(:),allocatable :: index_x2i_Sw_wavespec     ! wave spectrum
 
 contains
 
   subroutine mpassi_cpl_indices_set( )
-
+    use seq_flds_mod, only : wav_nfreq
     type(mct_aVect) :: i2x      ! temporary
     type(mct_aVect) :: x2i      ! temporary
+
+    integer :: i 
+    character(len= 2) :: freqnum
+    character(len=64) :: name
 
     ! Determine attribute vector indices
 
@@ -200,7 +205,13 @@ contains
     index_x2i_So_u          = mct_avect_indexra(x2i,'So_u')
     index_x2i_So_v          = mct_avect_indexra(x2i,'So_v')
     index_x2i_Sw_Hs          = mct_avect_indexra(x2i,'Sw_Hs')
-    index_x2i_Sw_wavespec   = mct_avect_indexra(x2i,'Sw_wavespec')
+    
+    allocate(index_x2i_Sw_wavespec(1:wav_nfreq))
+    do i = 1,wav_nfreq
+       write(freqnum,'(i2.2)') i
+       name = 'Sw_wavespec' // freqnum
+       index_x2i_Sw_wavespec   = mct_avect_indexra(x2i,trim(name))
+    enddo
     index_x2i_Sa_z          = mct_avect_indexra(x2i,'Sa_z')
     index_x2i_Sa_u          = mct_avect_indexra(x2i,'Sa_u')
     index_x2i_Sa_v          = mct_avect_indexra(x2i,'Sa_v')

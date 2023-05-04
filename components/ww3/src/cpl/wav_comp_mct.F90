@@ -312,7 +312,7 @@ CONTAINS
       inst_name   = seq_comm_name(compid)
       inst_index  = seq_comm_inst(compid)
       inst_suffix = seq_comm_suffix(compid)
-      call ww3_cpl_indices_set()
+!      call ww3_cpl_indices_set()
 
       call mpi_barrier ( mpi_comm, ierr )
       call mpi_comm_rank(mpi_comm, iproc, ierr)
@@ -825,6 +825,8 @@ CONTAINS
       !--------------------------------------------------------------------
       ! cpl7/mct initialization
       !--------------------------------------------------------------------
+
+      call ww3_cpl_indices_set()
 
       ! initialize mct gsmap
 
