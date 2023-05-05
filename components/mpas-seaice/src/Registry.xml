@@ -732,6 +732,10 @@
 			description="Allow snow modifications plus additional snow tracers"
 			possible_values="true or false"
 		/>
+		<nml_option name="config_use_column_waves" type="logical" default_value="false" units="unitless"
+			description="Allow wavebreaking of ice floes. Requires coupling to WW3."
+			possible_values="true or false"
+		/>
 	</nml_record>
 
 	<nml_record name="column_tracers" in_defaults="true">
@@ -792,10 +796,6 @@
 	</nml_record>
 
 	<nml_record name="wave_config" in_defaults="true">
-		<nml_option name="config_use_column_waves" type="logical" default_value="false" units="unitless"
-			description="Allow wavebreaking of ice floes. Requires coupling to WW3."
-			possible_values="true or false"
-		/>
 		<nml_option name="config_xfreq" type="real" default_value="0.0" units="unitless"
 			description="Frequency multiplication factor used by wave model."
 			possible_values="Defined by WW3 component. Do not modify."

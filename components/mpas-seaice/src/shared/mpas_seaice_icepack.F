@@ -600,10 +600,14 @@ contains
 
       allocate(WaveFrequency_TEMP(nFrequencies+2))
       allocate(WaveFreqBinWidth_TEMP(nFrequencies+2))
+
+      !initalize Wave Frequencies (same asn done in WW3)
       call shr_calc_wave_freq(nFrequencies, config_freq1, config_xfreq, &
                               WaveFrequency_TEMP, &
                               WaveFreqBinWidth_TEMP)
       WaveFrequency = WaveFrequency_TEMP(1:nFrequencies) ! remove frequency 'tails' (these are only need in WW3, not MPAS-SI)
+      
+      ! initialize HS and Spectra
       SignificantWaveHeight(:) = c0   
       WaveSpectra(:,:)        = c0
       

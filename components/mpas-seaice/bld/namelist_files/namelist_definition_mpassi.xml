@@ -852,6 +852,13 @@ Valid values: true or false
 Default: Defined in namelist_defaults.xml
 </entry>
 
+<entry id="config_use_column_waves" type="logical"
+	category="column_package" group="column_package">
+Use the wave coupling to allow breaking of ice floes
+
+Valid values: true or false
+Default: Defined in namelist_defaults.xml
+</entry>
 
 <!-- column_tracers -->
 
@@ -945,13 +952,6 @@ Default: Defined in namelist_defaults.xml
 
 
 <!-- wave_config -->
-<entry id="config_use_column_waves" type="logical"
-	category="wave_config" group="wave_config">
-Use the wave coupling to allow breaking of ice floes
-
-Valid values: true or false
-Default: Defined in namelist_defaults.xml
-</entry>
 
 <entry id="config_xfreq" type="real"
 	category="wave_config" group="wave_config">

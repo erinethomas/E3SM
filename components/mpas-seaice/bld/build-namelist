@@ -641,6 +641,7 @@ if ($ice_bgc eq 'ice_bgc') {
 add_default($nl, 'config_use_column_itd_thermodynamics');
 add_default($nl, 'config_use_column_ridging');
 add_default($nl, 'config_use_column_snow_tracers');
+add_default($nl, 'config_use_column_waves');
 
 ##################################
 # Namelist group: column_tracers #
@@ -661,13 +662,8 @@ add_default($nl, 'config_use_floe_size_distribution');
 ##################################
 # Namelist group: wave_config #
 ##################################
-if (($wave_spec eq 'sp25x36') or ($wave_spec eq 'sp36x36') or ($wave_spec eq 'sp50x36')) {
-	add_default($nl, 'config_use_column_waves', 'val'=>".true.");
-} else {
-	add_default($nl, 'config_use_column_waves', 'val'=>".false.");
-}
-# define wave-dependent variables
-# Note: these are also defined in ww3/bld/build-namelist script
+# the following values should not be modified. 
+# They are set to match available WW3 configurations
 if ($wave_spec eq 'sp25x36') {
 	add_default($nl, 'config_xfreq', 'val'=>"1.147");
 	add_default($nl, 'config_freq1', 'val'=>"0.035");
@@ -678,8 +674,8 @@ if ($wave_spec eq 'sp25x36') {
 	add_default($nl, 'config_xfreq', 'val'=>"1.07");
 	add_default($nl, 'config_freq1', 'val'=>"0.035");
 } else {
-	add_default($nl, 'config_xfreq', 'val'=>"0.0");
-	add_default($nl, 'config_freq1', 'val'=>"0.0");
+	add_default($nl, 'config_xfreq');
+	add_default($nl, 'config_freq1');
 }
 
 ###################################
