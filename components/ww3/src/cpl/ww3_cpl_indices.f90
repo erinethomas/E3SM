@@ -43,7 +43,7 @@ contains
 
   subroutine ww3_cpl_indices_set( )
 
-    use w3gdatmd, only : nk
+    use seq_flds_mod, only : wav_nfreq
     type(mct_aVect) :: w2x      ! temporary
     type(mct_aVect) :: x2w      ! temporary
 
@@ -73,12 +73,11 @@ contains
     index_w2x_Sw_Fp = mct_avect_indexra(w2x,'Sw_Fp') ! Peak wave freqency  
     index_w2x_Sw_Dp = mct_avect_indexra(w2x,'Sw_Dp') ! Peak wave direction
 
-    allocate(index_w2x_Sw_wavespec(1:nk))
-    do i = 1,nk
+    allocate(index_w2x_Sw_wavespec(1:wav_nfreq))
+    do i = 1,wav_nfreq
        write(freqnum,'(i2.2)') i
        name = 'Sw_wavespec' // freqnum
        index_w2x_Sw_wavespec(i) = mct_avect_indexra(w2x,trim(name)) ! full wave spectrum (fcn of frq)
-     !  if ( index_w2x_Sw_wavespec(i) == 0) exit
     enddo 
     
     index_w2x_Sw_ustokes_wavenumber_1 = mct_avect_indexra(w2x,'Sw_ustokes_wavenumber_1') ! partitioned Stokes drift u 1

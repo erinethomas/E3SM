@@ -570,18 +570,15 @@ contains
          WaveFreqBinWidth,   &
          SignificantWaveHeight
 
-    real(kind=RKIND), dimension(:), pointer :: &
-         WaveFrequency_TEMP,      &
-         WaveFreqBinWidth_TEMP
-
     real(kind=RKIND), dimension(:,:), pointer :: &
          WaveSpectra
-    real(kind=RKIND), dimension(:), pointer :: &
-         WaveSPectrum_TEMP
 
     !local variables
     integer :: iCell
     integer :: i
+    real(kind=RKIND), dimension(:),allocatable :: &
+         WaveFrequency_TEMP,      &
+         WaveFreqBinWidth_TEMP
 
    call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
    call MPAS_pool_get_config(domain % configs, "config_xfreq", config_xfreq)
@@ -601,16 +598,12 @@ contains
       call MPAS_pool_get_array(wave_coupling, "WaveFrequency", WaveFrequency)
       call MPAS_pool_get_array(wave_coupling, "WaveFreqBinWidth", WaveFreqBinWidth)
 
-      call mpas_log_write("Erin Thomas before shr_calc_wave")
+      allocate(WaveFrequency_TEMP(nFrequencies+2))
+      allocate(WaveFreqBinWidth_TEMP(nFrequencies+2))
       call shr_calc_wave_freq(nFrequencies, config_freq1, config_xfreq, &
-                              WaveFrequency, &
-                              WaveFreqBinWidth)
-      call mpas_log_write("Erin Thomas after shr_calc_wave")
-      
-      do i = 1,nFrequencies      
-         call mpas_log_write('ERIN THOMAS after init wavefreq INDEX: $i, Freq: $r',intArgs=(/i/),realArgs=(/WaveFrequency(i)/)) 
-      end do
-    
+                              WaveFrequency_TEMP, &
+                              WaveFreqBinWidth_TEMP)
+      WaveFrequency = WaveFrequency_TEMP(1:nFrequencies) ! remove frequency 'tails' (these are only need in WW3, not MPAS-SI)
       SignificantWaveHeight(:) = c0   
       WaveSpectra(:,:)        = c0
       
