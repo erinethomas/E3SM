@@ -2007,7 +2007,7 @@ contains
         if (config_use_column_waves) then
           SignificantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
           do iFreq = 1,nFrequencies
-             WaveSpectra(:,iFreq)      = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
+             WaveSpectra(i,iFreq)      = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
           enddo
         endif
 

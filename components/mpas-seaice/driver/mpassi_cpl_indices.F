@@ -212,6 +212,7 @@ contains
        name = 'Sw_wavespec' // freqnum
        index_x2i_Sw_wavespec(i)   = mct_avect_indexra(x2i,trim(name))
     enddo
+
     index_x2i_Sa_z          = mct_avect_indexra(x2i,'Sa_z')
     index_x2i_Sa_u          = mct_avect_indexra(x2i,'Sa_u')
     index_x2i_Sa_v          = mct_avect_indexra(x2i,'Sa_v')

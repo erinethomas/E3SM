@@ -3732,6 +3732,7 @@ contains
                   trcrn = tracerArrayCategory, &
                   d_afsd_wave = DFloeSizeWaves(:,iCell))
           
+          call mpas_log_write("Erin Thomas after icepack_step_wavefracture")
           call get_cice_tracer_array_category(block, ciceTracerObject, &
                  tracerArrayCategory, iCell, setGetPhysicsTracers, setGetBGCTracers)
        enddo !iCell
