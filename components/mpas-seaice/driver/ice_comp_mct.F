@@ -1775,6 +1775,7 @@ contains
 
    integer ::  &
       i,n
+   integer :: iFreq
 
    real (kind=RKIND) :: &
       frazilMassFlux, &
@@ -1792,6 +1793,7 @@ contains
       biogeochemistry
 
    integer, pointer :: nCellsSolve
+   integer, pointer :: nFrequencies
 
    logical, pointer :: &
       config_use_aerosols,              &
@@ -1922,8 +1924,9 @@ contains
       call mpas_pool_get_subpool(block_ptr % structs, 'mesh', meshPool)
       call mpas_pool_get_subpool(block_ptr % structs, 'ocean_coupling', oceanCoupling)
       call mpas_pool_get_subpool(block_ptr % structs, 'atmos_coupling', atmosCoupling)
-
+      
       call mpas_pool_get_dimension(meshPool, 'nCellsSolve', nCellsSolve)
+      call MPAS_pool_get_dimension(block_ptr % dimensions, "nFrequencies", nFrequencies)
 
       call mpas_pool_get_array(oceanCoupling, 'seaSurfaceTemperature', seaSurfaceTemperature)
       call mpas_pool_get_array(oceanCoupling, 'seaSurfaceSalinity', seaSurfaceSalinity)
@@ -2003,7 +2006,9 @@ contains
 
         if (config_use_column_waves) then
           SignificantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
-          WaveSpectra(:,i)             = x2i_i % rAttr(index_x2i_Sw_wavespec, n)
+          do iFreq = 1,nFrequencies
+             WaveSpectra(:,iFreq)      = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
+          enddo
         endif
 
         if (trim(config_ocean_surface_type) == "free") then ! free surface (MPAS-O)

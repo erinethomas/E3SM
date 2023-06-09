@@ -210,7 +210,7 @@ contains
     do i = 1,wav_nfreq
        write(freqnum,'(i2.2)') i
        name = 'Sw_wavespec' // freqnum
-       index_x2i_Sw_wavespec   = mct_avect_indexra(x2i,trim(name))
+       index_x2i_Sw_wavespec(i)   = mct_avect_indexra(x2i,trim(name))
     enddo
     index_x2i_Sa_z          = mct_avect_indexra(x2i,'Sa_z')
     index_x2i_Sa_u          = mct_avect_indexra(x2i,'Sa_u')

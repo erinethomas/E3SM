@@ -605,7 +605,9 @@ contains
       call shr_calc_wave_freq(nFrequencies, config_freq1, config_xfreq, &
                               WaveFrequency_TEMP, &
                               WaveFreqBinWidth_TEMP)
+                      
       WaveFrequency = WaveFrequency_TEMP(1:nFrequencies) ! remove frequency 'tails' (these are only need in WW3, not MPAS-SI)
+      WaveFreqBinWidth = WaveFreqBinWidth_TEMP((1:nFrequencies) 
       
       ! initialize HS and Spectra
       SignificantWaveHeight(:) = c0   
