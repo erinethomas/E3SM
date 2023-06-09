@@ -1922,7 +1922,6 @@ contains
       call mpas_pool_get_subpool(block_ptr % structs, 'mesh', meshPool)
       call mpas_pool_get_subpool(block_ptr % structs, 'ocean_coupling', oceanCoupling)
       call mpas_pool_get_subpool(block_ptr % structs, 'atmos_coupling', atmosCoupling)
-      call mpas_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
 
       call mpas_pool_get_dimension(meshPool, 'nCellsSolve', nCellsSolve)
 
@@ -1938,7 +1937,6 @@ contains
 
       if (config_use_column_waves) then
          call mpas_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
-         call mpas_pool_get_subpool(block_ptr % structs, 'floe_size_distribution', floe_size_distribution)
          call mpas_pool_get_array(waveCoupling, 'SignificantWaveHeight', SignificantWaveHeight)
          call mpas_pool_get_array(waveCoupling, 'WaveSpectra', WaveSpectra)
       endif

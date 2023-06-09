@@ -204,7 +204,7 @@ contains
     index_x2i_So_s          = mct_avect_indexra(x2i,'So_s')
     index_x2i_So_u          = mct_avect_indexra(x2i,'So_u')
     index_x2i_So_v          = mct_avect_indexra(x2i,'So_v')
-    index_x2i_Sw_Hs          = mct_avect_indexra(x2i,'Sw_Hs')
+    index_x2i_Sw_Hs         = mct_avect_indexra(x2i,'Sw_Hs')
     
     allocate(index_x2i_Sw_wavespec(1:wav_nfreq))
     do i = 1,wav_nfreq

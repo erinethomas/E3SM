@@ -308,7 +308,7 @@ if ($NML_TYPE eq "ww3") {
     }
     else {
        add_default($nl, 'pnt_out_freq');
-       add_default($nl, 'grd_out_freq');
+       add_default($nl, 'grd_out_freq', 'val'=>21600);
        add_default($nl, 'fldout');
        add_default($nl, 'fldcou');
     }

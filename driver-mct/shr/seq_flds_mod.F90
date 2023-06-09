@@ -2117,9 +2117,9 @@ contains
           name = 'Sw_wavespec' // cnum
           call seq_flds_add(w2x_states,trim(name))
           call seq_flds_add(x2i_states,trim(name))
-          longname = 'wave power spectra for frequency catorgory ' // cnum
+          longname = 'wave power spectra for wave frequency category number' // cnum
           stdname  = 'wave_spectra'
-          units    = 'm2/Hz' !Erin Thomas - double check units
+          units    = 'm2/Hz'
           attname  = name
           call metadata_set(attname, longname, stdname, units)
        enddo
