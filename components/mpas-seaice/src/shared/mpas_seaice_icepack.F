@@ -607,7 +607,7 @@ contains
                               WaveFreqBinWidth_TEMP)
                       
       WaveFrequency = WaveFrequency_TEMP(1:nFrequencies) ! remove frequency 'tails' (these are only need in WW3, not MPAS-SI)
-      WaveFreqBinWidth = WaveFreqBinWidth_TEMP((1:nFrequencies) 
+      WaveFreqBinWidth = WaveFreqBinWidth_TEMP(1:nFrequencies) 
       
       ! initialize HS and Spectra
       SignificantWaveHeight(:) = c0   
