@@ -663,7 +663,7 @@ add_default($nl, 'config_use_floe_size_distribution');
 # Namelist group: wave_config #
 ##################################
 # the following values should not be modified. 
-# They are set to match available WW3 configurations
+# They are defined to match available WW3 configurations
 if ($wave_spec eq 'sp25x36') {
 	add_default($nl, 'config_xfreq', 'val'=>"1.147");
 	add_default($nl, 'config_freq1', 'val'=>"0.035");
