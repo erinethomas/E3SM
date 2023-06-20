@@ -2430,6 +2430,9 @@ contains
           endif
 
           oceanBioFluxesTemp(:) = 0.0_RKIND
+          ! CICE calculates the Sig Wave Height from the wave spectrum as follows before step therm2:
+           ! we should probably use the Sig Wave Height from WW3 
+           ! if (tr_fsd) wave_sig_ht(i,j,iblk) = c4*SQRT(SUM(wave_spectrum(i,j,:,iblk)*dwavefreq(:)))
 
           call icepack_step_therm2(&
                dt=config_dt, &
