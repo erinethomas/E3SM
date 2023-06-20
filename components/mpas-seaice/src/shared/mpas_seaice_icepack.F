@@ -2143,9 +2143,10 @@ contains
 
   subroutine column_itd_thermodynamics(domain, clock)
 
-    use ice_colpkg, only: &
-         colpkg_step_therm2, &
-         colpkg_clear_warnings
+    use icepack_intfc, only: &
+         icepack_step_therm2, &
+         icepack_warnings_clear, &
+         icepack_warnings_aborted
 
     type(domain_type), intent(inout) :: domain
 
@@ -2183,6 +2184,7 @@ contains
          nIceLayers, &
          nSnowLayers, &
          nAerosols, &
+         nFloeCategories, &
          nBioLayers, &
          nBioLayersP1
 
@@ -2208,7 +2210,12 @@ contains
          verticalGrid, &
          interfaceBiologyGrid, &
          zSalinityFlux, &
-         frazilGrowthDiagnostic
+         frazilGrowthDiagnostic, &
+         WaveFrequency,      &
+         WaveFreqBinWidth,   &
+         SignificantWaveHeight,&
+         FloeSizeBinCenter,  &
+         FloeSizeBinWidth
 
     real(kind=RKIND), dimension(:,:), pointer :: &
          iceAreaCategoryInitial, &
@@ -2216,7 +2223,13 @@ contains
          oceanAerosolFlux, &
          oceanBioFluxes, &
          oceanBioConcentrations, &
-         initialSalinityProfile
+         initialSalinityProfile, &
+         WaveSpectra, &
+         DFloeSizeNewIce, &
+         DFloeSizeLateralGrowth, &
+         DFloeSizeLateralMelt, &
+         DFloeSizeWaves, &
+         DFloeSizeWeld
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          iceAreaCategory, &
@@ -2291,6 +2304,8 @@ contains
        call MPAS_pool_get_subpool(block % structs, "initial", initial)
        call MPAS_pool_get_subpool(block % structs, "diagnostics", diagnostics)
        call MPAS_pool_get_subpool(block % structs, "aerosols", aerosols)
+       call MPAS_pool_get_subpool(block % structs, "wave_coupling", wave_coupling)
+       call MPAS_pool_get_subpool(block % structs, "floe_size_distribution", floe_size_distribution)
 
        call MPAS_pool_get_config(block % configs, "config_dt", config_dt)
        call MPAS_pool_get_config(block % configs, "config_update_ocean_fluxes", config_update_ocean_fluxes)
@@ -2301,6 +2316,7 @@ contains
        call MPAS_pool_get_dimension(mesh, "nIceLayers", nIceLayers)
        call MPAS_pool_get_dimension(mesh, "nSnowLayers", nSnowLayers)
        call MPAS_pool_get_dimension(mesh, "nAerosols", nAerosols)
+       call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
        call MPAS_pool_get_dimension(block % dimensions, "nBioLayers", nBioLayers)
 
        call MPAS_pool_get_dimension(block % dimensions, "nBioLayersP1", nBioLayersP1)
@@ -2322,6 +2338,19 @@ contains
        call MPAS_pool_get_array(ocean_coupling, "freezingMeltingPotential", freezingMeltingPotential)
        call MPAS_pool_get_array(ocean_coupling, "seaFreezingTemperature", seaFreezingTemperature)
        call MPAS_pool_get_array(ocean_coupling, "seaSurfaceSalinity", seaSurfaceSalinity)
+
+       call MPAS_pool_get_array(wave_coupling, "SignificantWaveHeight", SignificantWaveHeight)
+       call MPAS_pool_get_array(wave_coupling, "WaveSpectra", WaveSpectra)
+       call MPAS_pool_get_array(wave_coupling, "WaveFrequency", WaveFrequency)
+       call MPAS_pool_get_array(wave_coupling, "WaveFreqBinWidth", WaveFreqBinWidth)
+
+       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
+       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinWidth", FloeSizeBinWidth)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeNewIce", DFloeSizeNewIce)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralGrowth", DFloeSizeLateralGrowth)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralMelt", DFloeSizeLateralMelt)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWeld", DFloeSizeWeld)
+       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
 
        call MPAS_pool_get_array(ocean_fluxes, "oceanFreshWaterFlux", oceanFreshWaterFlux)
        call MPAS_pool_get_array(ocean_fluxes, "oceanSaltFlux", oceanSaltFlux)
@@ -2402,55 +2431,70 @@ contains
 
           oceanBioFluxesTemp(:) = 0.0_RKIND
 
-          call colpkg_clear_warnings()
-          call colpkg_step_therm2(&
-               config_dt, &
-               nCategories, &
-               nAerosols, &
-               ciceTracerObject % nBioTracers, & !nbtrcr, intent(in)
-               nIcelayers, &
-               nSnowLayers, &
-               categoryThicknessLimits(:), & !hin_max, intent(inout), dimension(0:ncat)
-               nBioLayers, &
-               iceAreaCategory(1,:,iCell), &
-               iceVolumeCategory(1,:,iCell), &
-               snowVolumeCategory(1,:,iCell), &
-               iceAreaCategoryInitial(:,iCell), &
-               iceVolumeCategoryInitial(:,iCell), &
-               tracerArrayCategory, & !trcrn,   intent(inout)
-               openWaterArea(iCell), &
-               iceAreaCell(iCell), &
-               ciceTracerObject % parentIndex, & !trcr_depend,     intent(in)
-               ciceTracerObject % firstAncestorMask, & !trcr_base, intent(in)
-               ciceTracerObject % ancestorNumber, & !n_trcr_strata,intent(in)
-               ciceTracerObject % ancestorIndices, & !nt_strata,   intent(in)
-               seaFreezingTemperature(iCell), &
-               seaSurfaceSalinity(iCell), &
-               initialSalinityProfile(:,iCell), &
-               lateralIceMeltFraction(iCell), &
-!in icepack, not colpkg               lateralIceMeltRate(iCell), &
-               lateralIceMelt(iCell), &
-               freezingMeltingPotential(iCell), &
-               frazilFormation(iCell), &
-               rainfallRate(iCell), &
-               pondFreshWaterFlux(iCell), &
-               oceanFreshWaterFlux(iCell), &
-               oceanSaltFlux(iCell), &
-               oceanHeatFlux(iCell), &
-               config_update_ocean_fluxes, &       !update_ocn_f, intent(in)
-               biologyGrid(:), &                   !bgrid, intent(in)
-               verticalGrid(:), &                  !cgrid, intent(in)
-               interfaceBiologyGrid(:), &          !igrid, intent(in)
-               oceanAerosolFlux(:,iCell), &
-               newlyFormedIceLogical(:), &         !first_ice, intent(inout)
-               zSalinityFlux(iCell), &
-               oceanBioFluxesTemp(:), &
-               oceanBioConcentrationsUsed(:), &    !ocean_bio, intent(in)
-               abortFlag, &
-               abortMessage, &
-               frazilGrowthDiagnostic(iCell), &
-               freezeOnset(iCell), &
-               dayOfYear)
+          call icepack_step_therm2(&
+               dt=config_dt, &
+               ncat=nCategories, &
+               nltrcr= ! number of zbgc tracers
+               nilyr=nIcelayers, &
+               nslyr=nSnowLayers, &
+               hin_max=categoryThicknessLimits(:), &
+               nblyr=nBioLayers, &
+               aicen=iceAreaCategory(1,:,iCell) ,   &
+               vicen=iceVolumeCategory(1,:,iCell),   &
+               vsnon=snowVolumeCategory(1,:,iCell),         &
+               aicen_init=iceAreaCategoryInitial(:,iCell), &  
+               vicen_init=iceVolumeCategoryInitial(:,iCell),    &
+               trcrn=tracerArrayCategory, &
+               aice0=openWaterArea(iCell), &
+               aice=iceAreaCell(iCell), &
+               trcr_depend=ciceTracerObject % parentIndex,   &
+               trcr_base=ciceTracerObject % firstAncestorMask, & 
+               n_trcr_strata=ciceTracerObject % ancestorNumber, &
+               nt_strata=ciceTracerObject % ancestorIndices, &
+               Tf=seaFreezingTemperature(iCell), &
+               sss=seaSurfaceSalinity(iCell), &
+               salinz=initialSalinityProfile(:,iCell), &
+               rside=lateralIceMeltFraction(iCell),   &
+               meltl=lateralIceMelt(iCell), &
+               fside=, & ! lateral heat flux (W/m^2)
+               wlat=lateralIceMeltRate(iCell), &
+               frzmlt=freezingMeltingPotential(iCell), &
+               frazil=frazilFormation(iCell), &
+               frain=rainfallRate(iCell), &
+               fpond=pondFreshWaterFlux(iCell), &
+               fresh=oceanFreshWaterFlux(iCell), &
+               fsalt=oceanSaltFlux(iCell), &
+               fhocn=oceanHeatFlux(iCell), &
+               update_ocn_f=config_update_ocean_fluxes,  &
+               bgrid=biologyGrid(:), &
+               cgrid=verticalGrid(:), &
+               igrid=interfaceBiologyGrid(:),  &
+               faero_ocn=oceanAerosolFlux(:,iCell), &
+               first_ice=newlyFormedIceLogical(:), & 
+               fzsal=zSalinityFlux(iCell), &
+               flux_bio=oceanBioFluxesTemp(:), &
+               ocean_bio=oceanBioConcentrationsUsed(:), &
+               frazil_diag=frazilGrowthDiagnostic(iCell), &
+               frz_onset=freezeOnset(iCell), & ! optional
+               yday=dayOfYear, & 
+               fiso_ocn=, & !optional - isotope flux to ocean  (kg/m^2/s)
+               HDO_ocn=, & ! optional - ocean concentration of HDO (kg/kg)
+               H2_16O_ocn=, & ! optional - ocean concentration of H2_16O (kg/kg) 
+               H2_18O_ocn=, & ! optional - ocean concentration of H2_18O (kg/kg)
+               nfsd=nFloeCategories, &
+               wave_sig_ht=SignificantWaveHeight(iCell), &
+               wave_spectrum=WaveSpectra(:,iCell),    &
+               wavefreq=WaveFrequency(:),       &
+               dwavefreq=WaveFreqBinWidth(:),      &
+               d_afsd_latg=DFloeSizeLateralGrowth(:,iCell),    &
+               d_afsd_newi=DFloeSizeNewIce(:,iCell),   &
+               d_afsd_latm=DFloeSizeLateralMelt(:,iCell),   &
+               d_afsd_weld=DFloeSizeWeld(:,iCell),   &
+               floe_rad_c=FloeSizeBinCenter(:), &  
+               floe_binwidth=FloeSizeBinWidth(:))
+
+          abortFlag = icepack_warnings_aborted()
+          call seaice_icepack_write_warnings(abortFlag)
 
                do iBioTracers = 1, ciceTracerObject % nBioTracers
                   oceanBioFluxes(iBioTracers,iCell) = oceanBioFluxes(iBioTracers,iCell) + oceanBioFluxesTemp(iBioTracers)
