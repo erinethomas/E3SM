@@ -2702,16 +2702,16 @@ contains
           call icepack_step_therm2(&
                dt=config_dt, &
                ncat=nCategories, &
-               nltrcr=ciceTracerObject % nBioTracers ! number of zbgc tracers
+               nltrcr=ciceTracerObject % nBioTracers, & ! CHECK/FIX for BGC
                nilyr=nIcelayers, &
                nslyr=nSnowLayers, &
                hin_max=categoryThicknessLimits(:), &
                nblyr=nBioLayers, &
-               aicen=iceAreaCategory(1,:,iCell) ,   &
-               vicen=iceVolumeCategory(1,:,iCell),   &
-               vsnon=snowVolumeCategory(1,:,iCell),         &
+               aicen=iceAreaCategory(1,:,iCell), &
+               vicen=iceVolumeCategory(1,:,iCell), &
+               vsnon=snowVolumeCategory(1,:,iCell), &
                aicen_init=iceAreaCategoryInitial(:,iCell), &  
-               vicen_init=iceVolumeCategoryInitial(:,iCell),    &
+               vicen_init=iceVolumeCategoryInitial(:,iCell), &
                trcrn=tracerArrayCategory, &
                aice0=openWaterArea(iCell), &
                aice=iceAreaCell(iCell), &
@@ -2724,7 +2724,7 @@ contains
                salinz=initialSalinityProfile(:,iCell), &
                rside=lateralIceMeltFraction(iCell),   &
                meltl=lateralIceMelt(iCell), &
-               fside=lateralHeatFlux(iCell), & ! lateral heat flux (W/m^2)
+               fside=lateralHeatFlux(iCell), &
                wlat=lateralIceMeltRate(iCell), &
                frzmlt=freezingMeltingPotential(iCell), &
                frazil=frazilFormation(iCell), &
@@ -2745,10 +2745,10 @@ contains
                frazil_diag=frazilGrowthDiagnostic(iCell), &
                frz_onset=freezeOnset(iCell), & ! optional
                yday=dayOfYear, & 
-               fiso_ocn=, & !optional - isotope flux to ocean  (kg/m^2/s)
-               HDO_ocn=, & ! optional - ocean concentration of HDO (kg/kg)
-               H2_16O_ocn=, & ! optional - ocean concentration of H2_16O (kg/kg) 
-               H2_18O_ocn=, & ! optional - ocean concentration of H2_18O (kg/kg)
+               !fiso_ocn=, & !optional - isotope flux to ocean  (kg/m^2/s)
+               !HDO_ocn=, & ! optional - ocean concentration of HDO (kg/kg)
+               !H2_16O_ocn=, & ! optional - ocean concentration of H2_16O (kg/kg) 
+               !H2_18O_ocn=, & ! optional - ocean concentration of H2_18O (kg/kg)
                nfsd=nFloeCategories, &
                wave_sig_ht=SignificantWaveHeight(iCell), &
                wave_spectrum=WaveSpectra(:,iCell),    &
