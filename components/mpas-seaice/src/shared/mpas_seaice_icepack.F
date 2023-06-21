@@ -2161,6 +2161,8 @@ contains
          tracers_aggregate, &
          atmos_coupling, &
          ocean_coupling, &
+         wave_coupling, &
+         floe_size_distribution, &
          ocean_fluxes, &
          melt_growth_rates, &
          ponds, &
@@ -2437,7 +2439,7 @@ contains
           call icepack_step_therm2(&
                dt=config_dt, &
                ncat=nCategories, &
-               nltrcr=nBioTracersLayer! number of zbgc tracers
+               nltrcr=nBioTracersLayer, & ! number of zbgc tracers
                nilyr=nIcelayers, &
                nslyr=nSnowLayers, &
                hin_max=categoryThicknessLimits(:), &
