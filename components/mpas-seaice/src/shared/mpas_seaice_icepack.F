@@ -2420,8 +2420,8 @@ contains
          tracers_aggregate, &
          atmos_coupling, &
          ocean_coupling, &
-!         wave_coupling, &
-!         floe_size_distribution, &
+         wave_coupling, &
+         floe_size_distribution, &
          ocean_fluxes, &
          melt_growth_rates, &
          ponds, &
