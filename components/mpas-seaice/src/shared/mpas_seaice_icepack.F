@@ -2199,6 +2199,7 @@ contains
          lateralIceMeltFraction, &
          lateralIceMeltRate, &
          lateralIceMelt, &
+         lateralHeatFlux, &
          freezingMeltingPotential, &
          frazilFormation, &
          rainfallRate, &
@@ -2363,6 +2364,7 @@ contains
        call MPAS_pool_get_array(melt_growth_rates, "lateralIceMelt", lateralIceMelt)
        call MPAS_pool_get_array(melt_growth_rates, "frazilFormation", frazilFormation)
        call MPAS_pool_get_array(melt_growth_rates, "frazilGrowthDiagnostic", frazilGrowthDiagnostic)
+       call MPAS_pool_get_array(melt_growth_rates, "lateralHeatFlux", lateralHeatFlux)
 
        call MPAS_pool_get_array(ponds, "pondFreshWaterFlux", pondFreshWaterFlux)
 
