@@ -2762,7 +2762,8 @@ contains
                d_afsd_latm=DFloeSizeLateralMelt(:,iCell),   &
                d_afsd_weld=DFloeSizeWeld(:,iCell),   &
                floe_rad_c=FloeSizeBinCenter(:), &  
-               floe_binwidth=FloeSizeBinWidth(:))
+               floe_binwidth=FloeSizeBinWidth(:) & 
+               )
 
           abortFlag = icepack_warnings_aborted()
           call seaice_icepack_write_warnings(abortFlag)
