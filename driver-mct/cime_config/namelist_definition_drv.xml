@@ -189,10 +189,7 @@
       Number of wave frequencies. Set by the xml variable WAV_SPEC in env_case.xml
     </desc>
     <values>
-      <value>0</value>
-      <value WAVSPEC='sp25x36'>25</value>
-      <value WAVSPEC='sp36x36'>36</value>
-      <value WAVSPEC='sp50x36'>50</value>
+      <value>$WAV_SPEC</value>
     </values>
 
   </entry>
