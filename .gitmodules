@@ -78,6 +78,6 @@
 	branch = dev_WaveIceCoupling
 [submodule "components/mpas-seaice/src/icepack"]
 	path = components/mpas-seaice/src/icepack
-	#url = git@github.com:E3SM-Project/Icepack.git
-	url = git@github.com:erinethomas/Icepack.git
-        branch = dev_WaveIceCoupling
+	url = git@github.com:E3SM-Project/Icepack.git
+	#url = git@github.com:erinethomas/Icepack.git
+	#branch = dev_WaveIceCoupling
