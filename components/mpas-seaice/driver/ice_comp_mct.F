@@ -1047,7 +1047,7 @@ contains
       character (len=StrKIND), pointer :: config_restart_timestamp_name
       real(kind=RKIND), pointer :: &
             dayOfNextShortwaveCalculation ! needed for CESM like coupled simulations
-      logical, pointer :: config_use_wavebreak
+      logical, pointer :: config_use_column_waves
 
       iam = domain % dminfo % my_proc_id
 
@@ -1061,6 +1061,7 @@ contains
       if (debugOn) call mpas_log_write("=== Beginning ice_run_mct ===")
 
       call mpas_pool_get_config(domain % configs, 'config_restart_timestamp_name', config_restart_timestamp_name)
+      call mpas_pool_get_config(domain % configs, 'config_use_column_waves', config_use_column_waves)
 
       ! Setup log information.
       call shr_file_getLogUnit (shrlogunit)
@@ -1799,7 +1800,8 @@ contains
       config_use_aerosols,              &
       config_use_modal_aerosols,        &
       config_use_zaerosols,             &
-      config_use_column_biogeochemistry
+      config_use_column_biogeochemistry, &
+      config_use_column_waves
 
    character(len=strKIND), pointer ::   &
       config_thermodynamics_type,       &
@@ -1882,7 +1884,8 @@ contains
       oceanHumicsConc,             &
       carbonToNitrogenRatioAlgae,  &
       carbonToNitrogenRatioDON,    &
-      DOCPoolFractions
+      DOCPoolFractions,            &
+      SignificantWaveHeight
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeConc,              &
@@ -1920,6 +1923,7 @@ contains
       call mpas_pool_get_config(configs, "config_use_aerosols", config_use_aerosols)
       call mpas_pool_get_config(configs, "config_use_modal_aerosols", config_use_modal_aerosols)
       call mpas_pool_get_config(configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
+      call mpas_pool_get_config(configs, "config_use_column_waves", config_use_column_waves)
 
       call mpas_pool_get_subpool(block_ptr % structs, 'mesh', meshPool)
       call mpas_pool_get_subpool(block_ptr % structs, 'ocean_coupling', oceanCoupling)
@@ -2172,7 +2176,6 @@ contains
 
    call mpas_pool_get_subpool(domain % blocklist % structs, 'ocean_coupling', oceanCoupling)
    call mpas_pool_get_subpool(domain % blocklist % structs, 'atmos_coupling', atmosCoupling)
-   call mpas_pool_get_subpool(domain % blocklist % structs, 'wave_coupling', waveCoupling)
 
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceTemperature', seaSurfaceTemperatureField)
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceSalinity', seaSurfaceSalinityField)
@@ -2502,7 +2505,7 @@ contains
          call MPAS_pool_get_subpool(block_ptr % structs, "tracers", tracers)
          call MPAS_pool_get_array(icestate, "iceAreaCategoryInitial", iceAreaCategoryInitial)
          call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
-         call MPAS_pool_get_array(floe_size_distribution, 'FloeSizeDiameter',FloeSizeDiameter)
+         call MPAS_pool_get_array(floe_size_distribution, "FloeSizeDiameter",FloeSizeDiameter)
          call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
       endif
       

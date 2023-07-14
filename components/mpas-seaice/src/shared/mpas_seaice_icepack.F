@@ -262,11 +262,13 @@ contains
          config_use_column_biogeochemistry, &
          config_use_column_shortwave, &
          config_use_column_snow_tracers, &
-         config_use_floe_size_distribution
+         config_use_floe_size_distribution, &
+         config_use_column_waves
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_package", config_use_column_package)
     call MPAS_pool_get_config(domain % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
     call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
+    call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
 
     if (config_use_column_package) then
 
@@ -276,9 +278,14 @@ contains
        ! initialize the itd thickness classes
        call init_column_itd(domain)
 
-       ! initalize fsd - this is being written by Erin 
+       ! initalize floe size distribution 
        if (config_use_floe_size_distribution) then
           call init_column_fsd(domain)
+       endif
+
+       ! initalize waves for column wave breaking
+       if (config_use_column_waves) then
+          call init_column_waves(domain)
        endif
 
        ! initialize thermodynamic tracer profiles
@@ -458,11 +465,6 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinLower", FloeSizeBinLower)
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinWidth", FloeSizeBinWidth)
-       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeFraction", FloeSizeFraction)
-       call MPAS_pool_get_array(floe_size_distribution, "WaveFrequency", WaveFrequency)
-       call MPAS_pool_get_array(floe_size_distribution, "WaveFreqBinWidth", WaveFreqBinWidth)
-       call MPAS_pool_get_array(floe_size_distribution, "SignificantWaveHeight", SignificantWaveHeight)
-       call MPAS_pool_get_array(floe_size_distribution, "WaveSpectrum", WaveSpectrum)
        
        call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist,1)
        call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
@@ -472,7 +474,6 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralMelt", DFloeSizeLateralMelt)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWeld", DFloeSizeWeld)
-
 
        allocate(FloeDist(nFloeCategories))
        allocate(FloeDistCat(nFloeCategories,nCategories))
@@ -545,7 +546,8 @@ contains
 !
 !-----------------------------------------------------------------------
 
-  subroutine init_column_waves
+subroutine init_column_waves(domain)
+
     use shr_wave_mod, only: shr_calc_wave_freq
     
     use icepack_intfc, only: &
@@ -608,7 +610,7 @@ contains
       allocate(WaveFrequency_TEMP(nFrequencies+2))
       allocate(WaveFreqBinWidth_TEMP(nFrequencies+2))
 
-      !initalize Wave Frequencies (same asn done in WW3)
+      !initalize Wave Frequencies (same as in WW3)
       call shr_calc_wave_freq(nFrequencies, config_freq1, config_xfreq, &
                               WaveFrequency_TEMP, &
                               WaveFreqBinWidth_TEMP)
@@ -2624,7 +2626,6 @@ contains
 
        call MPAS_pool_get_array(melt_growth_rates, "lateralHeatFlux", lateralHeatFlux)
        call MPAS_pool_get_array(melt_growth_rates, "lateralIceMeltFraction", lateralIceMeltFraction)
-       call MPAS_pool_get_array(melt_growth_rates, "lateralIceMeltRate", lateralIceMeltRate)
        call MPAS_pool_get_array(melt_growth_rates, "lateralIceMelt", lateralIceMelt)
        call MPAS_pool_get_array(melt_growth_rates, "lateralIceMeltRate", lateralIceMeltRate)
        call MPAS_pool_get_array(melt_growth_rates, "frazilFormation", frazilFormation)
@@ -2699,9 +2700,10 @@ contains
           endif
 
           oceanBioFluxesTemp(:) = 0.0_RKIND
+       
           ! CICE calculates the Sig Wave Height from the wave spectrum as follows before step therm2:
-           ! we should probably use the Sig Wave Height from WW3 
-           ! if (tr_fsd) wave_sig_ht(i,j,iblk) = c4*SQRT(SUM(wave_spectrum(i,j,:,iblk)*dwavefreq(:)))
+          ! we should probably use the Sig Wave Height from WW3 
+          ! if (tr_fsd) wave_sig_ht(i,j,iblk) = c4*SQRT(SUM(wave_spectrum(i,j,:,iblk)*dwavefreq(:)))
 
           ! CICE calculates the Sig Wave Height from the wave spectrum as follows before step therm2:
           ! we will use the Sig Wave Height from WW3, but could use this for testing without WW3
@@ -3632,12 +3634,10 @@ contains
 !-----------------------------------------------------------------------
   subroutine column_wavefracture(domain)
 
-!    use icepack_intfc, only: icepack_step_wavefracture
-
-!    use icedrv_arrays_column, only: wave_spectrum, wave_sig_ht, &
-!        d_afsd_wave, floe_rad_l, floe_rad_c, wavefreq, dwavefreq
-!    use icedrv_domain_size, only: ncat, nfsd, nfreq, nx
-!    use icedrv_state, only: trcrn, aicen, aice, vice
+    use icepack_intfc, only: &
+            icepack_step_wavefracture, &
+            c0, &
+            icepack_char_len
 
     type(domain_type), intent(inout) :: domain
     
@@ -3654,16 +3654,20 @@ contains
        floe_size_distribution, &
        wave_coupling
 
-    character, pointer :: &
+    character(len=icepack_char_len), pointer :: &
          waveSpectraType  ! the wave spectra type 
 
     ! dimensions
     integer, pointer :: &
+         nCellsSolve, &   
          nCategories, & !number of ice thicknes categories
          nFloeCategories, & ! number of floe size categories
          nWaveFrequencies   ! number of wave frequency bins
 
     ! variables
+    real(kind=RKIND), pointer :: &
+         dynamicsTimeStep
+
     real(kind=RKIND), dimension(:), pointer :: &
          iceAreaCell, & ! ice area fraction
          iceVolumeCell, & ! ice volume per unit area
@@ -3671,7 +3675,6 @@ contains
          FloeSizeBinCenter, & ! fsd size bin center in m (radius)
          WaveFrequency, & ! wave frequencies
          WaveFreqBinWidth   ! wave frequency bin widths
-
 
     real(kind=RKIND), dimension(:,:), pointer :: &
          WaveSpectra, & ! ocean surface wave spectrum as a function of frequency
@@ -3705,6 +3708,10 @@ contains
        call MPAS_pool_get_subpool(block % structs, "velocity_solver", velocity_solver)
 
        call MPAS_pool_get_dimension(mesh, "nCategories", nCategories)
+       call MPAS_pool_get_dimension(mesh, "nCellsSolve", nCellsSolve)
+       call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
+       call MPAS_pool_get_dimension(block % dimensions, "nFrequencies", nFrequencies)
+
        call MPAS_pool_get_array(velocity_solver, "dynamicsTimeStep", dynamicsTimeStep)
 
        call MPAS_pool_get_array(tracers_aggregate, "iceAreaCell", iceAreaCell)

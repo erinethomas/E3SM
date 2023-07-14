@@ -3858,31 +3858,6 @@
 		     dimensions="nFloeCategories"
 		     icepack_name="floe_binwidth"
 		/>
-		<var name="FloeSizeFraction"
-		     type="real"
-		     dimensions="nFloeCategories nCells Time"
-		     icepack_name="afsd"
-		/>
-		<var name="WaveFrequency"
-		     type="real"
-		     dimensions="nFrequencies"
-		     icepack_name="wavefreq"
-		/>
-		<var name="WaveFreqBinWidth"
-		     type="real"
-		     dimensions="nFrequencies"
-		     icepack_name="dwavefreq"
-		/>
-		<var name="SignificantWaveHeight"
-		     type="real"
-		     dimensions="nCells Time"
-		     icepack_name="wave_sig_ht"
-		/>
-		<var name="WaveSpectrum"
-		     type="real"
-		     dimensions="nFrequencies nCells Time"
-		     icepack_name="wave_spectrum"
-		/>
 		<var name="DFloeSizeNewIce"
 		     type="real"
 		     dimensions="nFloeCategories nCells Time"
