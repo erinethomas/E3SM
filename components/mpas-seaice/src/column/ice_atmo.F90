@@ -19,7 +19,9 @@
            cp_wv, cp_air, iceruf, zref, qqqice, TTTice, qqqocn, TTTocn, &
            Lsub, Lvap, vonkar, Tffresh, zvir, gravit, &
            pih, dragio, rhoi, rhos, rhow
-
+      
+      use mpas_log, only: mpas_log_write
+      
       implicit none
       save
 
@@ -60,7 +62,8 @@
                                       Cdn_atm,            &
                                       Cdn_atm_ratio_n,    &
                                       uvel,     vvel,     &
-                                      Uref)
+                                      Uref, &! )
+                                      lat,lon)
 
       character (len=3), intent(in) :: &
          sfctype      ! ice or ocean
@@ -82,7 +85,13 @@
          zlvl     , & ! atm level height (m)
          Qa       , & ! specific humidity (kg/kg)
          rhoa         ! air density (kg/m^3)
-
+      
+      ! ET EDIT: ---
+      real (kind=dbl_kind), intent(in),optional :: &
+         lat, &
+         lon
+      ! ------------
+      
       real (kind=dbl_kind), intent(inout) :: &
          Cdn_atm      ! neutral drag coefficient
  
@@ -264,7 +273,6 @@
 
       k = 0
       do while (abs(ustar - ustar_prev)/ustar > 0 .and. k <= natmiter)
-
          ustar_prev = ustar
          k = k + 1
 
@@ -296,7 +304,21 @@
          ustar = rd * vmag
          tstar = rh * delt
          qstar = re * delq
-
+         
+         ! ET EDIT:
+         if (present(lat) .and. present(lon)) then
+            if (lat == -1.30530554 .and. lon == 5.49050058) then 
+               call mpas_log_write("ErinThomas: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas:k counter= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+               call mpas_log_write("ErinThomas:k counter= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+               call mpas_log_write("ErinThomas:k counter= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+         endif
+         ! --------------------------
       enddo                     ! end iteration
 
       if (calc_strair) then

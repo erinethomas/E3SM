@@ -1868,7 +1868,8 @@
                                     lmask_n     , lmask_s     , &
                                     mlt_onset   , frz_onset   , &
                                     yday        , l_stop      , &
-                                    stop_label  , prescribed_ice)
+                                    stop_label  , prescribed_ice, & !)
+                                    lat ,lon) 
 
       use ice_aerosol, only: update_aerosol
       use ice_atmo, only: neutral_drag_coeffs
@@ -1899,7 +1900,11 @@
          strax       , & ! wind stress components (N/m^2)
          stray       , & ! 
          yday            ! day of year
-
+      ! ET EDIT: ---
+      real (kind=dbl_kind), intent(in), optional :: &
+         lat, &
+         lon
+      ! ----
       logical (kind=log_kind), intent(in) :: &
          lmask_n     , & ! northern hemisphere mask
          lmask_s     , & ! southern hemisphere mask
@@ -2173,7 +2178,8 @@
                                         Cdn_atm,                 &
                                         Cdn_atm_ratio_n,         &
                                         uvel,     vvel,          &
-                                        Uref=Urefn)
+                                        Uref=Urefn,     &
+                                        lat=lat,lon=lon)  ! ET EDIT
 
             endif   ! calc_Tsfc or calc_strair
 
@@ -3637,7 +3643,8 @@
                                      Cdn_atm,                    &
                                      Cdn_atm_ratio_n,            &
                                      uvel,        vvel,          &
-                                     Uref)
+                                     Uref, & !)
+                                     lat,lon)
 
       use ice_atmo, only: atmo_boundary_const, atmo_boundary_layer
       use ice_constants_colpkg, only: c0
@@ -3654,7 +3661,11 @@
          zlvl     , & ! atm level height (m)
          Qa       , & ! specific humidity (kg/kg)
          rhoa         ! air density (kg/m^3)
-
+      ! ET EDIT: ----
+      real (kind=dbl_kind), intent(in), optional :: &
+         lat, &
+         lon
+      ! --------
       real (kind=dbl_kind), intent(inout) :: &
          Cdn_atm  , &    ! neutral drag coefficient
          Cdn_atm_ratio_n ! ratio drag coeff / neutral drag coeff
@@ -3718,7 +3729,7 @@
                                             Cdn_atm,                 &
                                             Cdn_atm_ratio_n,         &
                                             worku,    workv,         &
-                                            workr)
+                                            workr,lat,lon)
                endif ! atmbndy
 
       if (present(Uref)) then

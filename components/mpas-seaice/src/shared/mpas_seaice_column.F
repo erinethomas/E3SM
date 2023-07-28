@@ -1338,6 +1338,10 @@ contains
          nSnowLayers, &
          nAerosols
 
+    ! ET EDIT:
+    real(kind=RKIND), dimension(:), pointer :: &
+         lonCell
+    !-------------- 
     ! variables
     real(kind=RKIND), dimension(:), pointer :: &
          latCell, &
@@ -1537,6 +1541,8 @@ contains
 
        call MPAS_pool_get_array(mesh, "latCell", latCell)
        call MPAS_pool_get_array(mesh, "indexToCellID", indexToCellID)
+       ! ET EDIT:
+       call MPAS_pool_get_array(mesh, "lonCell", lonCell)
 
        call MPAS_pool_get_array(icestate, "iceAreaCellInitial", iceAreaCellInitial)
        call MPAS_pool_get_array(icestate, "iceAreaCategoryInitial", iceAreaCategoryInitial)
@@ -1883,7 +1889,8 @@ contains
                dayOfYear, &
                abortFlag, &
                abortMessage, &
-               config_use_prescribed_ice)
+               config_use_prescribed_ice, & !)
+               latCell(iCell),lonCell(iCell) )
           call column_write_warnings(abortFlag)
 
           ! code abort
@@ -5366,6 +5373,10 @@ contains
 
     type(block_type), pointer :: block
 
+    ! ET EDIT:---
+    type(MPAS_pool_type), pointer :: &
+         mesh
+    !------------
     type(MPAS_pool_type), pointer :: &
          oceanCoupling, &
          atmosCoupling, &
@@ -5415,6 +5426,12 @@ contains
          albedoVisibleDiffuseOcean, &
          albedoIRDiffuseOcean
 
+    ! ET EDIT: ---
+    real(kind=RKIND), dimension(:), pointer :: &
+         latCell, &
+         lonCell
+    ! ------------
+ 
     real(kind=RKIND) :: &
          sensibleTransferCoefficient, &
          latentTransferCoefficient, &
@@ -5454,6 +5471,12 @@ contains
        call MPAS_pool_get_subpool(block % structs, "ocean_atmosphere", oceanAtmosphere)
 
        call MPAS_pool_get_dimension(oceanCoupling, "nCellsSolve", nCellsSolve)
+       
+       ! ET EDIT:---
+       call MPAS_pool_get_subpool(block % structs, "mesh", mesh)
+       call MPAS_pool_get_field(mesh, "latCell", latCell) ! nCells real array
+       call MPAS_pool_get_field(mesh, "lonCell", latCell) ! nCells real array
+       !------------
 
        call MPAS_pool_get_array(oceanCoupling, "seaSurfaceTemperature", seaSurfaceTemperature)
        call MPAS_pool_get_array(oceanCoupling, "seaSurfaceSalinity", seaSurfaceSalinity)
