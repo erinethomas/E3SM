@@ -5427,9 +5427,12 @@ contains
          albedoIRDiffuseOcean
 
     ! ET EDIT: ---
-    real(kind=RKIND), dimension(:), pointer :: &
-         latCell, &
-         lonCell
+    !real(kind=RKIND), dimension(:), pointer :: &
+    !     latCell, &
+    !     lonCell
+    ! mesh stand-ins
+    type(field1DReal), pointer :: &
+         latCell, lonCell ! nCells array
     ! ------------
  
     real(kind=RKIND) :: &
@@ -5475,7 +5478,7 @@ contains
        ! ET EDIT:---
        call MPAS_pool_get_subpool(block % structs, "mesh", mesh)
        call MPAS_pool_get_field(mesh, "latCell", latCell) ! nCells real array
-       call MPAS_pool_get_field(mesh, "lonCell", latCell) ! nCells real array
+       call MPAS_pool_get_field(mesh, "lonCell", lonCell) ! nCells real array
        !------------
 
        call MPAS_pool_get_array(oceanCoupling, "seaSurfaceTemperature", seaSurfaceTemperature)
