@@ -307,7 +307,22 @@
          
          ! ET EDIT:
          if (present(lat) .and. present(lon)) then
-            if (lat == -1.30530554 .and. lon == 5.49050058) then 
+            call mpas_log_write("ErinThomas: Lat = $r",realArgs=(/lat/))
+            call mpas_log_write("ErinThomas: Lon = $r",realArgs=(/lon/))
+
+            if (lat > -1.3 .and. lat < -1.2 .and. & ! RADIANS?
+                lon > 5.4 .and. lon < 5.5) then 
+               call mpas_log_write("ErinThomas: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas:k counter= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+               call mpas_log_write("ErinThomas:k counter= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+               call mpas_log_write("ErinThomas:k counter= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+            if (lat > -74.5 .and. lat < -75.0 .and. & ! DEGREES?
+                lon > 314.0 .and. lon < 315.0) then 
                call mpas_log_write("ErinThomas: Lat = $r",realArgs=(/lat/))
                call mpas_log_write("ErinThomas: Lon = $r",realArgs=(/lon/))
                call mpas_log_write("ErinThomas:k counter= $i, Ustar= $r",&
