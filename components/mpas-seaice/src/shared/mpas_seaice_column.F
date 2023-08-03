@@ -5427,11 +5427,8 @@ contains
          albedoIRDiffuseOcean
 
     ! ET EDIT: ---
-    !real(kind=RKIND), dimension(:), pointer :: &
-    !     latCell, &
-    !     lonCell
     ! mesh stand-ins
-    type(field1DReal), pointer :: &
+    real(kind=RKIND), dimension(:), pointer :: &
          latCell, lonCell ! nCells array
     ! ------------
  
@@ -5477,8 +5474,8 @@ contains
        
        ! ET EDIT:---
        call MPAS_pool_get_subpool(block % structs, "mesh", mesh)
-       call MPAS_pool_get_field(mesh, "latCell", latCell) ! nCells real array
-       call MPAS_pool_get_field(mesh, "lonCell", lonCell) ! nCells real array
+       call MPAS_pool_get_array(mesh, "latCell", latCell) ! nCells real array
+       call MPAS_pool_get_array(mesh, "lonCell", lonCell) ! nCells real array
        !------------
 
        call MPAS_pool_get_array(oceanCoupling, "seaSurfaceTemperature", seaSurfaceTemperature)
@@ -5549,7 +5546,7 @@ contains
                   latentTransferCoefficient, &
                   sensibleTransferCoefficient, &
                   airDragCoefficient(iCell), &
-                  airOceanDragCoefficientRatio(iCell))
+                  airOceanDragCoefficientRatio(iCell),latCell(iCell),lonCell(iCell))
 
              albedoVisibleDirectOcean(iCell)  = seaiceOceanAlbedo
              albedoIRDirectOcean(iCell)       = seaiceOceanAlbedo
@@ -5609,7 +5606,7 @@ contains
                   latentTransferCoefficient, &
                   sensibleTransferCoefficient, &
                   airDragCoefficient(iCell), &
-                  airOceanDragCoefficientRatio(iCell))
+                  airOceanDragCoefficientRatio(iCell),latCell(iCell),lonCell(iCell))
 
              albedoVisibleDirectOcean(iCell)  = seaiceOceanAlbedo
              albedoIRDirectOcean(iCell)       = seaiceOceanAlbedo
