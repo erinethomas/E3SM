@@ -267,8 +267,6 @@ contains
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_package", config_use_column_package)
     call MPAS_pool_get_config(domain % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
-    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
-    call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
 
     if (config_use_column_package) then
 
@@ -279,14 +277,14 @@ contains
        call init_column_itd(domain)
 
        ! initalize floe size distribution 
-       if (config_use_floe_size_distribution) then
+       call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
+       if (config_use_floe_size_distribution) &
           call init_column_fsd(domain)
-       endif
 
        ! initalize waves for column wave breaking
-       if (config_use_column_waves) then
+       call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
+       if (config_use_column_waves) &
           call init_column_waves(domain)
-       endif
 
        ! initialize thermodynamic tracer profiles
        call init_column_thermodynamic_profiles(domain)
@@ -416,13 +414,12 @@ contains
          tracers, &
          floe_size_distribution
 
-    logical, pointer :: config_use_floe_size_distribution
-    character, pointer :: config_initial_condition_type
-
+    character(len=StrKIND), pointer :: config_initial_condition_type
     ! dimensions
     integer, pointer ::   &
          nCellsSolve,     &
          nCategories, &
+         nFrequencies, &
          nFloeCategories
 
     !variables
@@ -448,7 +445,6 @@ contains
     real(kind=RKIND), dimension(:),allocatable :: FloeDist
     real(kind=RKIND), dimension(:,:),allocatable :: FloeDistCat
 
-    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution",config_use_floe_size_distribution)
     call MPAS_pool_get_config(domain % configs, "config_initial_condition_type",config_initial_condition_type)
 
     block => domain % blocklist
@@ -1458,9 +1454,10 @@ subroutine init_column_waves(domain)
        ! Wave fracturing  
        !-----------------------------------------------------------------
        call mpas_timer_start("Column wavefracture")
-       if (config_use_column_waves .and. config_use_floe_size_distribution) &
+       if (config_use_column_waves .and. config_use_floe_size_distribution) then
              call mpas_log_write("Erin Thomas before CALL column wavefracture")
              call column_wavefracture(domain)
+       endif
        call mpas_timer_stop("Column wavefracture")
        
 
@@ -2438,7 +2435,9 @@ subroutine init_column_waves(domain)
 
     logical, pointer :: &
          config_update_ocean_fluxes, &
-         config_use_column_biogeochemistry
+         config_use_column_biogeochemistry, &
+         config_use_floe_size_distribution, &
+         config_use_column_waves
 
     ! dimensions
     integer, pointer :: &
@@ -2462,7 +2461,6 @@ subroutine init_column_waves(domain)
          lateralIceMeltFraction, &
          lateralIceMeltRate, &
          lateralIceMelt, &
-         lateralIceMeltRate, &
          lateralHeatFlux, &
          freezingMeltingPotential, &
          frazilFormation, &
@@ -2571,12 +2569,12 @@ subroutine init_column_waves(domain)
        call MPAS_pool_get_subpool(block % structs, "initial", initial)
        call MPAS_pool_get_subpool(block % structs, "diagnostics", diagnostics)
        call MPAS_pool_get_subpool(block % structs, "aerosols", aerosols)
-       call MPAS_pool_get_subpool(block % structs, "wave_coupling", wave_coupling)
-       call MPAS_pool_get_subpool(block % structs, "floe_size_distribution", floe_size_distribution)
 
        call MPAS_pool_get_config(block % configs, "config_dt", config_dt)
        call MPAS_pool_get_config(block % configs, "config_update_ocean_fluxes", config_update_ocean_fluxes)
        call MPAS_pool_get_config(block % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
+       call MPAS_pool_get_config(block % configs, "config_use_column_waves", config_use_column_waves)
+       call MPAS_pool_get_config(block % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
        call MPAS_pool_get_dimension(mesh, "nCellsSolve", nCellsSolve)
        call MPAS_pool_get_dimension(mesh, "nCategories", nCategories)
@@ -2584,7 +2582,6 @@ subroutine init_column_waves(domain)
        call MPAS_pool_get_dimension(mesh, "nIceLayers", nIceLayers)
        call MPAS_pool_get_dimension(mesh, "nSnowLayers", nSnowLayers)
        call MPAS_pool_get_dimension(mesh, "nAerosols", nAerosols)
-       call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
        call MPAS_pool_get_dimension(block % dimensions, "nBioLayers", nBioLayers)
 
        call MPAS_pool_get_dimension(block % dimensions, "nBioLayersP1", nBioLayersP1)
@@ -2606,12 +2603,14 @@ subroutine init_column_waves(domain)
        call MPAS_pool_get_array(ocean_coupling, "freezingMeltingPotential", freezingMeltingPotential)
        call MPAS_pool_get_array(ocean_coupling, "seaFreezingTemperature", seaFreezingTemperature)
        call MPAS_pool_get_array(ocean_coupling, "seaSurfaceSalinity", seaSurfaceSalinity)
-
+       
+       call MPAS_pool_get_subpool(block % structs, "wave_coupling", wave_coupling)
+       call MPAS_pool_get_subpool(block % structs, "floe_size_distribution", floe_size_distribution)
+       call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
        call MPAS_pool_get_array(wave_coupling, "SignificantWaveHeight", SignificantWaveHeight)
        call MPAS_pool_get_array(wave_coupling, "WaveSpectra", WaveSpectra)
        call MPAS_pool_get_array(wave_coupling, "WaveFrequency", WaveFrequency)
        call MPAS_pool_get_array(wave_coupling, "WaveFreqBinWidth", WaveFreqBinWidth)
-
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
        call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinWidth", FloeSizeBinWidth)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeNewIce", DFloeSizeNewIce)
@@ -2619,7 +2618,7 @@ subroutine init_column_waves(domain)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralMelt", DFloeSizeLateralMelt)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWeld", DFloeSizeWeld)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
-
+       
        call MPAS_pool_get_array(ocean_fluxes, "oceanFreshWaterFlux", oceanFreshWaterFlux)
        call MPAS_pool_get_array(ocean_fluxes, "oceanSaltFlux", oceanSaltFlux)
        call MPAS_pool_get_array(ocean_fluxes, "oceanHeatFlux", oceanHeatFlux)
@@ -2701,10 +2700,6 @@ subroutine init_column_waves(domain)
 
           oceanBioFluxesTemp(:) = 0.0_RKIND
        
-          ! CICE calculates the Sig Wave Height from the wave spectrum as follows before step therm2:
-          ! we should probably use the Sig Wave Height from WW3 
-          ! if (tr_fsd) wave_sig_ht(i,j,iblk) = c4*SQRT(SUM(wave_spectrum(i,j,:,iblk)*dwavefreq(:)))
-
           ! CICE calculates the Sig Wave Height from the wave spectrum as follows before step therm2:
           ! we will use the Sig Wave Height from WW3, but could use this for testing without WW3
           ! if (tr_fsd) wave_sig_ht(i,j,iblk) = c4*SQRT(SUM(wave_spectrum(i,j,:,iblk)*dwavefreq(:)))
@@ -3662,7 +3657,7 @@ subroutine init_column_waves(domain)
          nCellsSolve, &   
          nCategories, & !number of ice thicknes categories
          nFloeCategories, & ! number of floe size categories
-         nWaveFrequencies   ! number of wave frequency bins
+         nFrequencies   ! number of wave frequency bins
 
     ! variables
     real(kind=RKIND), pointer :: &
@@ -6726,8 +6721,8 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nZBGCTracers", nZBGCTracers)
 
     call MPAS_pool_get_config(domain % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
-    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
+    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
     ! get the number of CICE tracers in trcrn
     call init_column_tracer_object_tracer_number(domain, tracerObject)
 

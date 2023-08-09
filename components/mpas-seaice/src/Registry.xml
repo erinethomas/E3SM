@@ -457,7 +457,7 @@
 		/>
 		<nml_option name="config_nFrequencies" type="integer" default_value="0" units="unitless"
 			description="The number of frequency bins used by wave model."
-			possible_values="25,36,50. Defined by WW3 component. Do not edit."
+			possible_values="0,25,36,50. Defined by WW3 component. Do not edit."
 		/>
 	</nml_record>
 	<nml_record name="initialize" in_defaults="true">

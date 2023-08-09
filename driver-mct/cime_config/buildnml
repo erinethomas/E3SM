@@ -46,10 +46,10 @@ def _create_drv_namelists(case, infile, confdir, nmlgen, files):
     config['MULTI_DRIVER'] = '.true.' if case.get_value('MULTI_DRIVER') else '.false.'
     config['OS'] = case.get_value('OS')
     config['glc_nec'] = 0 if case.get_value('GLC_NEC') == 0 else case.get_value('GLC_NEC')
-    if case.get_value('COMP_WAV') == 'ww3':
+    if 'ww3' in case.get_value('COMP_WAV'):
         config['WAVSPEC'] = case.get_value('WAV_SPEC')
     else:
-        config['WAVSPEC'] = 0
+        config['WAVSPEC'] = 'none'
 
     config['single_column'] = 'true' if case.get_value('PTS_MODE') else 'false'
     config['timer_level'] = 'pos' if case.get_value('TIMER_LEVEL') >= 1 else 'neg'
