@@ -2443,11 +2443,10 @@ subroutine init_column_waves(domain)
     integer, pointer :: &
          nCellsSolve, &
          nCategories, &
-!         nFloeCategories, &
+         nFloeCategories, &
          nIceLayers, &
          nSnowLayers, &
          nAerosols, &
-         nFloeCategories, &
          nBioLayers, &
          nBioLayersP1
 
@@ -2461,7 +2460,6 @@ subroutine init_column_waves(domain)
          lateralIceMeltFraction, &
          lateralIceMeltRate, &
          lateralIceMelt, &
-         lateralHeatFlux, &
          freezingMeltingPotential, &
          frazilFormation, &
          rainfallRate, &
