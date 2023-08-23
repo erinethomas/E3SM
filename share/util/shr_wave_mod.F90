@@ -24,7 +24,7 @@ contains
       sigma   = freq1 / xfreq**2 
       sxfr    = 0.5 * (xfreq-1./xfreq)
 
-      DO ik=0, nfr+1
+      DO ik=1, nfr+2
          sigma    = sigma * xfreq
          freq(ik)  = sigma
          dfreq(ik) = sigma * sxfr      
