@@ -804,6 +804,10 @@
 			description="The first frequency used by wave model."
 			possible_values="Defined by WW3 component. Do not modify."
 		/>
+		<nml_option name="config_wave_spec_type" type="character" default_value="none" units="unitless"
+			description="The type of wave spectra input."
+			possible_values="none, constant, random."
+		/>
 	</nml_record>
 	<nml_record name="biogeochemistry" in_defaults="true">
 		<nml_option name="config_use_brine" type="logical" default_value="false" units="unitless"
