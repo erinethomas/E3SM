@@ -194,6 +194,7 @@
 <!-- wave_config -->
 <config_xfreq>0.0</config_xfreq>
 <config_freq1>0.0</config_freq1>
+<config_wave_spec_type>'none'</config_wave_spec_type>
 
 <!-- biogeochemistry -->
 <config_use_brine>false</config_use_brine>

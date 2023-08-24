@@ -194,6 +194,7 @@ add_default($nl, 'config_use_floe_size_distribution');
 ###################################
 add_default($nl, 'config_xfreq');
 add_default($nl, 'config_freq1');
+add_default($nl, 'config_wave_spec_type');
 
 ###################################
 # Namelist group: biogeochemistry #

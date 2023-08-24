@@ -965,6 +965,11 @@ First frequency used by the wave model.
 Default: Defined in namelist_defaults.xml
 </entry>
 
+<entry id="config_wave_spec_type" type="char*1024"
+	category="wave_config" group="wave_config">
+Wave Spectra input type.
+Default = 'none'. Defined in namelist_defaults.xml
+</entry>
 
 
 <!-- biogeochemistry -->

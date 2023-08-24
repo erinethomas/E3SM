@@ -416,7 +416,7 @@ my $RUN_STARTDATE          = "$xmlvars{'RUN_STARTDATE'}";
 my $START_TOD              = "$xmlvars{'START_TOD'}";
 my $RUN_REFDATE            = "$xmlvars{'RUN_REFDATE'}";
 my $CONTINUE_RUN           = "$xmlvars{'CONTINUE_RUN'}";
-my $wave_spec              = $xmlvars{'WAV_SPEC'};
+my $wave_spec              = "$xmlvars{'WAV_SPEC'}";
 
 my $SSTICE_GRID_FILENAME;
 my $SSTICE_DATA_FILENAME;
@@ -677,6 +677,14 @@ if ($wave_spec eq 'sp25x36') {
 	add_default($nl, 'config_xfreq');
 	add_default($nl, 'config_freq1');
 }
+# if wave coupling is off define spectra tyep = none, if wave coupling is on, spectra type = random
+# ET NOTE: useing wave spec to define these options do NOT account for wave coupling to 
+# a data-wave componet where wave spectra will be constant dummy value for testing.
+if ($wave_spec eq 'none') {
+	add_default($nl, 'config_wave_spec_type','val'=>"none");
+} else {
+	add_default($nl, 'config_wave_spec_type','val'=>"random");
+}
 
 ###################################
 # Namelist group: biogeochemistry #
@@ -911,6 +919,7 @@ add_default($nl, 'config_category_bounds_type');
 # Namelist group:  floesize #
 #############################
 add_default($nl, 'config_floeshape');
+#CONFIG_FLOEDIAM SHOULD ONLY BE DEFINED IF THERE IS NO WAVE COUPLING
 add_default($nl, 'config_floediam');
 
 ###########################

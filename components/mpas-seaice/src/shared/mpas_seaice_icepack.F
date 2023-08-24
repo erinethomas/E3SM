@@ -611,9 +611,17 @@ subroutine init_column_waves(domain)
                               WaveFrequency_TEMP, &
                               WaveFreqBinWidth_TEMP)
                       
-      WaveFrequency = WaveFrequency_TEMP(1:nFrequencies) ! remove frequency 'tails' (these are only need in WW3, not MPAS-SI)
-      WaveFreqBinWidth = WaveFreqBinWidth_TEMP(1:nFrequencies) 
+      do i = 1,nFrequencies+2      
+         call mpas_log_write('Erin Thomas: NFreq: $i, WAVEFREQ: $r', &
+                              intArgs=(/i/), realArgs=(/WaveFrequency_TEMP(i)/)) 
+      end do
+      WaveFrequency = WaveFrequency_TEMP(2:nFrequencies-1) ! remove frequency 'tails' (these are only need in WW3, not MPAS-SI)
+      WaveFreqBinWidth = WaveFreqBinWidth_TEMP(2:nFrequencies-1) 
       
+      do i = 1,nFrequencies      
+         call mpas_log_write('Erin Thomas: NFreq: $i, WAVEFREQ: $r', &
+                              intArgs=(/i/), realArgs=(/WaveFrequency(i)/)) 
+      end do
       ! initialize HS and Spectra
       SignificantWaveHeight(:) = c0   
       WaveSpectra(:,:)        = c0
@@ -3638,6 +3646,9 @@ subroutine init_column_waves(domain)
    
     logical, pointer :: &
        config_use_column_biogeochemistry
+    
+    character(len=strKIND), pointer :: &
+       config_wave_spec_type
 
     type(MPAS_pool_type), pointer :: &
        mesh, &
@@ -3646,9 +3657,6 @@ subroutine init_column_waves(domain)
        tracers_aggregate, &
        floe_size_distribution, &
        wave_coupling
-
-    character(len=icepack_char_len), pointer :: &
-         waveSpectraType  ! the wave spectra type 
 
     ! dimensions
     integer, pointer :: &
@@ -3692,6 +3700,7 @@ subroutine init_column_waves(domain)
 
        !MPAS_pool_get* calls
        call MPAS_pool_get_config(block % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
+       call MPAS_pool_get_config(block % configs, "config_wave_spec_type", config_wave_spec_type)
 
        call MPAS_pool_get_subpool(block % structs, "mesh", mesh)
        call MPAS_pool_get_subpool(block % structs, "tracers", tracers)
@@ -3730,7 +3739,7 @@ subroutine init_column_waves(domain)
           
           call mpas_log_write("Erin Thomas before icepack_step_wavefracture")
           call icepack_step_wavefracture(&
-                  wave_spec_type = waveSpectraType, &
+                  wave_spec_type = config_wave_spec_type, &
                   dt = dynamicsTimeStep, &
                   ncat = nCategories, &
                   nfsd = nFloeCategories, &
