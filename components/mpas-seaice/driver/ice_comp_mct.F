@@ -364,7 +364,9 @@ contains
     ! Disable output from all but the master task for E3SM!
     ! (This overrides the default set by mpas_log_init based on MPAS_DEBUG setting.)
     if (iam /= 0) then
-       domain % logInfo % outputLog % isActive = .false.
+       !domain % logInfo % outputLog % isActive = .false.
+       ! ET EDIT
+       domain % logInfo % outputLog % isActive = .true.
     endif
 
     ! After core has had a chance to modify log defaults, open the output log
