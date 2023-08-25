@@ -13136,7 +13136,8 @@ subroutine init_column_waves(domain)
          config_ocean_heat_transfer_type, &
          config_sea_freezing_temperature_type, &
          config_skeletal_bgc_flux_type, &
-         config_snow_redistribution_scheme
+         config_snow_redistribution_scheme, &
+         config_wave_spec_type
 
     logical, pointer :: &
          config_use_snicar_ad, &
@@ -13315,10 +13316,18 @@ subroutine init_column_waves(domain)
          config_max_snow_density, &
          config_minimum_wind_compaction, &
          config_wind_compaction_factor, &
-         config_max_dry_snow_radius
+         config_max_dry_snow_radius, &
+         config_floeshape
 
     integer, pointer :: &
-         config_boundary_layer_iteration_number
+         config_boundary_layer_iteration_number, &
+         config_nFrequencies
+
+    real(kind=RKIND), dimension(:), pointer :: &
+         FloeSizeDiameter
+    
+    real(kind=RKIND), dimension(:,:), pointer :: &
+         WaveSpectra
 
     integer :: &
          config_thermodynamics_type_int, &
@@ -13540,6 +13549,13 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_config(domain % configs, "config_wind_compaction_factor", config_wind_compaction_factor)
     call MPAS_pool_get_config(domain % configs, "config_max_dry_snow_radius", config_max_dry_snow_radius)
     call MPAS_pool_get_config(domain % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
+    call MPAS_pool_get_config(domain % configs, "config_floeshape", config_floeshape)
+    call MPAS_pool_get_config(domain % configs, "config_wave_spec_type", config_wave_spec_type)
+    call MPAS_pool_get_config(domain % configs, "config_nFrequencies", config_nFrequencies)
+    call MPAS_pool_get_subpool(domain % blocklist % structs, "wave_coupling", wave_coupling)
+    call MPAS_pool_get_subpool(domain % blocklist % structs, "floe_size_distribution", floe_size_distribution)
+    call MPAS_pool_get_array(wave_coupling, "WaveSpectra", WaveSpectra) 
+    call MPAS_pool_get_array(floe_size_distribution, "FloeSizeDiameter",FloeSizeDiameter)
 
     config_thermodynamics_type_int = config_cice_int("config_thermodynamics_type", config_thermodynamics_type)
     config_ice_strength_formulation_int = config_cice_int("config_ice_strength_formulation", config_ice_strength_formulation)
@@ -13701,7 +13717,7 @@ subroutine init_column_waves(domain)
          cp_ice_in               = seaiceFreshIceSpecificHeat, & !
          cp_ocn_in               = seaiceSeaWaterSpecificHeat, &
          !hfrazilmin_in           = , &
-         !floediam_in             = , &
+         floediam_in             = FloeSizeDiameter, &
          !depressT_in             = , &             ! used for prescribed ice in CICE
          dragio_in               = seaiceIceOceanDragCoefficient, & ! note calc_dragio not implemented
          !thickness_ocn_layer1_in = , &        ! not yet implemented in MPAS-SI (stealth feature)
@@ -13793,10 +13809,10 @@ subroutine init_column_waves(domain)
          hs0_in                  = config_snow_to_ice_transition_depth, &
          frzpnd_in               = config_pond_refreezing_type, &
          saltflux_option_in      = config_salt_flux_coupling_type, &
-         !floeshape_in            = , &
-         !wave_spec_in            = , &        ! not yet implemented in MPAS-SI (stealth feature)
-         !wave_spec_type_in       = , &        ! not yet implemented in MPAS-SI (stealth feature)
-         !nfreq_in                = , &        ! not yet implemented in MPAS-SI (stealth feature)
+         floeshape_in            = config_floeshape, &
+         wave_spec_in            = WaveSpectra, &        ! not yet implemented in MPAS-SI (stealth feature)
+         wave_spec_type_in       = config_wave_spec_type, &        ! not yet implemented in MPAS-SI (stealth feature)
+         nfreq_in                = config_nFrequencies, &        ! not yet implemented in MPAS-SI (stealth feature)
          dpscale_in              = config_pond_flushing_timescale, &
          rfracmin_in             = config_min_meltwater_retained_fraction, &
          rfracmax_in             = config_max_meltwater_retained_fraction, &
