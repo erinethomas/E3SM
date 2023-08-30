@@ -311,15 +311,114 @@
          
          ! ET EDIT:
          if (present(lat) .and. present(lon)) then
-            if (lat > -1.31 .and. lat < -1.29 .and. & ! RADIANS?
-                lon > 5.485 .and. lon < 5.495) then 
-               call mpas_log_write("ErinThomasDEBUG: Lat = $r",realArgs=(/lat/))
-               call mpas_log_write("ErinThomasDEBUG: Lon = $r",realArgs=(/lon/))
-               call mpas_log_write("ErinThomas:k count= $i, Ustar= $r",&
+            if (lat > -1.300 .and. lat < -1.295 .and. & ! RADIANS?
+                lon > 5.490 .and. lon < 5.495) then 
+               call mpas_log_write("ErinThomas#1: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas#1: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas#1:k count= $i, Ustar= $r",&
                      intArgs=(/k/),realArgs=(/ustar/))
-               call mpas_log_write("ErinThomas:k count= $i, Tstar= $r",&
+               call mpas_log_write("ErinThomas#1:k count= $i, Tstar= $r",&
                      intArgs=(/k/),realArgs=(/tstar/))
-               call mpas_log_write("ErinThomas:k count= $i, Qstar= $r",&
+               call mpas_log_write("ErinThomas#1:k count= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+            if (lat > -1.225 .and. lat < -1.215 .and. & ! RADIANS?
+                lon > 5.320 .and. lon < 5.330) then 
+               call mpas_log_write("ErinThomas#2: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas#2: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas#2:k count= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+               call mpas_log_write("ErinThomas#2:k count= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+               call mpas_log_write("ErinThomas#2:k count= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+            if (lat > -1.135 .and. lat < -1.130 .and. & ! RADIANS?
+                lon > 5.409 .and. lon < 5.415) then 
+               call mpas_log_write("ErinThomas#3: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas#3: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas#3:k count= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+               call mpas_log_write("ErinThomas#3:k count= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+               call mpas_log_write("ErinThomas#3:k count= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+            if (lat > -1.206 .and. lat < -1.195 .and. & ! RADIANS?
+                lon > 5.930 .and. lon < 5.940) then 
+               call mpas_log_write("ErinThomas#4: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas#4: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas#4:k count= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+               call mpas_log_write("ErinThomas#4:k count= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+               call mpas_log_write("ErinThomas#4:k count= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+            if (lat > -1.280 .and. lat < -1.270 .and. & ! RADIANS?
+                lon > 3.485 .and. lon < 3.495) then 
+               call mpas_log_write("ErinThomas#5: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas#5: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas#5:k count= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+               call mpas_log_write("ErinThomas#5:k count= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+               call mpas_log_write("ErinThomas#5:k count= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+            if (lat > 0.990 .and. lat < 1.00 .and. & ! RADIANS?
+                lon > 5.320 .and. lon < 5.330) then 
+               call mpas_log_write("ErinThomas#6: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas#6: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas#6:k count= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+               call mpas_log_write("ErinThomas#6:k count= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+               call mpas_log_write("ErinThomas#6:k count= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+            if (lat > 1.185 .and. lat < 1.195 .and. & ! RADIANS?
+                lon > 5.930 .and. lon < 5.940) then 
+               call mpas_log_write("ErinThomas#7: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas#7: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas#7:k count= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+               call mpas_log_write("ErinThomas#7:k count= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+               call mpas_log_write("ErinThomas#7:k count= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+            if (lat > 1.300 .and. lat < 1.310 .and. & ! RADIANS?
+                lon > 3.835 .and. lon < 3.845) then 
+               call mpas_log_write("ErinThomas#8: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas#8: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas#8:k count= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+               call mpas_log_write("ErinThomas#8:k count= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+               call mpas_log_write("ErinThomas#8:k count= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+            if (lat > 1.430 .and. lat < 1.440 .and. & ! RADIANS?
+                lon > 4.270 .and. lon < 4.280) then 
+               call mpas_log_write("ErinThomas#9: Lat = $r",realArgs=(/lat/))
+               call mpas_log_write("ErinThomas#9: Lon = $r",realArgs=(/lon/))
+               call mpas_log_write("ErinThomas#9:k count= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+               call mpas_log_write("ErinThomas#9:k count= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+               call mpas_log_write("ErinThomas#9:k count= $i, Qstar= $r",&
+                     intArgs=(/k/),realArgs=(/qstar/))
+            endif
+            if (lat > 1.74 .and. & 
+              (lon > 6.25 .or. lon < 0.05)) then 
+              call mpas_log_write("ErinThomas#10: Lat = $r",realArgs=(/lat/))
+              call mpas_log_write("ErinThomas#10: Lon = $r",realArgs=(/lon/))
+              call mpas_log_write("ErinThomas#10:k count= $i, Ustar= $r",&
+                     intArgs=(/k/),realArgs=(/ustar/))
+              call mpas_log_write("ErinThomas#10:k count= $i, Tstar= $r",&
+                     intArgs=(/k/),realArgs=(/tstar/))
+              call mpas_log_write("ErinThomas#10:k count= $i, Qstar= $r",&
                      intArgs=(/k/),realArgs=(/qstar/))
             endif
          endif
