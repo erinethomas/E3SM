@@ -13119,6 +13119,10 @@ subroutine init_column_waves(domain)
 
     type(domain_type), intent(inout) :: &
          domain
+    
+    type(MPAS_pool_type), pointer :: &
+         wave_coupling, &
+         floe_size_distribution 
 
     character(len=strKIND), pointer :: &
          config_thermodynamics_type, &
@@ -13155,7 +13159,8 @@ subroutine init_column_waves(domain)
          config_use_vertical_zsalinity, &
          config_use_modal_aerosols, &
          config_use_snow_liquid_ponds, &
-         config_use_snow_grain_radius
+         config_use_snow_grain_radius, &
+         config_use_column_waves
 
     real(kind=RKIND), pointer :: &
          config_min_friction_velocity, &
@@ -13549,6 +13554,7 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_config(domain % configs, "config_wind_compaction_factor", config_wind_compaction_factor)
     call MPAS_pool_get_config(domain % configs, "config_max_dry_snow_radius", config_max_dry_snow_radius)
     call MPAS_pool_get_config(domain % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
+    call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
     call MPAS_pool_get_config(domain % configs, "config_floeshape", config_floeshape)
     call MPAS_pool_get_config(domain % configs, "config_wave_spec_type", config_wave_spec_type)
     call MPAS_pool_get_config(domain % configs, "config_nFrequencies", config_nFrequencies)
@@ -13717,7 +13723,7 @@ subroutine init_column_waves(domain)
          cp_ice_in               = seaiceFreshIceSpecificHeat, & !
          cp_ocn_in               = seaiceSeaWaterSpecificHeat, &
          !hfrazilmin_in           = , &
-         floediam_in             = FloeSizeDiameter, &
+         !floediam_in             = FloeSizeDiameter, & ! THIS IS NOT A PARAMETER IF FSD IS ON 
          !depressT_in             = , &             ! used for prescribed ice in CICE
          dragio_in               = seaiceIceOceanDragCoefficient, & ! note calc_dragio not implemented
          !thickness_ocn_layer1_in = , &        ! not yet implemented in MPAS-SI (stealth feature)
@@ -13810,9 +13816,9 @@ subroutine init_column_waves(domain)
          frzpnd_in               = config_pond_refreezing_type, &
          saltflux_option_in      = config_salt_flux_coupling_type, &
          floeshape_in            = config_floeshape, &
-         wave_spec_in            = WaveSpectra, &        ! not yet implemented in MPAS-SI (stealth feature)
-         wave_spec_type_in       = config_wave_spec_type, &        ! not yet implemented in MPAS-SI (stealth feature)
-         nfreq_in                = config_nFrequencies, &        ! not yet implemented in MPAS-SI (stealth feature)
+         wave_spec_in            = config_use_column_waves, &
+         wave_spec_type_in       = config_wave_spec_type, &
+         nfreq_in                = config_nFrequencies, &
          dpscale_in              = config_pond_flushing_timescale, &
          rfracmin_in             = config_min_meltwater_retained_fraction, &
          rfracmax_in             = config_max_meltwater_retained_fraction, &
