@@ -4813,6 +4813,36 @@
       <value bfbflag="on">X</value>
     </values>
   </entry>
+  
+  <entry id="wav2ice_smapname"    modify_via_xml="WAV2ICE_SMAPNAME">
+    <type>char</type>
+    <category>mapping</category>
+    <input_pathname>abs</input_pathname>
+    <group>seq_maps</group>
+    <desc>
+      wav to ice state mapping file for states
+    </desc>
+    <values>
+      <value>$WAV2ICE_SMAPNAME</value>
+    </values>
+  </entry>
+
+  <entry id="wav2ice_smaptype"    modify_via_xml="WAV2ICE_SMAPTYPE">
+    <type>char</type>
+    <category>mapping</category>
+    <group>seq_maps</group>
+    <desc>
+      The type of mapping desired, either "source" or "destination" mapping.
+      X is associated with rearrangement of the source grid to the
+      destination grid and then local mapping.  Y is associated with mapping
+      on the source grid and then rearrangement and sum to the destination
+      grid.
+    </desc>
+    <values>
+      <value>$WAV2ICE_SMAPTYPE</value>
+      <value bfbflag="on">X</value>
+    </values>
+  </entry>
 
   <entry id="drv_flds_in_files" skip_default_entry="true">
     <type>char(10)</type>
