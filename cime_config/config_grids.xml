@@ -4120,12 +4120,14 @@
 
     <gridmap ocn_grid="oEC60to30v3" wav_grid="wQU225EC60to30">
       <map name="WAV2OCN_SMAPNAME">cpl/gridmaps/wQU225EC60to30/map_wQU225EC60to30_TO_oEC60to30v3_blin.20210428.nc</map>
+      <map name="WAV2ICE_SMAPNAME">cpl/gridmaps/wQU225EC60to30/map_wQU225EC60to30_TO_oEC60to30v3_blin.20210428.nc</map>
       <map name="OCN2WAV_SMAPNAME">cpl/gridmaps/wQU225EC60to30/map_oEC60to30v3_TO_wQU225EC60to30_blin.20210428.nc</map>
       <map name="ICE2WAV_SMAPNAME">cpl/gridmaps/wQU225EC60to30/map_oEC60to30v3_TO_wQU225EC60to30_blin.20210428.nc</map>
     </gridmap>
 
     <gridmap ocn_grid="EC30to60E2r2" wav_grid="wQU225EC30to60E2r2">
       <map name="WAV2OCN_SMAPNAME">cpl/gridmaps/wQU225EC30to60E2r2/map_wQU225EC30to60E2r2_TO_EC30to60E2r2_blin.20220222.nc</map>
+      <map name="WAV2ICE_SMAPNAME">cpl/gridmaps/wQU225EC30to60E2r2/map_wQU225EC30to60E2r2_TO_EC30to60E2r2_blin.20220222.nc</map>
       <map name="OCN2WAV_SMAPNAME">cpl/gridmaps/wQU225EC30to60E2r2/map_EC30to60E2r2_TO_wQU225EC30to60E2r2_blin.20220222.nc</map>
       <map name="ICE2WAV_SMAPNAME">cpl/gridmaps/wQU225EC30to60E2r2/map_EC30to60E2r2_TO_wQU225EC30to60E2r2_blin.20220222.nc</map>
     </gridmap>
