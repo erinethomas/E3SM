@@ -227,7 +227,7 @@ contains
              write(logunit,F00) 'Initializing mapper_Sw2i'
           end if
           call seq_map_init_rcfile(mapper_Sw2i, wav(1), ice(1), &
-               'seq_maps.rc','wav2ice_rmapname:','wav2ice_rmaptype:',samegrid_iw, &
+               'seq_maps.rc','wav2ice_smapname:','wav2ice_smaptype:',samegrid_iw, &
                'mapper_Sw2i initialization', esmf_map_flag)
        endif
        call shr_sys_flush(logunit)
