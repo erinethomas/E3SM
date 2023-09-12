@@ -500,12 +500,6 @@ contains
           floe_rad_c=FloeSizeBinCenter(:),      & ! fsd size bin centre in m (radius)
           floe_binwidth=FloeSizeBinWidth(:),    & ! fsd size bin width in m (radius)
           afsd=FloeDist)                          ! floe size distribution initalization tracer 
-
-       call mpas_log_write("Erin Thomas after icepack_init_fsd:")
-       do i = 1,nFloeCategories      
-          call mpas_log_write('Erin Thomas TEST: floe category INDEX: $i, FloeDist: $r', &
-                                   intArgs=(/i/), realArgs=(/FloeDist(i)/)) 
-       end do
       
        do iCell =1, nCellsSolve 
           do iCategory =1,nCategories
@@ -520,7 +514,6 @@ contains
              enddo
           enddo
        enddo !iCell
-!       call mpas_log_write("Erin Thomas: end of init_column_fsd subroutine")
 
        block => block % next
     
@@ -611,17 +604,9 @@ subroutine init_column_waves(domain)
                               WaveFrequency_TEMP, &
                               WaveFreqBinWidth_TEMP)
                       
-      do i = 1,nFrequencies+2      
-         call mpas_log_write('Erin Thomas: NFreq: $i, WAVEFREQ: $r', &
-                              intArgs=(/i/), realArgs=(/WaveFrequency_TEMP(i)/)) 
-      end do
       WaveFrequency = WaveFrequency_TEMP(2:nFrequencies-1) ! remove frequency 'tails' (these are only need in WW3, not MPAS-SI)
       WaveFreqBinWidth = WaveFreqBinWidth_TEMP(2:nFrequencies-1) 
       
-      do i = 1,nFrequencies      
-         call mpas_log_write('Erin Thomas: NFreq: $i, WAVEFREQ: $r', &
-                              intArgs=(/i/), realArgs=(/WaveFrequency(i)/)) 
-      end do
       ! initialize HS and Spectra
       SignificantWaveHeight(:) = c0   
       WaveSpectra(:,:)        = c0
@@ -1463,7 +1448,6 @@ subroutine init_column_waves(domain)
        !-----------------------------------------------------------------
        call mpas_timer_start("Column wavefracture")
        if (config_use_column_waves .and. config_use_floe_size_distribution) then
-             call mpas_log_write("Erin Thomas before CALL column wavefracture")
              call column_wavefracture(domain)
        endif
        call mpas_timer_stop("Column wavefracture")
@@ -3737,7 +3721,6 @@ subroutine init_column_waves(domain)
           call set_cice_tracer_array_category(block, ciceTracerObject, &
                  tracerArrayCategory, iCell, setGetPhysicsTracers, setGetBGCTracers)
           
-          call mpas_log_write("Erin Thomas before icepack_step_wavefracture")
           call icepack_step_wavefracture(&
                   wave_spec_type = config_wave_spec_type, &
                   dt = dynamicsTimeStep, &
@@ -3755,7 +3738,6 @@ subroutine init_column_waves(domain)
                   trcrn = tracerArrayCategory, &
                   d_afsd_wave = DFloeSizeWaves(:,iCell))
           
-          call mpas_log_write("Erin Thomas after icepack_step_wavefracture")
           call get_cice_tracer_array_category(block, ciceTracerObject, &
                  tracerArrayCategory, iCell, setGetPhysicsTracers, setGetBGCTracers)
        enddo !iCell
