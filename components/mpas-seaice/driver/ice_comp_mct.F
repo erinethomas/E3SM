@@ -2628,6 +2628,20 @@ contains
                if (worky > 0.0_RKIND ) workx = 2.0_RKIND*workx / worky
                FloeSizeDiameter(i) = MAX(2.0_RKIND*FloeSizeBinCenter(1),workx) 
                i2x_i % rAttr(index_i2x_Si_ifloe, n)  = FloeSizeDiameter(i)
+
+               ! calc perimeter
+               workx = 0.0_RKIND
+               if ( > puny) then
+                 do iCategory=1,nCategories
+                    do iFloeCategory=1,nFloeCategories
+                       workx =  workx + (   & 
+                                 )
+                    enddo
+                 enddo
+               endif
+
+
+
             endif ! end floe size distribution
 
             !--- a/i fluxes computed by ice
