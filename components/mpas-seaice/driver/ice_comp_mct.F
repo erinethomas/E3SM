@@ -2425,7 +2425,8 @@ contains
       carbonToNitrogenRatioAlgae,  &
       carbonToNitrogenRatioDON,    &
       FloeSizeBinCenter,           &
-      FloeSizeDiameter
+      FloeSizeDiameter,            &
+      FloeSizePerimeter
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeFlux,              &
@@ -2506,6 +2507,7 @@ contains
          call MPAS_pool_get_array(icestate, "iceAreaCategoryInitial", iceAreaCategoryInitial)
          call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
          call MPAS_pool_get_array(floe_size_distribution, "FloeSizeDiameter",FloeSizeDiameter)
+         call MPAS_pool_get_array(floe_size_distribution, "FloeSizePerimeter",FloeSizePerimeter)
          call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
       endif
       
@@ -2631,17 +2633,13 @@ contains
 
                ! calc perimeter
                workx = 0.0_RKIND
-               if ( > puny) then
-                 do iCategory=1,nCategories
-                    do iFloeCategory=1,nFloeCategories
-                       workx =  workx + (   & 
-                                 )
-                    enddo
-                 enddo
-               endif
-
-
-
+               do iCategory=1,nCategories
+                  do iFloeCategory=1,nFloeCategories
+                     workx =  workx + ( 2.0_RKIND*floeSizeDist(iFloeCategory,iCategory,i)*iceAreaCategory(iCategory,i)  & 
+                               /(FloeSizeBinCenter(iFloeCategory)*iceAreaCell(i)))
+                  enddo
+               enddo
+               FloeSizePerimeter(i) = workx
             endif ! end floe size distribution
 
             !--- a/i fluxes computed by ice
