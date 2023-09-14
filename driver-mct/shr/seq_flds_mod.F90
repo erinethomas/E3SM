@@ -2110,6 +2110,15 @@ contains
     attname  = 'Si_ifloe'
     call metadata_set(attname, longname, stdname, units)
     
+    call seq_flds_add(w2x_states,'Sw_Hs')
+    call seq_flds_add(x2i_states,'Sw_Hs')
+    call seq_flds_add(x2o_states,'Sw_Hs')
+    longname = 'Significant wave height'
+    stdname  = 'significant_wave_height'
+    units    = 'm'
+    attname  = 'Sw_Hs'
+    call metadata_set(attname, longname, stdname, units)
+    
     ! Wave spectra
     if (wav_nfreq > 0) then
        do num = 1, wav_nfreq
@@ -2540,14 +2549,6 @@ contains
     attname  = 'Sw_vstokes_wavenumber_6'
     call metadata_set(attname, longname, stdname, units)
 
-    call seq_flds_add(w2x_states,'Sw_Hs')
-    call seq_flds_add(x2o_states,'Sw_Hs')
-    call seq_flds_add(x2i_states,'Sw_Hs')
-    longname = 'Significant wave height'
-    stdname  = 'significant_wave_height'
-    units    = 'm'
-    attname  = 'Sw_Hs'
-    call metadata_set(attname, longname, stdname, units)
 
     call seq_flds_add(w2x_states,'Sw_Fp')
     call seq_flds_add(x2o_states,'Sw_Fp')
