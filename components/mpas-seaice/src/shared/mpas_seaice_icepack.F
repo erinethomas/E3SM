@@ -13304,7 +13304,8 @@ subroutine init_column_waves(domain)
          config_minimum_wind_compaction, &
          config_wind_compaction_factor, &
          config_max_dry_snow_radius, &
-         config_floeshape
+         config_floeshape, &
+         config_floediam
 
     integer, pointer :: &
          config_boundary_layer_iteration_number, &
@@ -13538,6 +13539,7 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_config(domain % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
     call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
     call MPAS_pool_get_config(domain % configs, "config_floeshape", config_floeshape)
+    call MPAS_pool_get_config(domain % configs, "config_floediam", config_floediam)
     call MPAS_pool_get_config(domain % configs, "config_wave_spec_type", config_wave_spec_type)
     call MPAS_pool_get_config(domain % configs, "config_nFrequencies", config_nFrequencies)
     call MPAS_pool_get_subpool(domain % blocklist % structs, "wave_coupling", wave_coupling)
@@ -13705,7 +13707,7 @@ subroutine init_column_waves(domain)
          cp_ice_in               = seaiceFreshIceSpecificHeat, & !
          cp_ocn_in               = seaiceSeaWaterSpecificHeat, &
          !hfrazilmin_in           = , &
-         !floediam_in             = FloeSizeDiameter, & ! THIS IS NOT A PARAMETER IF FSD IS ON 
+         floediam_in             = floediam, &  ! this parameter is never used if FSD in 'on' 
          !depressT_in             = , &             ! used for prescribed ice in CICE
          dragio_in               = seaiceIceOceanDragCoefficient, & ! note calc_dragio not implemented
          !thickness_ocn_layer1_in = , &        ! not yet implemented in MPAS-SI (stealth feature)
