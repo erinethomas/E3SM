@@ -919,7 +919,6 @@ add_default($nl, 'config_category_bounds_type');
 # Namelist group:  floesize #
 #############################
 add_default($nl, 'config_floeshape');
-#CONFIG_FLOEDIAM SHOULD ONLY BE DEFINED IF THERE IS NO WAVE COUPLING
 add_default($nl, 'config_floediam');
 
 ###########################

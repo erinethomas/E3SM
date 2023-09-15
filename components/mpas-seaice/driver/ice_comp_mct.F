@@ -2434,11 +2434,12 @@ contains
       oceanDICFlux,                &
       oceanDONFlux,                &
       oceanParticulateIronFlux,    &
-      oceanDissolvedIronFlux, &
+      oceanDissolvedIronFlux,      &
       iceAreaCategoryInitial
 
    real (kind=RKIND), dimension(:,:,:), pointer :: &
-      floeSizeDist
+      floeSizeDist, &
+      iceAreaCategory
 !-----------------------------------------------------------------------
 
    errorCode = 0
@@ -2509,6 +2510,7 @@ contains
          call MPAS_pool_get_array(floe_size_distribution, "FloeSizeDiameter",FloeSizeDiameter)
          call MPAS_pool_get_array(floe_size_distribution, "FloeSizePerimeter",FloeSizePerimeter)
          call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
+         call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
       endif
       
       call MPAS_pool_get_array(atmosFluxes, 'latentHeatFlux', latentHeatFlux)
@@ -2635,7 +2637,7 @@ contains
                workx = 0.0_RKIND
                do iCategory=1,nCategories
                   do iFloeCategory=1,nFloeCategories
-                     workx =  workx + ( 2.0_RKIND*floeSizeDist(iFloeCategory,iCategory,i)*iceAreaCategory(iCategory,i)  & 
+                     workx =  workx + ( 2.0_RKIND*floeSizeDist(iFloeCategory,iCategory,i)*iceAreaCategory(1,iCategory,i)  & 
                                /(FloeSizeBinCenter(iFloeCategory)*iceAreaCell(i)))
                   enddo
                enddo
