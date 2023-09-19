@@ -13707,7 +13707,7 @@ subroutine init_column_waves(domain)
          cp_ice_in               = seaiceFreshIceSpecificHeat, & !
          cp_ocn_in               = seaiceSeaWaterSpecificHeat, &
          !hfrazilmin_in           = , &
-         floediam_in             = floediam, &  ! this parameter is never used if FSD in 'on' 
+         floediam_in             = config_floediam, &  ! this parameter is never used if FSD in 'on' 
          !depressT_in             = , &             ! used for prescribed ice in CICE
          dragio_in               = seaiceIceOceanDragCoefficient, & ! note calc_dragio not implemented
          !thickness_ocn_layer1_in = , &        ! not yet implemented in MPAS-SI (stealth feature)
