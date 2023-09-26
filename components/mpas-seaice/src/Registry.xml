@@ -52,6 +52,11 @@
 			definition="namelist:config_nSnowLayers"
 			description="The number of snow layers in the vertical direction."
 		/>
+		<dim name="nFloeCategories"
+			definition="namelist:config_nFloeCategories"
+			description="The number of ice floe size categories."
+		        icepack_name="nfsd"
+		/>
 		<dim name="nHemispheres"
 			definition="3"
 			description="The number of hemispheres (global, north, south)."
@@ -442,6 +447,10 @@
 			description="The number of snow layers in the vertical direction to use."
 			possible_values="Any positive integer."
 		/>
+		<nml_option name="config_nFloeCategories" type="integer" default_value="1" units="unitless"
+			description="The number of ice floe size categories to use."
+			possible_values="1, 12, 16, 24."
+		/>
 	</nml_record>
 	<nml_record name="initialize" in_defaults="true">
 		<nml_option name="config_earth_radius" type="real" default_value="6371229.0" units="m"
@@ -774,6 +783,11 @@
 		<nml_option name="config_use_special_boundaries_tracers" type="logical" default_value="false" units="unitless"
 			description="Modify tracers in given boundary cells."
 			possible_values="true or false"
+		/>
+		<nml_option name="config_use_floe_size_distribution" type="logical" default_value="false" units="unitless"
+			description="If true use floe size distribution"
+			possible_values="true or false"
+			icepack_name="tr_fsd"
 		/>
 	</nml_record>
 
@@ -2694,6 +2708,11 @@
 		     units="m"
 		     description="Ice volume per unit area of sea ice per ice thickness category"
 		/>
+	        <var name="floeSizeDist"
+		     type="real"
+		     dimensions="nFloeCategories nCategories nCells Time"
+		     units=""
+		/>
 		<var name="surfaceTemperature"
 		     type="real"
 		     dimensions="ONE nCategories nCells Time"
@@ -3859,7 +3878,50 @@
 		     type="real"
 		     dimensions="nCells Time"
 		/>
-	</var_struct>
+        </var_struct>
+
+        <!-- floe size distribution -->
+	<var_struct name="floe_size_distribution" time_levs="1">
+		<var name="FloeSizeBinLower"
+		     type="real"
+		     dimensions="nFloeCategories"
+		     icepack_name="floe_rad_l"
+		/>
+		<var name="FloeSizeBinCenter"
+		     type="real"
+		     dimensions="nFloeCategories"
+		     icepack_name="floe_rad_c"
+		/>
+		<var name="FloeSizeBinWidth"
+		     type="real"
+		     dimensions="nFloeCategories"
+		     icepack_name="floe_binwidth"
+		/>
+		<var name="DFloeSizeNewIce"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_newi"
+		/>
+		<var name="DFloeSizeLateralGrowth"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_latg"
+		/>
+		<var name="DFloeSizeLateralMelt"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_latm"
+		/>
+		<var name="DFloeSizeWeld"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_weld"
+		/>
+		<var name="FloeSizeDiameter"
+		     type="real"
+		     dimensions="nCells Time"
+		/>
+        </var_struct>
 
 	<!--ocean coupling -->
 	<var_struct name="ocean_coupling" time_levs="1">
