@@ -2413,7 +2413,7 @@ contains
       carbonToNitrogenRatioAlgae,  &
       carbonToNitrogenRatioDON,    &
       FloeSizeBinCenter,           &
-      FloeSizeDiameter,            &
+      FloeSizeDiameter
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeFlux,              &
