@@ -10116,7 +10116,7 @@ contains
          nt_smliq_in      = tracerObject % index_snowLiquidMass, &
          nt_rhos_in       = tracerObject % index_snowDensity, &
          nt_rsnw_in       = tracerObject % index_snowGrainRadius, &
-         nt_fsd           = tracerObject % index_floeSizeDist, &
+         nt_fsd_in        = tracerObject % index_floeSizeDist, &
          !nt_isosno_in
          !nt_isoice_in
          nt_aero_in       = tracerObject % index_aerosols, &
