@@ -2316,7 +2316,7 @@ contains
          oceanAerosolFlux, &
          oceanBioFluxes, &
          oceanBioConcentrations, &
-         initialSalinityProfile
+         initialSalinityProfile, &
 !         WaveSpectra, &
          DFloeSizeNewIce, &
          DFloeSizeLateralGrowth, &
