@@ -209,8 +209,7 @@ contains
 !> \date    26 September 2023
 !> \details
 !>  This routine conducts all computation required for this
-!>  MPAS-Seaice analysis member. It computes ice and snow layer
-!>  floesize from ice area and volume
+!>  MPAS-Seaice analysis member.
 !
 !-----------------------------------------------------------------------
 
@@ -260,11 +259,7 @@ contains
            floesizeAMPool
 
       real(kind=RKIND), dimension(:), pointer :: &
-           iceAreaCell, &
-           iceVolumeCell, &
-           snowVolumeCell, &
-           iceThicknessCell, &
-           snowThicknessCell
+           iceAreaCell
 
       real(kind=RKIND), dimension(:,:,:), pointer :: &
            iceAreaCategory, &
@@ -277,11 +272,13 @@ contains
 
       integer, pointer :: &
            nCellsSolve, &
-           nCategories
+           nCategories, &
+           nFloeCategories
 
       integer :: &
            iCell, &
-           iCategory
+           iCategory, &
+           iFloeCategory
 
       err = 0
 
@@ -294,49 +291,28 @@ contains
 
          call MPAS_pool_get_dimension(blockPtr % dimensions, 'nCellsSolve', nCellsSolve)
          call MPAS_pool_get_dimension(blockPtr % dimensions, 'nCategories', nCategories)
-
-         call MPAS_pool_get_array(floesizeAMPool, 'iceThicknessCell',      iceThicknessCell)
-         call MPAS_pool_get_array(floesizeAMPool, 'iceThicknessCategory',  iceThicknessCategory)
-         call MPAS_pool_get_array(floesizeAMPool, 'snowThicknessCell',     snowThicknessCell)
-         call MPAS_pool_get_array(floesizeAMPool, 'snowThicknessCategory', snowThicknessCategory)
+         call MPAS_pool_get_dimension(blockPtr % dimensions, 'nFloeCategories', nFloeCategories)
 
          call MPAS_pool_get_array(tracersPool, 'iceAreaCategory', iceAreaCategory, 1)
-         call MPAS_pool_get_array(tracersPool, 'iceVolumeCategory', iceVolumeCategory, 1)
-         call MPAS_pool_get_array(tracersPool, 'snowVolumeCategory', snowVolumeCategory, 1)
-
+         call MPAS_pool_get_array(tracersPool, 'floeSizeDist', floeSizeDist, 1)
          call MPAS_pool_get_array(tracersAggregatePool, 'iceAreaCell', iceAreaCell)
-         call MPAS_pool_get_array(tracersAggregatePool, 'iceVolumeCell', iceVolumeCell)
-         call MPAS_pool_get_array(tracersAggregatePool, 'snowVolumeCell', snowVolumeCell)
+
+         call MPAS_pool_get_array(floe_size_distribution, 'FloeSizeBinCenter', FloeSizeBinCenter)
+         call MPAS_pool_get_array(floe_size_distribution, 'FloeSizeDiameter',FloeSizeDiameter)
 
          ! initialize
-         iceThicknessCell(:) = 0.0_RKIND
-         iceThicknessCategory(:,:) = 0.0_RKIND
-         snowThicknessCell(:) = 0.0_RKIND
-         snowThicknessCategory(:,:) = 0.0_RKIND
-
-         ! compute floesize
+         FloeSizePerimeter(:) = 0.0_RKIND
+          
          do iCell = 1, nCellsSolve
-
-            ! aggregate quantities
-            if (iceAreaCell(iCell) > seaicePuny) then
-
-               iceThicknessCell(iCell)  = iceVolumeCell(iCell)  / iceAreaCell(iCell)
-               snowThicknessCell(iCell) = snowVolumeCell(iCell) / iceAreaCell(iCell)
-
-            endif ! iceAreaCell
-
-            ! category quantities
-            do iCategory = 1, nCategories
-
-               ! check if ice present
-               if (iceAreaCategory(1,iCategory,iCell) > seaicePuny) then
-
-                  iceThicknessCategory(iCategory,iCell)  = iceVolumeCategory(1,iCategory,iCell)  / iceAreaCategory(1,iCategory,iCell)
-                  snowThicknessCategory(iCategory,iCell) = snowVolumeCategory(1,iCategory,iCell) / iceAreaCategory(1,iCategory,iCell)
-
-               endif ! iceAreaCategory
-
-            enddo ! iCategory
+              ! calc perimeter
+               workx = 0.0_RKIND
+               do iCategory=1,nCategories
+                  do iFloeCategory=1,nFloeCategories
+                     workx =  workx + ( 2.0_RKIND*floeSizeDist(iFloeCategory,iCategory,i)*iceAreaCategory(1,iCategory,i)  & 
+                               /(FloeSizeBinCenter(iFloeCategory)*iceAreaCell(i)))
+                  enddo
+               enddo
+               FloeSizePerimeter(i) = workx
          enddo ! iCell
 
          blockPtr => blockPtr % next
