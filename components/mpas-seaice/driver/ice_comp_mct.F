@@ -2414,7 +2414,6 @@ contains
       carbonToNitrogenRatioDON,    &
       FloeSizeBinCenter,           &
       FloeSizeDiameter,            &
-      FloeSizePerimeter
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeFlux,              &
@@ -2495,7 +2494,6 @@ contains
          call MPAS_pool_get_array(icestate, "iceAreaCategoryInitial", iceAreaCategoryInitial)
          call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
          call MPAS_pool_get_array(floe_size_distribution, "FloeSizeDiameter",FloeSizeDiameter)
-         call MPAS_pool_get_array(floe_size_distribution, "FloeSizePerimeter",FloeSizePerimeter)
          call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
          call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
       endif
