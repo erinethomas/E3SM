@@ -2318,6 +2318,9 @@ contains
    integer ::  &
       i, n
 
+   integer ::  &
+      iCategory, iFloeCategory
+
    real(kind=RKIND) :: &
       ailohi,          &
       Tsrf,            &
@@ -2327,6 +2330,8 @@ contains
       tauyo,           &
       basalPressure
 
+   real(kind=RKIND) :: workx, worky
+   
    type (block_type), pointer :: &
       block_ptr
 
@@ -2341,17 +2346,23 @@ contains
       atmosFluxes,      &
       oceanFluxes,      &
       icebergFluxes,    &
-      biogeochemistry
+      biogeochemistry,  &
+      floe_size_distribution, &
+      icestate,         &
+      tracers
 
    integer, pointer :: &
-      nCellsSolve
+      nCellsSolve, &
+      nCategories, &
+      nFloeCategories
 
    logical, pointer :: &
       config_rotate_cartesian_grid,      &
       config_use_topo_meltponds,         &
       config_use_column_biogeochemistry, &
       config_use_column_shortwave,       &
-      config_use_data_icebergs
+      config_use_data_icebergs,          &
+      config_use_floe_size_distribution
 
    real(kind=RKIND), pointer :: &
       sphere_radius
@@ -2400,7 +2411,10 @@ contains
       oceanDMSPdFlux,              &
       oceanHumicsFlux,             &
       carbonToNitrogenRatioAlgae,  &
-      carbonToNitrogenRatioDON
+      carbonToNitrogenRatioDON,    &
+      FloeSizeBinCenter,           &
+      FloeSizeDiameter,            &
+      FloeSizePerimeter
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeFlux,              &
@@ -2408,8 +2422,12 @@ contains
       oceanDICFlux,                &
       oceanDONFlux,                &
       oceanParticulateIronFlux,    &
-      oceanDissolvedIronFlux
+      oceanDissolvedIronFlux,      &
+      iceAreaCategoryInitial
 
+   real (kind=RKIND), dimension(:,:,:), pointer :: &
+      floeSizeDist,                &
+      iceAreaCategory
 !-----------------------------------------------------------------------
 
    errorCode = 0
@@ -2424,6 +2442,7 @@ contains
       call MPAS_pool_get_config(configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
       call MPAS_pool_get_config(configs, "config_use_column_shortwave", config_use_column_shortwave)
       call MPAS_pool_get_config(configs, "config_use_data_icebergs", config_use_data_icebergs)
+      call MPAS_pool_get_config(configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
       call MPAS_pool_get_subpool(block_ptr % structs, 'mesh', meshPool)
       call MPAS_pool_get_subpool(block_ptr % structs, "tracers_aggregate", tracersAggregate)
@@ -2466,6 +2485,20 @@ contains
       call MPAS_pool_get_array(atmosCoupling, 'atmosReferenceHumidity2m', atmosReferenceHumidity2m)
 
       call MPAS_pool_get_array(oceanCoupling, 'frazilMassAdjust', frazilMassAdjust)
+
+      if (config_use_floe_size_distribution) then
+         call MPAS_pool_get_dimension(block_ptr % dimensions, "nCategories", nCategories)
+         call MPAS_pool_get_dimension(block_ptr % dimensions, "nFloeCategories", nFloeCategories)
+         call MPAS_pool_get_subpool(block_ptr % structs, "floe_size_distribution", floe_size_distribution)
+         call MPAS_pool_get_subpool(block_ptr % structs, "icestate", icestate)
+         call MPAS_pool_get_subpool(block_ptr % structs, "tracers", tracers)
+         call MPAS_pool_get_array(icestate, "iceAreaCategoryInitial", iceAreaCategoryInitial)
+         call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
+         call MPAS_pool_get_array(floe_size_distribution, "FloeSizeDiameter",FloeSizeDiameter)
+         call MPAS_pool_get_array(floe_size_distribution, "FloeSizePerimeter",FloeSizePerimeter)
+         call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
+         call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
+      endif
 
       call MPAS_pool_get_array(atmosFluxes, 'latentHeatFlux', latentHeatFlux)
       call MPAS_pool_get_array(atmosFluxes, 'sensibleHeatFlux', sensibleHeatFlux)
@@ -2573,7 +2606,19 @@ contains
             i2x_i % rAttr(index_i2x_Si_qref  ,n)  = atmosReferenceHumidity2m(i)
             i2x_i % rAttr(index_i2x_Si_snowh ,n)  = snowVolumeCell(i) / ailohi
             i2x_i % rAttr(index_i2x_Si_ithick,n)  = iceVolumeCell(i) / ailohi
-
+           if (config_use_floe_size_distribution) then 
+               workx = 0.0_RKIND
+               worky = 0.0_RKIND
+               do iCategory=1,nCategories
+                  do iFloeCategory=1,nFloeCategories
+                     workx = workx + FloeSizeBinCenter(iFloeCategory) * iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
+                     worky = worky + iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
+                  enddo
+               enddo     
+               if (worky > 0.0_RKIND ) workx = 2.0_RKIND*workx / worky
+               FloeSizeDiameter(i) = MAX(2.0_RKIND*FloeSizeBinCenter(1),workx) 
+            endif ! end floe size distribution
+            
             !--- a/i fluxes computed by ice
             i2x_i % rAttr(index_i2x_Faii_taux ,n) = tauxa
             i2x_i % rAttr(index_i2x_Faii_tauy ,n) = tauya
