@@ -749,10 +749,14 @@ contains
 
     ! Coupling prep
     call MPAS_pool_get_config(domain % configs, "config_column_physics_type", tempCharConfig)
+    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", tempLogicalConfig)
     if (trim(tempCharConfig) == "icepack") then
       call seaice_icepack_coupling_prep(domain)
     else if (trim(tempCharConfig) == "column_package") then
       call seaice_column_coupling_prep(domain)
+      if (tempLogicalConfig) then
+         call mpas_log_write('Column package physics does not allow for using FloeSizeDistribution. Reconfigure Column_Package or FSD settings.', MPAS_LOG_CRIT)    
+      endif
     endif ! config_column_physics_type
 
 !-----------------------------------------------------------------------
