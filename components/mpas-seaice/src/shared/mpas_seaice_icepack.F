@@ -405,7 +405,6 @@ contains
          DFloeSizeNewIce, &
          DFloeSizeLateralGrowth, &
          DFloeSizeLateralMelt, &
-         DFloeSizeWaves, &
          DFloeSizeWeld
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
@@ -441,7 +440,6 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeNewIce", DFloeSizeNewIce)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralGrowth", DFloeSizeLateralGrowth)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralMelt", DFloeSizeLateralMelt)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWeld", DFloeSizeWeld)
 
        allocate(FloeDist(nFloeCategories))
@@ -459,7 +457,6 @@ contains
        DFloeSizeLateralGrowth(:,:) = c0   ! change in floe size distribution due to lateral growth
        DFloeSizeLateralMelt(:,:)   = c0   ! change in floe size distribution due to lateral melt
        DFloeSizeWeld(:,:)          = c0   ! change in floe size distribution due to welding
-       DFloeSizeWaves(:,:)         = c0   ! change in floe size distribution due to wave breaking
 
        ! default: floes occupy the smallest floe size category in all thickness categories
        FloeDistCat(:,:) = c0
@@ -2321,7 +2318,6 @@ contains
          DFloeSizeNewIce, &
          DFloeSizeLateralGrowth, &
          DFloeSizeLateralMelt, &
-!         DFloeSizeWaves, &
          DFloeSizeWeld
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
@@ -2443,7 +2439,6 @@ contains
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralGrowth", DFloeSizeLateralGrowth)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralMelt", DFloeSizeLateralMelt)
        call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWeld", DFloeSizeWeld)
-!       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
 
        call MPAS_pool_get_array(ocean_fluxes, "oceanFreshWaterFlux", oceanFreshWaterFlux)
        call MPAS_pool_get_array(ocean_fluxes, "oceanSaltFlux", oceanSaltFlux)
