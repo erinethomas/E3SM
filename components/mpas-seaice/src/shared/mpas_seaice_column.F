@@ -589,11 +589,12 @@ contains
        endif !config_use_effective_snow_density
 
        if (config_use_snow_grain_radius) then
-          if (.not. config_do_restart_snow_grain_radius) then
 
-             call MPAS_pool_get_array(tracers, "snowIceMass", snowIceMass, 1)
-             call MPAS_pool_get_array(tracers, "snowLiquidMass", snowLiquidMass, 1)
-             call MPAS_pool_get_array(tracers, "snowGrainRadius", snowGrainRadius, 1)
+          call MPAS_pool_get_array(tracers, "snowIceMass", snowIceMass, 1)
+          call MPAS_pool_get_array(tracers, "snowLiquidMass", snowLiquidMass, 1)
+          call MPAS_pool_get_array(tracers, "snowGrainRadius", snowGrainRadius, 1)
+
+          if (.not. config_do_restart_snow_grain_radius) then
 
              snowGrainRadius(:,:,:)      = config_fallen_snow_radius
              snowIceMass(:,:,:)          = seaiceDensitySnow
@@ -2698,7 +2699,8 @@ contains
          config_new_snow_density, &
          config_max_snow_density, &
          config_minimum_wind_compaction, &
-         config_wind_compaction_factor
+         config_wind_compaction_factor, &
+         config_snow_redistribution_factor
 
     integer, pointer :: &
          nCellsSolve, &
@@ -2745,6 +2747,7 @@ contains
        call MPAS_pool_get_config(block % configs, "config_max_snow_density", config_max_snow_density)
        call MPAS_pool_get_config(block % configs, "config_minimum_wind_compaction", config_minimum_wind_compaction)
        call MPAS_pool_get_config(block % configs, "config_wind_compaction_factor", config_wind_compaction_factor)
+       call MPAS_pool_get_config(block % configs, "config_snow_redistribution_factor", config_snow_redistribution_factor)
        call MPAS_pool_get_config(block % configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
 
        call MPAS_pool_get_dimension(block % dimensions, "nCellsSolve", nCellsSolve)
@@ -2827,6 +2830,7 @@ contains
                config_max_snow_density, &
                config_minimum_wind_compaction, &
                config_wind_compaction_factor, &
+               config_snow_redistribution_factor, &
                snowEmpiricalGrowthParameterTau(:,:,:), &
                snowEmpiricalGrowthParameterKappa(:,:,:), &
                snowPropertyRate(:,:,:), &
@@ -9925,7 +9929,7 @@ contains
          config_calc_surface_temperature, &
          config_use_form_drag, &
          config_use_level_ice, &
-         config_use_cesm_meltponds, &
+         config_use_cesm_meltponds, &  ! deprecated
          config_use_level_meltponds, &
          config_use_topo_meltponds, &
          config_use_vertical_zsalinity, &
@@ -9985,7 +9989,7 @@ contains
     call MPAS_pool_get_config(domain % configs, "config_snow_to_ice_transition_depth", config_snow_to_ice_transition_depth)
     call MPAS_pool_get_config(domain % configs, "config_use_form_drag", config_use_form_drag)
     call MPAS_pool_get_config(domain % configs, "config_use_level_ice", config_use_level_ice)
-    call MPAS_pool_get_config(domain % configs, "config_use_cesm_meltponds", config_use_cesm_meltponds)
+    call MPAS_pool_get_config(domain % configs, "config_use_cesm_meltponds", config_use_cesm_meltponds) ! deprecated
     call MPAS_pool_get_config(domain % configs, "config_use_level_meltponds", config_use_level_meltponds)
     call MPAS_pool_get_config(domain % configs, "config_use_topo_meltponds", config_use_topo_meltponds)
     call MPAS_pool_get_config(domain % configs, "config_ocean_heat_transfer_type", config_ocean_heat_transfer_type)
@@ -10022,10 +10026,15 @@ contains
     !-----------------------------------------------------------------------
 
     ! check config_thermodynamics_type value
-    if (.not. (trim(config_thermodynamics_type) == "zero layer" .or. &
-               trim(config_thermodynamics_type) == "BL99" .or. &
+    if (trim(config_thermodynamics_type) == "zero layer") then
+       call mpas_log_write(&
+            "check_column_package_configs: config_thermodynamics_type) = zero layer but 0-layer thermo is being deprecated", &
+            messageType=MPAS_LOG_WARN)
+    endif
+
+    if (.not. (trim(config_thermodynamics_type) == "BL99" .or. &
                trim(config_thermodynamics_type) == "mushy")) then
-       call config_error("config_thermodynamics_type", config_thermodynamics_type, "'zero layer', 'BL99' or 'mushy'")
+       call config_error("config_thermodynamics_type", config_thermodynamics_type, "'BL99' or 'mushy'")
     endif
 
     ! check config_heat_conductivity_type value
@@ -10107,6 +10116,13 @@ contains
             'Check for inconsistencies in restart file: config_nIceLayers /= nIceLayers', &
             messageType=MPAS_LOG_CRIT)
 
+    ! deprecate cesm ponds
+    if (config_use_cesm_meltponds) then
+       call mpas_log_write(&
+            "check_column_package_configs: config_use_cesm_meltponds = .true. but cesm ponds are being deprecated", &
+            messageType=MPAS_LOG_CRIT)
+    endif
+
     !-----------------------------------------------------------------------
     ! Check combinations
     !-----------------------------------------------------------------------
@@ -10161,20 +10177,6 @@ contains
     if (config_use_snow_liquid_ponds .and. .not. config_use_snow_grain_radius) then
        call mpas_log_write(&
          "check_column_package_configs: config_use_snow_liquid_ponds = true but config_use_snow_grain_radius = false", &
-            messageType=MPAS_LOG_CRIT)
-    endif
-
-    ! check config_use_snow_grain_radius and config_use_column_snow_tracers
-    if (config_use_snow_grain_radius .and. .not. config_use_column_snow_tracers) then
-       call mpas_log_write(&
-         "check_column_package_configs: config_use_snow_grain_radius = true but config_use_column_snow_tracers = false", &
-            messageType=MPAS_LOG_CRIT)
-    endif
-
-    ! check config_use_snow_grain_radius and config_use_column_snow_tracers
-    if (config_use_column_snow_tracers .and. .not. config_use_snow_grain_radius) then
-       call mpas_log_write(&
-         "check_column_package_configs: config_use_column_snow_tracers but config_use_snow_grain_radius = false", &
             messageType=MPAS_LOG_CRIT)
     endif
 
@@ -10263,6 +10265,13 @@ contains
        call mpas_log_write(&
             "check_column_package_configs: config_thermodynamics_type == 'mushy' and "//&
             "config_sea_freezing_temperature_type /= 'mushy'", &
+            messageType=MPAS_LOG_CRIT)
+    endif
+
+    ! deprecate zsalinity
+    if (config_use_vertical_zsalinity) then
+       call mpas_log_write(&
+            "check_column_package_configs: vertical zSalinity has been deprecated", &
             messageType=MPAS_LOG_CRIT)
     endif
 
@@ -11002,10 +11011,10 @@ contains
          config_temp_change_snow_grain_radius_change, &
          config_max_melting_snow_grain_radius, &
          config_algae_absorption_coefficient, &
-         config_ridiging_efolding_scale, &
+         config_ridging_efolding_scale, &
          config_ratio_ridging_work_to_PE, &
          config_snow_to_ice_transition_depth, &
-         config_pond_flushing_timescale, &
+         config_pond_flushing_factor, &
          config_min_meltwater_retained_fraction, &
          config_max_meltwater_retained_fraction, &
          config_pond_depth_to_fraction_ratio, &
@@ -11138,6 +11147,7 @@ contains
          config_new_snow_density, &
          config_max_snow_density, &
          config_minimum_wind_compaction, &
+         config_snow_redistribution_factor, &
          config_wind_compaction_factor, &
          config_max_dry_snow_radius
 
@@ -11173,7 +11183,7 @@ contains
     call MPAS_pool_get_config(domain % configs, "config_ice_strength_formulation", config_ice_strength_formulation)
     call MPAS_pool_get_config(domain % configs, "config_ridging_participation_function", config_ridging_participation_function)
     call MPAS_pool_get_config(domain % configs, "config_ridging_redistribution_function", config_ridging_redistribution_function)
-    call MPAS_pool_get_config(domain % configs, "config_ridiging_efolding_scale", config_ridiging_efolding_scale)
+    call MPAS_pool_get_config(domain % configs, "config_ridging_efolding_scale", config_ridging_efolding_scale)
     call MPAS_pool_get_config(domain % configs, "config_ratio_ridging_work_to_PE", config_ratio_ridging_work_to_PE)
     call MPAS_pool_get_config(domain % configs, "config_atmos_boundary_method", config_atmos_boundary_method)
     call MPAS_pool_get_config(domain % configs, "config_calc_surface_stresses", config_calc_surface_stresses)
@@ -11186,7 +11196,7 @@ contains
     call MPAS_pool_get_config(domain % configs, "config_category_bounds_type", config_category_bounds_type)
     call MPAS_pool_get_config(domain % configs, "config_snow_to_ice_transition_depth", config_snow_to_ice_transition_depth)
     call MPAS_pool_get_config(domain % configs, "config_pond_refreezing_type", config_pond_refreezing_type)
-    call MPAS_pool_get_config(domain % configs, "config_pond_flushing_timescale", config_pond_flushing_timescale)
+    call MPAS_pool_get_config(domain % configs, "config_pond_flushing_factor", config_pond_flushing_factor)
     call MPAS_pool_get_config(domain % configs, "config_min_meltwater_retained_fraction", config_min_meltwater_retained_fraction)
     call MPAS_pool_get_config(domain % configs, "config_max_meltwater_retained_fraction", config_max_meltwater_retained_fraction)
     call MPAS_pool_get_config(domain % configs, "config_pond_depth_to_fraction_ratio", config_pond_depth_to_fraction_ratio)
@@ -11341,6 +11351,7 @@ contains
     call MPAS_pool_get_config(domain % configs, "config_new_snow_density", config_new_snow_density)
     call MPAS_pool_get_config(domain % configs, "config_max_snow_density", config_max_snow_density)
     call MPAS_pool_get_config(domain % configs, "config_minimum_wind_compaction", config_minimum_wind_compaction)
+    call MPAS_pool_get_config(domain % configs, "config_snow_redistribution_factor", config_snow_redistribution_factor)
     call MPAS_pool_get_config(domain % configs, "config_wind_compaction_factor", config_wind_compaction_factor)
     call MPAS_pool_get_config(domain % configs, "config_max_dry_snow_radius", config_max_dry_snow_radius)
 
@@ -11373,7 +11384,7 @@ contains
          config_cice_int("config_ice_strength_formulation", config_ice_strength_formulation), &
          config_cice_int("config_ridging_participation_function", config_ridging_participation_function), &
          config_cice_int("config_ridging_redistribution_function", config_ridging_redistribution_function), &
-         config_ridiging_efolding_scale, &
+         config_ridging_efolding_scale, &
          config_ratio_ridging_work_to_PE, &
          config_atmos_boundary_method, &
          config_calc_surface_stresses, &
@@ -11386,7 +11397,7 @@ contains
          config_cice_int("config_category_bounds_type", config_category_bounds_type), &
          config_snow_to_ice_transition_depth, &
          config_pond_refreezing_type, &
-         config_pond_flushing_timescale, &
+         config_pond_flushing_factor, &
          config_min_meltwater_retained_fraction, &
          config_max_meltwater_retained_fraction, &
          config_pond_depth_to_fraction_ratio, &
@@ -11530,6 +11541,7 @@ contains
          config_new_snow_density, &
          config_max_snow_density, &
          config_minimum_wind_compaction, &
+         config_snow_redistribution_factor, &
          config_wind_compaction_factor)
 
     !-----------------------------------------------------------------------
@@ -11666,7 +11678,7 @@ contains
     ! mu_rdg:
     ! gives e-folding scale of ridged ice (m^.5)
     ! (krdg_redist = 1)
-    !mu_rdg = config_ridiging_efolding_scale
+    !mu_rdg = config_ridging_efolding_scale
 
     ! Cf
     ! ratio of ridging work to PE change in ridging (kstrength = 1)
@@ -11747,8 +11759,8 @@ contains
     !frzpnd = config_pond_refreezing_type
 
     ! dpscale:
-    ! alter e-folding time scale for flushing
-    !dpscale = config_pond_flushing_timescale
+    ! alters e-folding time scale for flushing with BL99 thermodynamics
+    !dpscale = config_pond_flushing_factor
 
     ! rfracmin:
     ! minimum retained fraction of meltwater
@@ -12327,6 +12339,10 @@ contains
     ! windmin:
     ! minimum wind speed to compact snow (m/s)
     ! windmin = config_minimum_wind_compaction
+
+    ! snwlvlfac:
+    ! snow loss factor for wind redistribution
+    ! snwlvlfac = config_snow_redistribution_factor
 
     ! drhosdwind:
     ! wind compaction factor (kg s/m^4)

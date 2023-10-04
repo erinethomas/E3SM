@@ -44,6 +44,10 @@
 			definition="namelist:config_nCategories"
 			description="The number of ice thickness categories."
 		/>
+		<dim name="nFloeCategories"
+			definition="namelist:config_nFloeCategories"
+			description="The number of floe size categories."
+		/>
 		<dim name="nIceLayers"
 			definition="namelist:config_nIceLayers"
 			description="The number of ice layers in the vertical direction."
@@ -443,6 +447,10 @@
 			description="The number of ice thickness categories to use."
 			possible_values="Any positive integer."
 		/>
+		<nml_option name="config_nFloeCategories" type="integer" default_value="1" units="unitless"
+			description="The number of floe size categories to use."
+			possible_values="Any positive integer."
+		/>
 		<nml_option name="config_nIceLayers" type="integer" default_value="7" units="unitless"
 			description="The number of ice layers in the vertical direction to use."
 			possible_values="Any positive integer."
@@ -467,7 +475,7 @@
 		/>
 		<nml_option name="config_initial_condition_type" type="character" default_value="cice_default" units="unitless"
 			description="Initial condition type for sea ice state."
-			possible_values="'restart', 'uniform', 'circle', 'square' or 'uniform_interior'"
+			possible_values="'restart', 'uniform', 'circle', 'square', 'uniform_interior' or 'uniform_1D'"
 		/>
 		<nml_option name="config_initial_ice_area" type="real" default_value="1.0" units="unitless"
 			description="Sea ice concentration at initialization."
@@ -539,7 +547,7 @@
 	<nml_record name="forcing" in_defaults="true">
 		<nml_option name="config_atmospheric_forcing_type" type="character" default_value="CORE" units="unitless"
 			description="Atmospheric forcing type."
-			possible_values="'CORE'"
+			possible_values="'CORE' or 'ISPOL'"
 		/>
 		<nml_option name="config_forcing_start_time" type="character" default_value="2000-01-01_00:00:00" units="unitless"
 			description="Forcing time to use at the simulation start time"
@@ -559,11 +567,19 @@
 		/>
 		<nml_option name="config_forcing_sst_type" type="character" default_value="ncar" units="unitless"
 			description="Sea surface temperature ocean forcing type."
-			possible_values="'ncar'"
+			possible_values="'ncar' or 'ISPOL'"
+		/>
+		<nml_option name="config_forcing_bgc_type" type="character" default_value="ISPOL" units="unitless"
+			description="Ocean biogeochemistry forcing type."
+			possible_values="'ISPOL'"
 		/>
 		<nml_option name="config_update_ocean_fluxes" type="logical" default_value="false" units="unitless"
-			description=""
+			description="Include frazil ice in ocean flux fields."
 			possible_values="true or false"
+		/>
+		<nml_option name="config_frazil_coupling_type" type="character" default_value="external" units="unitless"
+			description="Type of frazil ice coupling."
+			possible_values="'external', 'internal', 'fresh_ice_correction'"
 		/>
 		<nml_option name="config_include_pond_freshwater_feedback" type="logical" default_value="false" units="unitless"
 			description="Reduce the ocean fresh water flux by the pond fresh water flux for coupling."
@@ -792,6 +808,11 @@
 		<nml_option name="config_use_special_boundaries_tracers" type="logical" default_value="false" units="unitless"
 			description="Modify tracers in given boundary cells."
 			possible_values="true or false"
+		/>
+		<nml_option name="config_use_floe_size_distribution" type="logical" default_value="false" units="unitless"
+			description="Use prognostic floe size distribution"
+			possible_values="true or false"
+			icepack_name="tr_fsd"
 		/>
 	</nml_record>
 
@@ -1602,6 +1623,21 @@
 			possible_values=""
 			icepack_name="kalg"
 		/>
+		<nml_option name="config_use_shortwave_redistribution" type="logical" default_value="false" units="none"
+			description="redistribution shortwave from layers near the melting temperature"
+			possible_values="true or false"
+			icepack_name="sw_redist"
+		/>
+		<nml_option name="config_shortwave_redistribution_fraction" type="real" default_value="0.9" units="none"
+			description="Fraction of shortwave moved from a layer near the melting temperature to the surface."
+			possible_values="fraction between 0 and 1"
+			icepack_name="sw_frac"
+		/>
+		<nml_option name="config_shortwave_redistribution_threshold" type="real" default_value="0.02" units="C"
+			description="Temperature threshold for moving shortwave to the surface."
+			possible_values=""
+			icepack_name="sw_dtemp"
+		/>
 	</nml_record>
 
 	<nml_record name="snow" in_defaults="true">
@@ -1640,6 +1676,11 @@
 			possible_values="positive real"
 			icepack_name="drhosdwind"
 		/>
+		<nml_option name="config_snow_redistribution_factor" type="real" default_value="0.3" units="none"
+			description="snow loss factor for wind redistribution"
+			possible_values="positive real less than or equal to 1"
+			icepack_name="snwlvlfac"
+		/>
 		<nml_option name="config_max_dry_snow_radius" type="real" default_value="2800.0" units="um"
 			description="maximum dry metamorphism snow grain radius"
 			possible_values="positive real"
@@ -1658,8 +1699,8 @@
 			possible_values="'cesm' or 'hlid'"
 			icepack_name="frzpnd"
 		/>
-		<nml_option name="config_pond_flushing_timescale" type="real" default_value="1.0e-3" units=""
-			description="Alter e-folding time scale for flushing.?????"
+		<nml_option name="config_pond_flushing_factor" type="real" default_value="1.0e-3" units=""
+			description="Alters e-folding time scale for flushing with BL99 thermodynamics."
 			possible_values=""
 			icepack_name="dpscale"
 		/>
@@ -1726,6 +1767,11 @@
 			possible_values="Any real number between 0 and 1."
 			icepack_name="phi_c_slow_mode"
 		/>
+		<nml_option name="config_macro_drainage_timescale" type="real" default_value="10." units="days"
+			description="Timescale for macroscopic drainage."
+			possible_values="Any positive real number."
+			icepack_name="tscale_pnd_drain"
+		/>
 		<nml_option name="config_congelation_ice_porosity" type="real" default_value="0.85" units="unitless"
 			description="Liquid fraction of congelation ice."
 			possible_values="Any real number between 0 and 1."
@@ -1775,7 +1821,7 @@
 			possible_values="'Hibler80' or 'exponential'"
 			icepack_name="krdg_redist"
 		/>
-		<nml_option name="config_ridiging_efolding_scale" type="real" default_value="3.0" units="m^0.5"
+		<nml_option name="config_ridging_efolding_scale" type="real" default_value="3.0" units="m^0.5"
 			description="E-folding scale of ridged ice (krdg_redist = 1)"
 			possible_values=""
 			icepack_name="mu_rdg"
@@ -1808,7 +1854,7 @@
 			possible_values="true or false"
 			icepack_name="formdrag"
 		/>
-		<nml_option name="config_use_high_frequency_coupling" type="logical" default_value="false" units="unitless"
+		<nml_option name="config_use_high_frequency_coupling" type="logical" default_value="true" units="unitless"
 			description="If true use high frequency coupling."
 			possible_values="true or false"
 			icepack_name="highfreq"
@@ -2213,6 +2259,54 @@
 				immutable="true">
 			<var name="iceCoverage"/>
 		</stream>
+		<stream name="ISPOLSixHourlyForcing"
+				type="input"
+				filename_template="forcing/atmosphere_forcing_six_hourly.ispol.nc"
+				filename_interval="0001-00-00_00:00:00"
+				input_interval="none"
+				reference_time="2004-01-01_00:00:00"
+				immutable="true">
+			<var name="shortwaveDown"/>
+			<var name="longwaveDown"/>
+		</stream>
+		<stream name="ISPOLDailyForcing"
+				type="input"
+				filename_template="forcing/atmosphere_forcing_daily.ispol.nc"
+				filename_interval="0001-00-00_00:00:00"
+				input_interval="none"
+				reference_time="2004-01-01_00:00:00"
+				immutable="true">
+			<var name="airTemperature"/>
+			<var name="airSpecificHumidity"/>
+			<var name="uAirVelocity"/>
+			<var name="vAirVelocity"/>
+			<var name="rainfallRate"/>
+		</stream>
+		<stream name="ISPOLMonthlyForcing"
+				type="input"
+				filename_template="forcing/ocean_forcing_monthly.ispol.nc"
+				filename_interval="none"
+				input_interval="none"
+				immutable="true">
+			<var name="seaSurfaceTemperature"/>
+			<var name="seaSurfaceSalinity"/>
+			<var name="oceanMixedLayerDepth"/>
+			<var name="uOceanVelocity"/>
+			<var name="vOceanVelocity"/>
+			<var name="seaSurfaceTiltU"/>
+			<var name="seaSurfaceTiltV"/>
+			<var name="oceanHeatFluxConvergence"/>
+		</stream>
+		<stream name="ISPOLDailyWOAForcing"
+				type="input"
+				filename_template="forcing/ocean_biogeochemistry_forcing_daily.ispol.nc"
+				filename_interval="0001-00-00_00:00:00"
+				input_interval="none"
+				reference_time="2004-01-01_00:00:00"
+				immutable="true">
+			<var name="oceanNitrateConc1D"/>
+			<var name="oceanSilicateConc1D"/>
+		</stream>
 
 		<!-- Aerosols input -->
 		<stream name="StandardAerosolsInput"
@@ -2603,7 +2697,7 @@
 		<package name="pkgColumnTracerPonds" description=""/>
 		<package name="pkgColumnTracerLidThickness" description=""/>
 		<package name="pkgColumnTracerAerosols" description=""/>
-		<package name="pkgColumnTracerEffectiveSnowDensity" description="Computes effective snow density based on liquid and ice snow content and snow compaction"/>
+		<package name="pkgColumnTracerEffectiveSnowDensity" description="Computes effective snow density based on snow compaction"/>
 		<package name="pkgColumnTracerSnowGrainRadius" description="Evolves snow grain radius for radiative transfer based on dry and wet metamorphism"/>
 		<package name="pkgTracerBrine" description=""/>
 		<package name="pkgTracerMobileFraction" description=""/>
@@ -2698,13 +2792,13 @@
 		     type="real"
 		     dimensions="nSnowLayers nCategories nCells Time"
 		     units="kg m-3"
-		     packages="pkgColumnTracerEffectiveSnowDensity"
+		     packages="pkgColumnTracerSnowGrainRadius"
 		/>
 		<var name="snowLiquidMass"
 		     type="real"
 		     dimensions="nSnowLayers nCategories nCells Time"
 		     units="kg m-3"
-		     packages="pkgColumnTracerEffectiveSnowDensity"
+		     packages="pkgColumnTracerSnowGrainRadius"
 		/>
 		<var name="snowGrainRadius"
 		     type="real"
@@ -3149,14 +3243,14 @@
 		     dimensions="nSnowLayers nCells Time"
 		     units="kg m-3"
 		     description="Mass of ice in snow layer"
-		     packages="pkgColumnTracerEffectiveSnowDensity"
+		     packages="pkgColumnTracerSnowGrainRadius"
 		/>
 		<var name="snowLiquidMassCell"
 		     type="real"
 		     dimensions="nSnowLayers nCells Time"
 		     units="kg m-3"
 		     description="Mass of liquid in snow layer"
-		     packages="pkgColumnTracerEffectiveSnowDensity"
+		     packages="pkgColumnTracerSnowGrainRadius"
 		/>
 		<var name="snowGrainRadiusCell"
 		     type="real"
@@ -3993,6 +4087,20 @@
 		<var name="landIceMaskVertex"
 		     type="integer"
 		     dimensions="nVertices Time"
+		/>
+	</var_struct>
+▶       <var_struct name="1D_ocean_biogeochemistry_forcing" time_levs="1">
+		<var name="oceanNitrateConc1D"
+		     type="real"
+		     dimensions="Time"
+		     units="mmol N m-3"
+		     description="sea surface nitrate"
+		/>
+		<var name="oceanSilicateConc1D"
+		     type="real"
+		     dimensions="Time"
+		     units="mmol Si m-3"
+		     description="sea surface silicate"
 		/>
 	</var_struct>
 

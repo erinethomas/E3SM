@@ -83,6 +83,8 @@
                                   mlt_onset,   frz_onset, &
                                   yday,        dsnow,     &
                                   tr_rsnw,                &
+                                  !NJ: for bulk conservation fix
+                                  !tr_rsnw,     fsloss,    &
                                   l_stop,      stop_label,&
                                   prescribed_ice)
 
@@ -95,6 +97,9 @@
       real (kind=dbl_kind), intent(in) :: &
          dt      , & ! time step
          frain       ! rainfall rate (kg/m2/s)
+         !NJ: for bulk conservation fix
+         !frain   , & ! rainfall rate (kg/m2/s)
+         !fsloss      ! blowing snow loss to leads (kg/m2/s)
 
       ! ice state variables
       real (kind=dbl_kind), intent(inout) :: &
@@ -413,6 +418,10 @@
                              zSin,        sss,       &
                              dsnow,       tr_snow,   &
                              rsnw,        tr_rsnw)
+                             !NJL for bulk conservation fix
+                             !rsnw,        tr_rsnw,   &
+                             !fsloss)
+
 
       !-----------------------------------------------------------------
       ! Check for energy conservation by comparing the change in energy
@@ -427,6 +436,8 @@
                                       fcondtopn, fcondbot, &
                                       fadvocn,   fbotUse,  &
                                       l_stop,    stop_label)
+                                      !NJ: for bulk conservation fix
+                                      !l_stop,    stop_label, fsloss)
       
       if (l_stop) return
 
@@ -448,25 +459,27 @@
       ! evapn < 0 => sublimation, evapn > 0 => condensation
       ! aerosol flux is accounted for in ice_aerosol.F90
       !-----------------------------------------------------------------
-            
+
       dhi = hin - worki
       dhs = hsn - works - hsn_new
-      
+
       freshn = freshn + evapn - (rhoi*dhi + rhos*dhs) / dt
+      !NJ: for bulk conservation fix
+      !freshn = freshn + evapn - (rhoi*dhi + rhos*dhs) / dt + fsloss
       fsaltn = fsaltn - rhoi*dhi*ice_ref_salinity*p001/dt
-      fhocnn = fhocnn + fadvocn ! for ktherm=2 
+      fhocnn = fhocnn + fadvocn ! for ktherm=2
 
       if (hin == c0) then
          if (tr_pond_topo) fpond = fpond - aicen * apond * hpond
       endif
 
       !-----------------------------------------------------------------
-      !  Given the vertical thermo state variables, compute the new ice 
+      !  Given the vertical thermo state variables, compute the new ice
       !   state variables.
       !-----------------------------------------------------------------
 
       call update_state_vthermo(nilyr,   nslyr,   &
-                                Tbot,    Tsf,     &     
+                                Tbot,    Tsf,     &
                                 hin,     hsn,     &
                                 zqin,    zSin,    &
                                 zqsn,             &
@@ -1052,6 +1065,9 @@
                                     zSin,      sss,      &
                                     dsnow,     tr_snow,  &
                                     rsnw,      tr_rsnw)
+                                    !NJ: for bulk conservation fix
+                                    !rsnw,      tr_rsnw,  &
+                                    !fsloss)
 
       use ice_colpkg_shared, only: phi_i_mushy
       use ice_mushy_physics, only: enthalpy_mush, enthalpy_of_melting, &
@@ -1070,6 +1086,8 @@
          fbot        , & ! ice-ocean heat flux at bottom surface (W/m^2)
          Tbot        , & ! ice bottom surface temperature (deg C)
          fsnow       , & ! snowfall rate (kg m-2 s-1)
+         !NJ: for bulk conservation fix
+         !fsloss      , & ! snow loss to leads (kg m-2 s-1)
          flatn       , & ! surface downward latent heat (W m-2)
          fsurfn      , & ! net flux to top surface, excluding fcondtopn
          fcondtopn   , & ! downward cond flux at top surface (W m-2)
@@ -1158,6 +1176,9 @@
          Tmlts       , & ! melting temperature
          smtot       , & ! total ice + liquid mass of snow
          smice_precs     ! ice mass added to snow due to snowfall (kg/m^2)
+         !NJ: for bulk conservation fix
+         !smice_precs , & ! ice mass added to snow due to snowfall (kg/m^2)
+         !fsnw            ! snow fall rate minus loss to leads (kg m-2 s-1)
 
       real (kind=dbl_kind), dimension (nilyr+1) :: &
          zi1         , & ! depth of ice layer boundaries (m)
@@ -1182,7 +1203,9 @@
       real (kind=dbl_kind) :: &
          qbotm       , &
          qbotp       , &
-         qbot0
+         qbot0       , &
+         mass        , & ! total snow ice + liq (kg/m2)
+         massi           ! ice mass change factor
 
       !-----------------------------------------------------------------
       ! Initialize
@@ -1374,9 +1397,11 @@
 
          qsub = zqsn(k) - rhos*Lvap ! qsub < 0
          dhs  = max (-dzs(k), esub/qsub)  ! esub > 0, dhs < 0
-         smice_precs = c0
-         if (abs(dzs(k)) > puny) smice_precs = dhs * smicetot(k)/dzs(k)
-         smicetot(k) = max(c0,smicetot(k) + smice_precs)
+         mass = smicetot(k) + smliqtot(k)
+         massi = c0
+         if (dzs(k) > puny) massi = c1 + dhs/dzs(k)
+         smicetot(k) = smicetot(k) * massi
+         smliqtot(k) = max(c0, mass + rhos*dhs - smicetot(k)) ! conserve new total mass
          dzs(k) = dzs(k) + dhs
          esub = esub - dhs*qsub
          esub = max(esub, c0)   ! in case of roundoff error
@@ -1465,8 +1490,18 @@
          !--------------------------------------------------------------
          ! Melt snow (only if all the ice has melted)
          !--------------------------------------------------------------
-         
+
+         ! NJ: if all the ice is melted, should all remaining snow be added to fresh
+         ! and latent heat to fhocnn?
+
          dhs = max(-dzs(k), ebot_mlt/zqsn(k))
+
+         mass = smicetot(k) + smliqtot(k)
+         massi = c0
+         if (dzs(k) > puny) massi = max(c0, c1 + dhs/dzs(k))
+         smicetot(k) = smicetot(k) * massi
+         smliqtot(k) = mass - smicetot(k) ! conserve mass
+
          dzs(k) = dzs(k) + dhs         ! zqsn < 0, dhs < 0
          ebot_mlt = ebot_mlt - dhs*zqsn(k)
          ebot_mlt = max(ebot_mlt, c0)
@@ -1493,9 +1528,15 @@
       !       have T = 0 (i.e. q = -rhos*Lfresh) and should not be
       !       converted to rain.
       !----------------------------------------------------------------
+      !NJ: for bulk conservation fix
+      !fsnw = fsnow - fsloss
+      !if (fsnw > c0) then
 
       if (fsnow > c0) then
 
+         !NJ: for bulk conservation fix
+         !fhocnn = fhocnn - Lfresh * fsloss
+         !hsn_new = fsnw/rhos * dt
          hsn_new = fsnow/rhos * dt
          zqsnew = -rhos*Lfresh
          hstot = dzs(1) + hsn_new
@@ -1510,14 +1551,15 @@
 
               smtot = c0
               if (abs(dzs(1)) > c0) smtot = smicetot(1)/dzs(1) !smice(1) ! save for now
-         
+
                ! ice mass in snow due to snowfall (precs)
                ! new snow density = rhos for now
               smice_precs = hsn_new * rhos ! kg/m^2
 
                ! update ice mass tracer due to snowfall
+              !NJ: for bulk conservation fix
+              !smicetot(1) = smicetot(1) + fsnw * dt
               smicetot(1) = smicetot(1) + smice_precs
-               ! smice(1) = (dzs(1)*smice(1) + smice_precs) / hstot
 
                ! mass fraction of ice due to snowfall
                smtot = c0
@@ -1714,8 +1756,8 @@
       !-----------------------------------------------------------------
 
       if (ktherm == 2) then
-         do k = 1, nslyr
-            if (hsn <= puny) then
+         if (hsn <= puny .or. hin <= c0) then
+            do k = 1, nslyr
                fhocnn = fhocnn &
                       + zqsn(k)*hsn/(real(nslyr,kind=dbl_kind)*dt)
                zqsn(k) = -rhos*Lfresh
@@ -1724,9 +1766,12 @@
                  smice(k) = rhos
                  smliq(k) = c0
                endif
-               hslyr = c0
-            endif
-         enddo
+               if (tr_rsnw) rsnw(k) = rsnw_fall
+            enddo
+            melts = melts + hsn
+            hsn = c0
+            hslyr = c0
+         endif
       endif
 
       !-----------------------------------------------------------------
@@ -1907,7 +1952,8 @@
          hovlp           ! overlap between old and new layers (m)
 
       real (kind=dbl_kind) :: &
-         rhlyr           ! 1./hlyr
+         rhlyr,        & ! 1./hlyr
+         qtot            ! total h*q in the column
 
       real (kind=dbl_kind), dimension (nlyr) :: &
          hq              ! h * q for a layer
@@ -1917,36 +1963,53 @@
       !-----------------------------------------------------------------
 
       rhlyr = c0
-      if (hn > puny) rhlyr = c1 / hlyr
+      if (hn > puny) then
+         rhlyr = c1 / hlyr
 
       !-----------------------------------------------------------------
       ! Compute h*q for new layers (k2) given overlap with old layers (k1)
       !-----------------------------------------------------------------
 
-      do k2 = 1, nlyr
-         hq(k2) = c0
-      enddo                     ! k
-      k1 = 1
-      k2 = 1
-      do while (k1 <= nlyr .and. k2 <= nlyr)
-         hovlp = min (z1(k1+1), z2(k2+1)) &
-               - max (z1(k1),   z2(k2))
-         hovlp = max (hovlp, c0)
-         hq(k2) = hq(k2) + hovlp*qn(k1)
-         if (z1(k1+1) > z2(k2+1)) then
-            k2 = k2 + 1
-         else
-            k1 = k1 + 1
-         endif
-      enddo                  ! while
+         do k2 = 1, nlyr
+            hq(k2) = c0
+         enddo                     ! k
+         k1 = 1
+         k2 = 1
+         do while (k1 <= nlyr .and. k2 <= nlyr)
+            hovlp = min (z1(k1+1), z2(k2+1)) &
+                  - max (z1(k1),   z2(k2))
+            hovlp = max (hovlp, c0)
+            hq(k2) = hq(k2) + hovlp*qn(k1)
+            if (z1(k1+1) > z2(k2+1)) then
+               k2 = k2 + 1
+            else
+               k1 = k1 + 1
+            endif
+         enddo                  ! while
 
       !-----------------------------------------------------------------
       ! Compute new enthalpies.
       !-----------------------------------------------------------------
 
-      do k = 1, nlyr
-         qn(k) = hq(k) * rhlyr
-      enddo                     ! k
+         do k = 1, nlyr
+            qn(k) = hq(k) * rhlyr
+         enddo                     ! k
+      else
+         qtot = c0
+         do k = 1, nlyr
+            qtot = qtot + qn(k) * (z1(k+1)-z1(k))
+         enddo
+         if (hn > c0) then
+            do k = 1, nlyr
+               qn(k) = qtot/hn
+            enddo
+         else
+            do k = 1, nlyr
+               qn(k) = c0
+            enddo
+         endif
+
+      endif
 
       end subroutine adjust_enthalpy
 
@@ -1968,6 +2031,8 @@
                                             fcondtopn,fcondbot, &
                                             fadvocn,  fbot,     &
                                             l_stop,   stop_label)
+                                            !NJ: for bulk conservation fix
+                                            !l_stop,   stop_label, fsloss)
 
       real (kind=dbl_kind), intent(in) :: &
          dt              ! time step
@@ -1980,7 +2045,10 @@
          fsnow       , & ! snowfall rate (kg m-2 s-1)
          fcondtopn   , &
          fadvocn     , &
-         fbot           
+         fbot
+         !NJ: for bulk conservation fix
+         !fbot        , &
+         !fsloss          ! snow loss factor for wind redistribution
 
       real (kind=dbl_kind), intent(in) :: &
          einit       , & ! initial energy of melting (J m-2)
@@ -2036,8 +2104,12 @@
          write(warning,*) 'efinal - einit  =', efinal-einit
          call add_warning(warning)
          write(warning,*) 'fsurfn,flatn,fswint,fhocn, fsnow*Lfresh:'
+         !NJ: for bulk conservation fix
+         !write(warning,*) 'fsurfn,flatn,fswint,fhocn, fsnow*Lfresh, fsloss*Lfresh:'
          call add_warning(warning)
          write(warning,*) fsurfn,flatn,fswint,fhocnn, fsnow*Lfresh
+         !NJ: for bulk conservation fix
+         !write(warning,*) fsurfn,flatn,fswint,fhocnn, fsnow*Lfresh, fsloss*Lfresh
          call add_warning(warning)
          write(warning,*) 'Input energy =', einp
          call add_warning(warning)
@@ -2075,12 +2147,16 @@
 
          !         write(warning,*) fsurfn,flatn,fswint,fhocnn
          !         call add_warning(warning)
-         
+
          write(warning,*) 'dt*(fsurfn, flatn, fswint, fhocn, fsnow*Lfresh, fadvocn):'
+         !NJ: for bulk conservation fix
+         !write(warning,*) 'dt*(fsurfn, flatn, fswint, fhocn, fsnow*Lfresh, fadvocn, fsloss*Lfresh):'
          call add_warning(warning)
          write(warning,*) fsurfn*dt, flatn*dt, &
               fswint*dt, fhocnn*dt, &
               fsnow*Lfresh*dt, fadvocn*dt
+         !NJ: for bulk conservation fix
+         !     fsnow*Lfresh*dt, fadvocn*dt, fsloss*Lfresh*dt
          call add_warning(warning)
          return
       endif

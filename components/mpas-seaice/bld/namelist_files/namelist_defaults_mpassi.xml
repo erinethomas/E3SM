@@ -59,10 +59,10 @@
 
 <!-- dimensions -->
 <config_nCategories>5</config_nCategories>
+<config_nFloeCategories>1</config_nFloeCategories>
 <config_nIceLayers>7</config_nIceLayers>
 <config_nSnowLayers>5</config_nSnowLayers>
 <config_nFrequencies>0</config_nFrequencies>
-<config_nFloeCategories>1</config_nFloeCategories>
 
 <!-- initialize -->
 <config_earth_radius>6371229.0</config_earth_radius>
@@ -93,6 +93,7 @@
 
 <!-- use_sections -->
 <config_use_dynamics>true</config_use_dynamics>
+<config_use_dynamics column_mode="true">false</config_use_dynamics>
 <config_use_dynamics prognostic_mode="prescribed">false</config_use_dynamics>
 <config_use_velocity_solver>true</config_use_velocity_solver>
 <config_use_advection>true</config_use_advection>
@@ -109,7 +110,9 @@
 <config_forcing_cycle_duration>'2-00-00_00:00:00'</config_forcing_cycle_duration>
 <config_forcing_precipitation_units>'mm_per_sec'</config_forcing_precipitation_units>
 <config_forcing_sst_type>'ncar'</config_forcing_sst_type>
+<config_forcing_bgc_type>'ISPOL'</config_forcing_bgc_type>
 <config_update_ocean_fluxes>true</config_update_ocean_fluxes>
+<config_frazil_coupling_type>'external'</config_frazil_coupling_type>
 <config_include_pond_freshwater_feedback>false</config_include_pond_freshwater_feedback>
 
 <!-- testing -->
@@ -357,6 +360,9 @@
 <config_temp_change_snow_grain_radius_change>1.5</config_temp_change_snow_grain_radius_change>
 <config_max_melting_snow_grain_radius>1500.0</config_max_melting_snow_grain_radius>
 <config_algae_absorption_coefficient>0.6</config_algae_absorption_coefficient>
+<config_use_shortwave_redistribution>false</config_use_shortwave_redistribution>
+<config_shortwave_redistribution_fraction>0.9</config_shortwave_redistribution_fraction>
+<config_shortwave_redistribution_threshold>0.02</config_shortwave_redistribution_threshold>
 
 <!-- snow -->
 <config_snow_redistribution_scheme>'ITDrdg'</config_snow_redistribution_scheme>
@@ -366,12 +372,13 @@
 <config_max_snow_density>450.0</config_max_snow_density>
 <config_minimum_wind_compaction>10.0</config_minimum_wind_compaction>
 <config_wind_compaction_factor>27.3</config_wind_compaction_factor>
+<config_snow_redistribution_factor>0.3</config_snow_redistribution_factor>
 <config_max_dry_snow_radius>2800.0</config_max_dry_snow_radius>
 
 <!-- meltponds -->
 <config_snow_to_ice_transition_depth>0.0</config_snow_to_ice_transition_depth>
 <config_pond_refreezing_type>'hlid'</config_pond_refreezing_type>
-<config_pond_flushing_timescale>1.0e-3</config_pond_flushing_timescale>
+<config_pond_flushing_factor>1.0e-3</config_pond_flushing_factor>
 <config_min_meltwater_retained_fraction>0.15</config_min_meltwater_retained_fraction>
 <config_max_meltwater_retained_fraction>1.0</config_max_meltwater_retained_fraction>
 <config_pond_depth_to_fraction_ratio>0.8</config_pond_depth_to_fraction_ratio>
@@ -386,6 +393,7 @@
 <config_rapid_mode_aspect_ratio>1.0</config_rapid_mode_aspect_ratio>
 <config_slow_mode_drainage_strength>-5.0e-8</config_slow_mode_drainage_strength>
 <config_slow_mode_critical_porosity>0.05</config_slow_mode_critical_porosity>
+<config_macro_drainage_timescale>10.</config_macro_drainage_timescale>
 <config_congelation_ice_porosity>0.85</config_congelation_ice_porosity>
 
 <!-- itd -->
@@ -400,7 +408,7 @@
 <config_ice_strength_formulation>'Rothrock75'</config_ice_strength_formulation>
 <config_ridging_participation_function>'exponential'</config_ridging_participation_function>
 <config_ridging_redistribution_function>'exponential'</config_ridging_redistribution_function>
-<config_ridiging_efolding_scale>3.0</config_ridiging_efolding_scale>
+<config_ridging_efolding_scale>3.0</config_ridging_efolding_scale>
 <config_ratio_ridging_work_to_PE>17.0</config_ratio_ridging_work_to_PE>
 
 <!-- atmosphere -->
@@ -409,11 +417,7 @@
 <config_calc_surface_temperature>true</config_calc_surface_temperature>
 <config_use_form_drag>false</config_use_form_drag>
 <config_use_high_frequency_coupling>true</config_use_high_frequency_coupling>
-<config_use_high_frequency_coupling ice_grid="ECwISC30to60E2r1">false</config_use_high_frequency_coupling>
-<config_use_high_frequency_coupling ice_grid="EC30to60E2r2">false</config_use_high_frequency_coupling>
 <config_boundary_layer_iteration_number>10</config_boundary_layer_iteration_number>
-<config_boundary_layer_iteration_number ice_grid="ECwISC30to60E2r1">5</config_boundary_layer_iteration_number>
-<config_boundary_layer_iteration_number ice_grid="EC30to60E2r2">5</config_boundary_layer_iteration_number>
 
 <!-- ocean -->
 <config_use_ocean_mixed_layer>false</config_use_ocean_mixed_layer>
