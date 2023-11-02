@@ -454,6 +454,7 @@ module cime_comp_mod
   logical  :: glcshelf_c2_ocn        ! .true.  => glc ice shelf to ocn coupling on
   logical  :: glcshelf_c2_ice        ! .true.  => glc ice shelf to ice coupling on
   logical  :: wav_c2_ocn             ! .true.  => wav to ocn coupling on
+  logical  :: wav_c2_ice             ! .true.  => wav to ice coupling on
 
   logical  :: iac_c2_lnd             ! .true.  => iac to lnd coupling on
   logical  :: iac_c2_atm             ! .true.  => iac to atm coupling on
@@ -1758,6 +1759,7 @@ contains
     glcshelf_c2_ocn = .false.
     glcshelf_c2_ice = .false.
     wav_c2_ocn = .false.
+    wav_c2_ice = .false.
     iac_c2_atm = .false.
     iac_c2_lnd = .false.
     lnd_c2_iac = .false.
@@ -1808,6 +1810,7 @@ contains
     endif
     if (wav_present) then
        if (ocn_prognostic) wav_c2_ocn = .true.
+       if (ice_prognostic) wav_c2_ice = .true.
     endif
     if (iac_present) then
        if (lnd_prognostic) iac_c2_lnd = .true.
@@ -1896,6 +1899,7 @@ contains
        write(logunit,F0L)'glcshelf_c2_ocn       = ',glcshelf_c2_ocn
        write(logunit,F0L)'glcshelf_c2_ice       = ',glcshelf_c2_ice
        write(logunit,F0L)'wav_c2_ocn            = ',wav_c2_ocn
+       write(logunit,F0L)'wav_c2_ice            = ',wav_c2_ice
        write(logunit,F0L)'iac_c2_lnd            = ',iac_c2_lnd
        write(logunit,F0L)'iac_c2_atm            = ',iac_c2_atm
 
@@ -2031,7 +2035,7 @@ contains
 
        call prep_ocn_init(infodata, atm_c2_ocn, atm_c2_ice, ice_c2_ocn, rof_c2_ocn, wav_c2_ocn, glc_c2_ocn, glcshelf_c2_ocn)
 
-       call prep_ice_init(infodata, ocn_c2_ice, glc_c2_ice, glcshelf_c2_ice, rof_c2_ice )
+       call prep_ice_init(infodata, ocn_c2_ice, glc_c2_ice, glcshelf_c2_ice, rof_c2_ice, wav_c2_ice)
 
        call prep_rof_init(infodata, lnd_c2_rof, atm_c2_rof, ocn_c2_rof)
 
@@ -4590,6 +4594,8 @@ contains
           a2x_ox => prep_ocn_get_a2x_ox() ! array
           call prep_ice_calc_a2x_ix(a2x_ox, timer='CPL:iceprep_atm2ice')
        endif
+
+       if (wav_c2_ice) call prep_ice_calc_w2x_ix(timer='CPL:iceprep_wav2ice')
 
        call prep_ice_mrg(infodata, timer_mrg='CPL:iceprep_mrgx2i')
 
