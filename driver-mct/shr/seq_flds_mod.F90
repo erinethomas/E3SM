@@ -147,6 +147,7 @@ module seq_flds_mod
   character(len=CX)  :: carma_fields        ! List of CARMA fields from lnd->atm
   character(len=CX)  :: ndep_fields         ! List of nitrogen deposition fields from atm->lnd/ocn
   integer            :: ice_ncat            ! number of sea ice thickness categories
+  integer            :: wav_nfreq           ! number of wave frequencies
   logical            :: seq_flds_i2o_per_cat! .true. if select per ice thickness category fields are passed from ice to ocean
 
   logical            :: rof_heat            ! .true. if river model includes temperature
@@ -381,7 +382,7 @@ contains
 
     namelist /seq_cplflds_inparm/  &
          flds_co2a, flds_co2b, flds_co2c, flds_co2_dmsa, flds_wiso, glc_nec, &
-         ice_ncat, seq_flds_i2o_per_cat, flds_bgc_oi, &
+         wav_nfreq, ice_ncat, seq_flds_i2o_per_cat, flds_bgc_oi, &
          nan_check_component_fields, rof_heat, atm_flux_method, atm_gustiness, &
          rof2ocn_nutrients, lnd_rof_two_way, ocn_rof_two_way, rof_sed
 
@@ -416,6 +417,7 @@ contains
        flds_wiso = .false.
        glc_nec   = 0
        ice_ncat  = 1
+       wav_nfreq  = 0
        seq_flds_i2o_per_cat = .false.
        nan_check_component_fields = .false.
        rof_heat = .false.
@@ -449,6 +451,7 @@ contains
     call shr_mpi_bcast(flds_wiso    , mpicom)
     call shr_mpi_bcast(glc_nec      , mpicom)
     call shr_mpi_bcast(ice_ncat     , mpicom)
+    call shr_mpi_bcast(wav_nfreq    , mpicom)
     call shr_mpi_bcast(seq_flds_i2o_per_cat, mpicom)
     call shr_mpi_bcast(nan_check_component_fields, mpicom)
     call shr_mpi_bcast(rof_heat    , mpicom)
@@ -2089,7 +2092,7 @@ contains
     endif
 
     !------------------------------
-    ! ice<->wav only exchange 
+    ! ice<->wav exchange 
     !------------------------------
 
     ! Sea ice thickness
@@ -2101,6 +2104,39 @@ contains
     attname  = 'Si_ithick'
     call metadata_set(attname, longname, stdname, units)
 
+    ! Sea ice floe Size
+    call seq_flds_add(i2x_states,"Si_ifloe")
+    call seq_flds_add(x2w_states,"Si_ifloe")
+    longname = 'Sea ice floe size'
+    stdname  = 'sea_ice_floe_size'
+    units    = 'm'
+    attname  = 'Si_ifloe'
+    call metadata_set(attname, longname, stdname, units)
+
+    ! Significant Wave Height
+    call seq_flds_add(w2x_states,'Sw_Hs')
+    call seq_flds_add(x2i_states,'Sw_Hs')
+    call seq_flds_add(x2o_states,'Sw_Hs')
+    longname = 'Significant wave height'
+    stdname  = 'significant_wave_height'
+    units    = 'm'
+    attname  = 'Sw_Hs'
+    call metadata_set(attname, longname, stdname, units)
+
+    ! Wave spectra
+    if (wav_nfreq > 0) then
+       do num = 1, wav_nfreq
+          write(cnum,'(i2.2)') num
+          name = 'Sw_wavespec' // cnum
+          call seq_flds_add(w2x_states,trim(name))
+          call seq_flds_add(x2i_states,trim(name))
+          longname = 'wave power spectra for wave frequency category number' // cnum
+          stdname  = 'wave_spectra'
+          units    = 'm2/Hz'
+          attname  = name
+          call metadata_set(attname, longname, stdname, units)
+       enddo
+    endif
 
     !-----------------------------
     ! lnd->rof exchange
@@ -2528,14 +2564,6 @@ contains
     stdname  = 'wave_model_partitioned_stokes_drift_v_wavenumber_6'
     units    = 'm/s'
     attname  = 'Sw_vstokes_wavenumber_6'
-    call metadata_set(attname, longname, stdname, units)
-
-    call seq_flds_add(w2x_states,'Sw_Hs')
-    call seq_flds_add(x2o_states,'Sw_Hs')
-    longname = 'Significant wave height'
-    stdname  = 'significant_wave_height'
-    units    = 'm'
-    attname  = 'Sw_Hs'
     call metadata_set(attname, longname, stdname, units)
 
     call seq_flds_add(w2x_states,'Sw_Fp')
