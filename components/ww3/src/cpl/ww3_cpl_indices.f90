@@ -13,7 +13,7 @@ module ww3_cpl_indices
   integer :: index_x2w_Sa_tbot  
   integer :: index_x2w_Si_ifrac
   integer :: index_x2w_Si_ithick
-  integer :: index_x2w_si_ifloe 
+  integer :: index_x2w_Si_ifloe 
   integer :: index_x2w_So_t     
   integer :: index_x2w_So_u     
   integer :: index_x2w_So_v     
@@ -37,12 +37,19 @@ module ww3_cpl_indices
   integer :: index_w2x_Sw_Fp
   integer :: index_w2x_Sw_Dp
 
+  integer,dimension(:),allocatable :: index_w2x_Sw_wavespec
+
 contains
 
   subroutine ww3_cpl_indices_set( )
 
+    use seq_flds_mod, only : wav_nfreq
     type(mct_aVect) :: w2x      ! temporary
     type(mct_aVect) :: x2w      ! temporary
+
+    integer :: i
+    character(len= 2) :: freqnum
+    character(len=64) :: name
 
     ! Determine attribute vector indices
 
@@ -55,7 +62,7 @@ contains
     index_x2w_Sa_tbot    = mct_avect_indexra(x2w,'Sa_tbot')    ! Temperature at lowest level
     index_x2w_Si_ifrac   = mct_avect_indexra(x2w,'Si_ifrac')   ! Fractional sea ice coverage 
     index_x2w_Si_ithick  = mct_avect_indexra(x2w,'Si_ithick')  ! Sea ice thickness
-    !index_x2w_Si_ifloe   = mct_avect_indexra(x2w,'Si_ifloe')   ! Sea ice floe size
+    index_x2w_Si_ifloe   = mct_avect_indexra(x2w,'Si_ifloe')   ! Sea ice floe size
     index_x2w_So_t       = mct_avect_indexra(x2w,'So_t')       ! Sea surface temperature
     index_x2w_So_u       = mct_avect_indexra(x2w,'So_u')       ! Zonal sea surface water velocity
     index_x2w_So_v       = mct_avect_indexra(x2w,'So_v')       ! Meridional sea surface water velocity
@@ -65,6 +72,13 @@ contains
     index_w2x_Sw_Hs = mct_avect_indexra(w2x,'Sw_Hs') ! Significant wave height
     index_w2x_Sw_Fp = mct_avect_indexra(w2x,'Sw_Fp') ! Peak wave freqency  
     index_w2x_Sw_Dp = mct_avect_indexra(w2x,'Sw_Dp') ! Peak wave direction
+
+    allocate(index_w2x_Sw_wavespec(1:wav_nfreq))
+    do i = 1,wav_nfreq
+       write(freqnum,'(i2.2)') i
+       name = 'Sw_wavespec' // freqnum
+       index_w2x_Sw_wavespec(i) = mct_avect_indexra(w2x,trim(name)) ! full wave spectrum (fcn of frq)
+    enddo 
 
     index_w2x_Sw_ustokes_wavenumber_1 = mct_avect_indexra(w2x,'Sw_ustokes_wavenumber_1') ! partitioned Stokes drift u 1
     index_w2x_Sw_vstokes_wavenumber_1 = mct_avect_indexra(w2x,'Sw_vstokes_wavenumber_1') ! partitioned Stokes drift v 1
