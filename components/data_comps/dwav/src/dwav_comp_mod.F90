@@ -48,9 +48,29 @@ module dwav_comp_mod
   type(mct_rearr)            :: rearr
 
   !--------------------------------------------------------------------------
-  integer(IN),parameter :: ktrans = 3
-  character(12),parameter  :: avofld(1:ktrans) =  (/"Sw_lamult   ","Sw_ustokes  ","Sw_vstokes  "/)
-  character(12),parameter  :: avifld(1:ktrans) =  (/"lamult      ","ustokes     ","vstokes     "/)
+  integer(IN),parameter :: ktrans = 39
+  character(13),parameter  :: avofld(1:ktrans) =  &
+     (/"Sw_ustokes   ","Sw_vstokes  ","Sw_Hs       ", &
+       "Sw_wavespec1 ","Sw_wavespec2 ","Sw_wavespec3 ","Sw_wavespec4 ",&
+       "Sw_wavespec5 ","Sw_wavespec6 ","Sw_wavespec7 ","Sw_wavespec8 ",&
+       "Sw_wavespec9 ","Sw_wavespec10","Sw_wavespec11","Sw_wavespec12",&
+       "Sw_wavespec13","Sw_wavespec14","Sw_wavespec15","Sw_wavespec16",&
+       "Sw_wavespec17","Sw_wavespec18","Sw_wavespec19","Sw_wavespec20",&
+       "Sw_wavespec21","Sw_wavespec22","Sw_wavespec23","Sw_wavespec24",&
+       "Sw_wavespec25","Sw_wavespec26","Sw_wavespec27","Sw_wavespec28",&
+       "Sw_wavespec29","Sw_wavespec30","Sw_wavespec31","Sw_wavespec32",&
+       "Sw_wavespec33","Sw_wavespec34","Sw_wavespec35","Sw_wavespec36"/)
+  character(13),parameter  :: avifld(1:ktrans) =  &
+     (/"Us           ","Vs           ","hs           ", &
+       "wavespec1    ","wavespec2    ","wavespec3    ","wavespec4    ",&
+       "wavespec5    ","wavespec6    ","wavespec7    ","wavespec8    ",&
+       "wavespec9    ","wavespec10   ","wavespec11   ","wavespec12   ",&
+       "wavespec13   ","wavespec14   ","wavespec15   ","wavespec16   ",&
+       "wavespec17   ","wavespec18   ","wavespec19   ","wavespec20   ",&
+       "wavespec21   ","wavespec22   ","wavespec23   ","wavespec24   ",&
+       "wavespec25   ","wavespec26   ","wavespec27   ","wavespec28   ",&
+       "wavespec29   ","wavespec30   ","wavespec31   ","wavespec32   ",&
+       "wavespec33   ","wavespec34   ","wavespec35   ","wavespec36   "/)
   !--------------------------------------------------------------------------
 
   !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
