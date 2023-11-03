@@ -468,7 +468,7 @@
       to turn off trapping, set the value to 1.0e30 or something similar.
     </desc>
     <values>
-      <value>1.5e0</value>
+      <value>1.0e30</value>
     </values>
   </entry>
 
