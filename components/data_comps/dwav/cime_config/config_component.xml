@@ -11,9 +11,10 @@
        This file may have wav desc entries.
   -->
   <description modifier_mode="1">
-    <desc wav="DWAV[%NULL][%CLIMO]">Data wave model (DWAV)</desc>
+    <desc wav="DWAV[%NULL][%CLIMO][%FSD]">Data wave model (DWAV)</desc>
     <desc option="NULL">null mode</desc>
     <desc option="CLIMO">climatological mode</desc>
+    <desc option="FSD">wave forcing for use in MPAS-SI floe size distribution(FSD) testing</desc>
   </description>
 
   <entry id="COMP_WAV">
@@ -27,11 +28,12 @@
 
   <entry id="DWAV_MODE">
     <type>char</type>
-    <valid_values>NULL,CLIMO</valid_values>
+    <valid_values>NULL,CLIMO,FSD</valid_values>
     <default_value>NULL</default_value>
     <values match="last">
       <value compset="_DWAV%NULL">NULL</value>
       <value compset="_DWAV%CLIMO">CLIMO</value>
+      <value compset="_DWAV%FSD">FSD</value>
     </values>
     <group>run_component_dwav</group>
     <file>env_run.xml</file>
