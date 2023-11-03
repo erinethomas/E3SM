@@ -839,16 +839,22 @@ contains
 
     ! Coupling prep
     call MPAS_pool_get_config(domain % configs, "config_column_physics_type", tempCharConfig)
+    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", tempLogicalConfig)
     if (trim(tempCharConfig) == "icepack") then
       call seaice_icepack_coupling_prep(domain)
+      if (tempLogicalConfig) then
+        call MPAS_pool_get_config(domain % configs, "config_use_column_waves", tempLogicalConfig)
+        if (.not.tempLogicalConfig) then
+          call mpas_log_write('FloeSizeDistribution requires column wave breaking.', MPAS_LOG_CRIT)
+          call mpas_log_write('Either a) turn FSD off or b) include wave component (either dwav or ww3)', MPAS_LOG_ERR)
+        endif
+      endif
     else if (trim(tempCharConfig) == "column_package") then
       call seaice_column_coupling_prep(domain)
+      if (tempLogicalConfig) then
+        call mpas_log_write('FloeSizeDistribution not available in column_package. Either turn FSD off or use icepack column physics.', MPAS_LOG_CRIT)
+      endif
     endif ! config_column_physics_type
-
-    call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", tempLogicalConfig)
-    if (tempLogicalConfig) then
-      call mpas_log_write('FloeSizeDistribution coming online soon. Turn FSD off for now.', MPAS_LOG_CRIT)
-    endif
 !-----------------------------------------------------------------------
 !
 !   send intial state to driver
@@ -923,6 +929,17 @@ contains
 !
 !   Reset shr logging to original values
 !
+!----------------------------------------------------------------------------
+
+    call shr_file_setLogUnit (shrlogunit)
+    call shr_file_setLogLevel(shrloglev)
+
+#if defined (_MEMTRACE)
+    if(iam  == 0) then
+        lbnum=1
+        call memmon_dump_fort('memmon.out','ice_init_mct:end::',lbnum)
+        call memmon_reset_addr()
+    endif
 !----------------------------------------------------------------------------
 
     call shr_file_setLogUnit (shrlogunit)
@@ -1903,6 +1920,8 @@ contains
 !    o  dstdry2  -- Size 2 dust -- dry deposition flux
 !    o  dstdry3  -- Size 3 dust -- dry deposition flux
 !    o  dstdry4  -- Size 4 dust -- dry deposition flux
+!    o  Hs       -- significant wave height
+!    o  wavespec -- wave spectrum 
 !
 !    The following fields are sometimes received from the coupler,
 !      depending on model options:
@@ -1959,7 +1978,7 @@ contains
       message
 
    integer ::  &
-      i,n
+      i,n,iFreq
 
    real (kind=RKIND) :: &
       frazilMassFlux, &
@@ -1973,16 +1992,19 @@ contains
       aerosols,       &
       atmosCoupling,  &
       oceanCoupling,  &
+      waveCoupling,  &
       biogeochemistry
 
    integer, pointer :: nCellsSolve
+   integer, pointer :: nFrequencies
 
    logical, pointer :: &
       config_use_aerosols,              &
       config_use_modal_aerosols,        &
       config_use_zaerosols,             &
       config_use_column_biogeochemistry, &
-      config_couple_biogeochemistry_fields
+      config_couple_biogeochemistry_fields, &
+      config_use_column_waves
 
    character(len=strKIND), pointer ::   &
       config_column_physics_type,       &
@@ -2018,7 +2040,8 @@ contains
       oceanAmmoniumConcField,           &
       oceanDMSConcField,                &
       oceanDMSPConcField,               &
-      oceanHumicsConcField
+      oceanHumicsConcField,             &
+      SignificantWaveHeightField
 
    type (field2DReal), pointer ::       &
       oceanAlgaeConcField,              &
@@ -2032,7 +2055,8 @@ contains
       atmosBlackCarbonFluxField,        &
       atmosDustFluxField,               &
       atmosWetDustFluxField,            &
-      atmosDryDustFluxField
+      atmosDryDustFluxField,            &
+      WaveSpectraField
 
    real (kind=RKIND), dimension(:), pointer :: &
       seaSurfaceTemperature,       &
@@ -2066,7 +2090,8 @@ contains
       oceanHumicsConc,             &
       carbonToNitrogenRatioAlgae,  &
       carbonToNitrogenRatioDON,    &
-      DOCPoolFractions
+      DOCPoolFractions,            &
+      SignificantWaveHeight
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeConc,              &
@@ -2080,7 +2105,8 @@ contains
       atmosBlackCarbonFlux,        &
       atmosDustFlux,               &
       atmosWetDustFlux,            &
-      atmosDryDustFlux
+      atmosDryDustFlux,            &
+      WaveSpectra
 
 !-----------------------------------------------------------------------
 !
@@ -2108,12 +2134,14 @@ contains
       call mpas_pool_get_config(configs, "config_use_column_biogeochemistry", config_use_column_biogeochemistry)
       call mpas_pool_get_config(configs, "config_couple_biogeochemistry_fields", config_couple_biogeochemistry_fields)
       call mpas_pool_get_config(configs, "config_use_zaerosols", config_use_zaerosols)
+      call mpas_pool_get_config(configs, "config_use_column_waves", config_use_column_waves)
 
       call mpas_pool_get_subpool(block_ptr % structs, 'mesh', meshPool)
       call mpas_pool_get_subpool(block_ptr % structs, 'ocean_coupling', oceanCoupling)
       call mpas_pool_get_subpool(block_ptr % structs, 'atmos_coupling', atmosCoupling)
 
       call mpas_pool_get_dimension(meshPool, 'nCellsSolve', nCellsSolve)
+      call mpas_pool_get_dimension(block_ptr % dimensions, "nFrequencies", nFrequencies)
 
       call mpas_pool_get_array(oceanCoupling, 'seaSurfaceTemperature', seaSurfaceTemperature)
       call mpas_pool_get_array(oceanCoupling, 'seaSurfaceSalinity', seaSurfaceSalinity)
@@ -2140,6 +2168,12 @@ contains
       call mpas_pool_get_array(atmosCoupling, 'uAirVelocity', uAirVelocity)
       call mpas_pool_get_array(atmosCoupling, 'vAirVelocity', vAirVelocity)
 
+      if (config_use_column_waves) then
+         call mpas_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
+         call mpas_pool_get_array(waveCoupling, 'SignificantWaveHeight', SignificantWaveHeight)
+         call mpas_pool_get_array(waveCoupling, 'WaveSpectra', WaveSpectra)
+      endif
+      
       if (config_use_aerosols) then
          call mpas_pool_get_subpool(block_ptr % structs, 'aerosols', aerosols)
 
@@ -2188,6 +2222,13 @@ contains
         vOceanVelocity(i)              = x2i_i % rAttr(index_x2i_So_v, n)
         seaSurfaceTiltU(i)             = x2i_i % rAttr(index_x2i_So_dhdx, n)
         seaSurfaceTiltV(i)             = x2i_i % rAttr(index_x2i_So_dhdy, n)
+
+        if (config_use_column_waves) then
+          SignificantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
+          do iFreq = 1,nFrequencies
+             WaveSpectra(iFreq,i)      = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
+          enddo
+        endif
 
         if (trim(config_ocean_surface_type) == "free") then ! free surface (MPAS-O)
 
@@ -2383,6 +2424,12 @@ contains
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceTiltU', seaSurfaceTiltUField)
    call mpas_pool_get_field(oceanCoupling, 'seaSurfaceTiltV', seaSurfaceTiltVField)
 
+   if (config_use_column_waves) then
+     call mpas_pool_get_subpool(domain % blocklist % structs, 'wave_coupling', waveCoupling)
+     call mpas_pool_get_field(waveCoupling, 'SignificantWaveHeight', SignificantWaveHeightField)
+     call mpas_pool_get_field(waveCoupling, 'WaveSpectra', WaveSpectraField)
+   endif
+
    call mpas_pool_get_field(atmosCoupling, 'airLevelHeight', airLevelHeightField)
    call mpas_pool_get_field(atmosCoupling, 'airPotentialTemperature', airPotentialTemperatureField)
    call mpas_pool_get_field(atmosCoupling, 'airTemperature', airTemperatureField)
@@ -2439,6 +2486,11 @@ contains
    call mpas_dmpar_exch_halo_field(vOceanVelocityField)
    call mpas_dmpar_exch_halo_field(seaSurfaceTiltUField)
    call mpas_dmpar_exch_halo_field(seaSurfaceTiltVField)
+
+   if (config_use_column_waves) then
+      call mpas_dmpar_exch_halo_field(SignificantWaveHeightField)
+      call mpas_dmpar_exch_halo_field(waveSpectraField)
+   endif
 
    call mpas_dmpar_exch_halo_field(airLevelHeightField)
    call mpas_dmpar_exch_halo_field(airPotentialTemperatureField)
@@ -2520,7 +2572,7 @@ contains
 !-----------------------------------------------------------------------
 
    integer ::  &
-      i, n
+      i, n, iCategory, iFloeCategory
 
    real(kind=RKIND) :: &
       ailohi,          &
@@ -2530,6 +2582,8 @@ contains
       tauxo,           &
       tauyo,           &
       basalPressure
+   
+   real(kind=RKIND) :: workx, worky
 
    type (block_type), pointer :: &
       block_ptr
@@ -2542,13 +2596,18 @@ contains
       shortwave,        &
       atmosCoupling,    &
       oceanCoupling,    &
+      floe_size_distribution, &
+      icestate,         &
+      tracers,          &
       atmosFluxes,      &
       oceanFluxes,      &
       icebergFluxes,    &
       biogeochemistry
 
    integer, pointer :: &
-      nCellsSolve
+      nCellsSolve,     &
+      nCategories,     &
+      nFloeCategories
 
    logical, pointer :: &
       config_rotate_cartesian_grid,      &
@@ -2557,7 +2616,8 @@ contains
       config_use_zaerosols,              &
       config_couple_biogeochemistry_fields, &
       config_use_column_shortwave,       &
-      config_use_data_icebergs
+      config_use_data_icebergs,          &
+      config_use_floe_size_distribution
 
    real(kind=RKIND), pointer :: &
       sphere_radius
@@ -2607,7 +2667,9 @@ contains
       oceanHumicsFlux,             &
       oceanDustIronFlux,           &
       carbonToNitrogenRatioAlgae,  &
-      carbonToNitrogenRatioDON
+      carbonToNitrogenRatioDON,    &
+      FloeSizeBinCenter,           &
+      FloeSizeDiameter
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeFlux,              &
@@ -2615,8 +2677,12 @@ contains
       oceanDICFlux,                &
       oceanDONFlux,                &
       oceanParticulateIronFlux,    &
-      oceanDissolvedIronFlux
+      oceanDissolvedIronFlux,      &
+      iceAreaCategoryInitial
 
+   real (kind=RKIND), dimension(:,:,:), pointer :: &
+      floeSizeDist,                &
+      iceAreaCategory
 !-----------------------------------------------------------------------
 
    errorCode = 0
@@ -2633,6 +2699,7 @@ contains
       call mpas_pool_get_config(configs, "config_couple_biogeochemistry_fields", config_couple_biogeochemistry_fields)
       call MPAS_pool_get_config(configs, "config_use_column_shortwave", config_use_column_shortwave)
       call MPAS_pool_get_config(configs, "config_use_data_icebergs", config_use_data_icebergs)
+      call MPAS_pool_get_config(configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
       call MPAS_pool_get_subpool(block_ptr % structs, 'mesh', meshPool)
       call MPAS_pool_get_subpool(block_ptr % structs, "tracers_aggregate", tracersAggregate)
@@ -2675,6 +2742,20 @@ contains
       call MPAS_pool_get_array(atmosCoupling, 'atmosReferenceHumidity2m', atmosReferenceHumidity2m)
 
       call MPAS_pool_get_array(oceanCoupling, 'frazilMassAdjust', frazilMassAdjust)
+
+      if (config_use_floe_size_distribution) then
+         call MPAS_pool_get_dimension(block_ptr % dimensions, "nCategories", nCategories)
+         call MPAS_pool_get_dimension(block_ptr % dimensions, "nFloeCategories", nFloeCategories)
+         call MPAS_pool_get_subpool(block_ptr % structs, "floe_size_distribution", floe_size_distribution)
+         call MPAS_pool_get_subpool(block_ptr % structs, "icestate", icestate)
+         call MPAS_pool_get_subpool(block_ptr % structs, "tracers", tracers)
+         call MPAS_pool_get_array(icestate, "iceAreaCategoryInitial", iceAreaCategoryInitial)
+         call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
+         call MPAS_pool_get_array(floe_size_distribution, "FloeSizeDiameter",FloeSizeDiameter)
+         call MPAS_pool_get_array(floe_size_distribution, "FloeSizePerimeter",FloeSizePerimeter)
+         call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
+         call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
+      endif
 
       call MPAS_pool_get_array(atmosFluxes, 'latentHeatFlux', latentHeatFlux)
       call MPAS_pool_get_array(atmosFluxes, 'sensibleHeatFlux', sensibleHeatFlux)
@@ -2786,6 +2867,20 @@ contains
             i2x_i % rAttr(index_i2x_Si_qref  ,n)  = atmosReferenceHumidity2m(i)
             i2x_i % rAttr(index_i2x_Si_snowh ,n)  = snowVolumeCell(i) / ailohi
             i2x_i % rAttr(index_i2x_Si_ithick,n)  = iceVolumeCell(i) / ailohi
+            
+            if (config_use_floe_size_distribution) then 
+               workx = 0.0_RKIND
+               worky = 0.0_RKIND
+               do iCategory=1,nCategories
+                  do iFloeCategory=1,nFloeCategories
+                     workx = workx + FloeSizeBinCenter(iFloeCategory) * iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
+                     worky = worky + iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
+                  enddo
+               enddo     
+               if (worky > 0.0_RKIND ) workx = 2.0_RKIND*workx / worky
+               FloeSizeDiameter(i) = MAX(2.0_RKIND*FloeSizeBinCenter(1),workx) 
+               i2x_i % rAttr(index_i2x_Si_ifloe, n)  = FloeSizeDiameter(i)
+            endif ! end floe size distribution
 
             !--- a/i fluxes computed by ice
             i2x_i % rAttr(index_i2x_Faii_taux ,n) = tauxa
@@ -3012,17 +3107,6 @@ contains
       real (kind=RKIND),      intent(in)   :: seaSurfaceSalinity
 
 ! !OUTPUT PARAMETERS:
-      real (kind=RKIND),      intent(out)  :: frazilMassFlux
-
-      character(len=strKIND), pointer   :: config_thermodynamics_type
-      character(len=strKIND), pointer   :: config_column_physics_type
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  local variables
-!
 !-----------------------------------------------------------------------
    real(kind=RKIND) :: &
       Si0new,          &
