@@ -56,6 +56,10 @@
 			definition="namelist:config_nSnowLayers"
 			description="The number of snow layers in the vertical direction."
 		/>
+		<dim name="nFrequencies"
+			definition="namelist:config_nFrequencies"
+			description="The number of frequency bins in the Wave Spectrum."
+		/>
 		<dim name="nHemispheres"
 			definition="3"
 			description="The number of hemispheres (global, north, south)."
@@ -439,8 +443,12 @@
 			possible_values="Any positive integer."
 		/>
 		<nml_option name="config_nFloeCategories" type="integer" default_value="1" units="unitless"
-			description="The number of floe size categories to use."
-			possible_values="Any positive integer."
+			description="The number of ice floe size categories to use."
+			possible_values="1 (default), 12, 16, 24."
+		/>
+		<nml_option name="config_nFrequencies" type="integer" default_value="0" units="unitless"
+			description="The number of frequency bins used to define the wave spectrum."
+			possible_values="0,25,36,50. Defined by WW3 component. Do not edit."
 		/>
 		<nml_option name="config_nIceLayers" type="integer" default_value="7" units="unitless"
 			description="The number of ice layers in the vertical direction to use."
@@ -731,6 +739,10 @@
 			description="Allow snow modifications plus additional snow tracers"
 			possible_values="true or false"
 		/>
+		<nml_option name="config_use_column_waves" type="logical" default_value="false" units="unitless"
+			description="Allow wavebreaking of ice floes. Requires coupling to WW3."
+			possible_values="true or false"
+		/>
 	</nml_record>
 
 	<nml_record name="column_tracers" in_defaults="true">
@@ -787,6 +799,21 @@
 			description="Use floe size distribution. Requires Icepack column package."
 			possible_values="true or false"
 			icepack_name="tr_fsd"
+		/>
+	</nml_record>
+
+	<nml_record name="wave_config" in_defaults="true">
+		<nml_option name="config_xfreq" type="real" default_value="0.0" units="unitless"
+			description="Frequency multiplication factor used by wave model."
+			possible_values="Defined by WW3 component. Do not modify."
+		/>
+		<nml_option name="config_freq1" type="real" default_value="0.0" units="unitless"
+			description="The first frequency used by wave model."
+			possible_values="Defined by WW3 component. Do not modify."
+		/>
+		<nml_option name="config_wave_spec_type" type="character" default_value="none" units="unitless"
+			description="The type of wave spectra input."
+			possible_values="none, constant, random."
 		/>
 	</nml_record>
 
@@ -2781,6 +2808,11 @@
 		     dimensions="nSnowLayers nCategories nCells Time"
 		     units="kg m-3"
 		     packages="pkgColumnTracerEffectiveSnowDensity"
+	        />
+	        <var name="floeSizeDist"
+		     type="real"
+		     dimensions="nFloeCategories nCategories nCells Time"
+		     units=""
 		/>
 		<var name="iceAge"
 		     type="real"
@@ -3903,6 +3935,83 @@
 		     dimensions="nCells Time"
 		/>
 	</var_struct>
+
+        <!-- floe size distribution -->
+	<var_struct name="floe_size_distribution" time_levs="1">
+		<var name="FloeSizeBinLower"
+		     type="real"
+		     dimensions="nFloeCategories"
+		     icepack_name="floe_rad_l"
+		/>
+		<var name="FloeSizeBinCenter"
+		     type="real"
+		     dimensions="nFloeCategories"
+		     icepack_name="floe_rad_c"
+		/>
+		<var name="FloeSizeBinWidth"
+		     type="real"
+		     dimensions="nFloeCategories"
+		     icepack_name="floe_binwidth"
+		/>
+		<var name="DFloeSizeNewIce"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_newi"
+		/>
+		<var name="DFloeSizeLateralGrowth"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_latg"
+		/>
+		<var name="DFloeSizeLateralMelt"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_latm"
+		/>
+		<var name="DFloeSizeWaves"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_wave"
+		/>
+		<var name="DFloeSizeWeld"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     icepack_name="d_afsd_weld"
+		/>
+		<var name="FloeSizeDiameter"
+		     type="real"
+		     dimensions="nCells Time"
+		/>
+		<var name="FloeSizePerimeter"
+		     type="real"
+		     dimensions="nCells Time"
+		/>
+
+	</var_struct>
+
+        <!-- wave coupling -->
+	<var_struct name="wave_coupling" time_levs="1">
+		<var name="WaveFrequency"
+		     type="real"
+		     dimensions="nFrequencies Time"
+		     icepack_name="wavefreq"
+		/>
+		<var name="WaveFreqBinWidth"
+		     type="real"
+		     dimensions="nFrequencies Time"
+		     icepack_name="dwavefreq"
+		/>
+		<var name="SignificantWaveHeight"
+		     type="real"
+		     dimensions="nCells Time"
+		     icepack_name="wave_sig_ht"
+		/>
+		<var name="WaveSpectra"
+		     type="real"
+		     dimensions="nFrequencies nCells Time"
+		     icepack_name="wave_spectrum"
+		/>
+        </var_struct>
 
 	<!--ocean coupling -->
 	<var_struct name="ocean_coupling" time_levs="1">
