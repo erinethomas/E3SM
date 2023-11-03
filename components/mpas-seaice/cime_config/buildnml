@@ -833,6 +833,21 @@ def buildnml(case, caseroot, compname):
             lines.append('    <var name="pondAlbedoCell"/>')
             lines.append('    <var name="bareIceAlbedoCell"/>')
             lines.append('    <var name="pondAreaCell"/>')
+            
+            if ("WW3" in compset or "DWAV%FSD" in compset): 
+                lines.append('    <var name="WaveFrequency"/> ')
+                lines.append('    <var name="SignificantWaveHeight"/> ')
+                lines.append('    <var name="WaveSpectra"/> ')
+                lines.append('    <var name="FloeSizeBinLower"/>')
+                lines.append('    <var name="FloeSizeBinCenter"/>')
+                lines.append('    <var name="FloeSizeBinWidth"/>')
+                lines.append('    <var name="FloeSizeDiameter"/> ')
+                lines.append('    <var name="DFloeSizeNewIce"/> ')
+                lines.append('    <var name="DFloeSizeLateralGrowth"/> ')
+                lines.append('    <var name="DFloeSizeLateralMelt"/> ')
+                lines.append('    <var name="DFloeSizeWeld"/> ')
+                lines.append('    <var name="DFloeSizeWaves"/> ')
+
             if iceberg_mode != 'none':
                 lines.append('    <var name="bergFreshwaterFlux"/>')
                 lines.append('    <var name="bergLatentHeatFlux"/>')

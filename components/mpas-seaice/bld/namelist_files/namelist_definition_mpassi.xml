@@ -292,7 +292,7 @@ Default: Defined in namelist_defaults.xml
 	category="dimensions" group="dimensions">
 The number of floe size categories to use.
 
-Valid values: Any positive integer.
+Valid values: 1, 12(default), 16, 24.
 Default: Defined in namelist_defaults.xml
 </entry>
 
@@ -312,6 +312,12 @@ Valid values: Any positive integer.
 Default: Defined in namelist_defaults.xml
 </entry>
 
+<entry id="config_nFrequencies" type="integer"	
+        category="dimensions" group="dimensions">
+The number of frequencies used by the wave model.
+Valid values: 0,25,36,50.
+Default: 36. Defined by WW3.
+</entry>
 
 <!-- initialize -->
 
@@ -861,6 +867,13 @@ Valid values: true or false
 Default: Defined in namelist_defaults.xml
 </entry>
 
+<entry id="config_use_column_waves" type="logical"
+	category="column_package" group="column_package">
+Use the wave coupling to allow breaking of ice floes
+
+Valid values: true or false
+Default: Defined in namelist_defaults.xml
+</entry>
 
 <!-- column_tracers -->
 
@@ -952,6 +965,25 @@ Valid values: true or false
 Default: Defined in namelist_defaults.xml
 </entry>
 
+<!-- wave_config -->
+
+<entry id="config_xfreq" type="real"
+	category="wave_config" group="wave_config">
+Frequency multiplication factor used by the wave model.
+Default: Defined in namelist_defaults.xml
+</entry>
+
+<entry id="config_freq1" type="real"
+	category="wave_config" group="wave_config">
+First frequency used by the wave model.
+Default: Defined in namelist_defaults.xml
+</entry>
+
+<entry id="config_wave_spec_type" type="char*1024"
+	category="wave_config" group="wave_config">
+Wave Spectra input type.
+Default = 'none'. Defined in namelist_defaults.xml
+</entry>
 
 <!-- biogeochemistry -->
 
