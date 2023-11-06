@@ -274,9 +274,10 @@ contains
        ! initalize floe size distribution and waves for col wave breaking
        call MPAS_pool_get_config(domain % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
        call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
-       if (config_use_floe_size_distribution .and. config_use_column_waves) &
+       if (config_use_floe_size_distribution .and. config_use_column_waves) then
           call init_column_fsd(domain)
           call init_column_waves(domain)
+       endif
 
        ! initialize thermodynamic tracer profiles
        call init_column_thermodynamic_profiles(domain)
