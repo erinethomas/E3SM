@@ -402,16 +402,18 @@ contains
 
     !variables
     real(kind=RKIND), dimension(:), pointer :: &
-         FloeSizeBinLower,   & !ndim = nFloeCat
-         FloeSizeBinCenter,  &
-         FloeSizeBinWidth
+         floeSizeBinLower,   & !ndim = nFloeCat
+         floeSizeBinCenter,  &
+         floeSizeBinWidth, &
+         floeDistribution
 
     real(kind=RKIND), dimension(:,:), pointer :: &
-         DFloeSizeNewIce, &
-         DFloeSizeLateralGrowth, &
-         DFloeSizeLateralMelt, &
-         DFloeSizeWaves, &
-         DFloeSizeWeld
+         dFloeSizeNewIce, &
+         dFloeSizeLateralGrowth, &
+         dFloeSizeLateralMelt, &
+         dFloeSizeWaves, &
+         dFloeSizeWeld, &
+         floeDistCat
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          iceAreaCategory, &
@@ -420,8 +422,6 @@ contains
     !local variables
     integer :: i,iCell, iCategory, iFloeCategory
     character (len=35) :: c_fsd_range 
-    real(kind=RKIND), dimension(:),allocatable :: FloeDist
-    real(kind=RKIND), dimension(:,:),allocatable :: FloeDistCat
 
     call MPAS_pool_get_config(domain % configs, "config_initial_condition_type",config_initial_condition_type)
 
@@ -434,61 +434,63 @@ contains
        call MPAS_pool_get_dimension(mesh, "nCellsSolve", nCellsSolve)
        call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
        call MPAS_pool_get_dimension(block % dimensions, "nFrequencies", nFrequencies)
-       call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nCategories", nCategories)
+       call MPAS_pool_get_dimension(block % dimensions, "nCategories", nCategories)
 
-       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinLower", FloeSizeBinLower)
-       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
-       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinWidth", FloeSizeBinWidth)
+       call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinLower", floeSizeBinLower)
+       call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinCenter", floeSizeBinCenter)
+       call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinWidth", floeSizeBinWidth)
+       call MPAS_pool_get_array(floe_size_distribution, "floeDistribution", floeDistribution)
+       call MPAS_pool_get_array(floe_size_distribution, "floeDistCat", floeDistCat)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeNewIce", dFloeSizeNewIce)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeLateralGrowth", dFloeSizeLateralGrowth)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeLateralMelt", dFloeSizeLateralMelt)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeWaves", dFloeSizeWaves)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeWeld", dFloeSizeWeld)
 
        call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist,1)
        call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
 
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeNewIce", DFloeSizeNewIce)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralGrowth", DFloeSizeLateralGrowth)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralMelt", DFloeSizeLateralMelt)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWeld", DFloeSizeWeld)
-
-       allocate(FloeDist(nFloeCategories))
-       allocate(FloeDistCat(nFloeCategories,nCategories))
-
        call icepack_init_fsd_bounds(          &
           nfsd=nFloeCategories,               &  ! number of floe size categories
-          floe_rad_l=FloeSizeBinLower(:),     &  ! fsd size lower bound in m (radius)
-          floe_rad_c=FloeSizeBinCenter(:),    &  ! fsd size bin centre in m (radius)
-          floe_binwidth=FloeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
+          floe_rad_l=floeSizeBinLower(:),     &  ! fsd size lower bound in m (radius)
+          floe_rad_c=floeSizeBinCenter(:),    &  ! fsd size bin centre in m (radius)
+          floe_binwidth=floeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
           c_fsd_range=c_fsd_range)               ! string for history output: fsd floe_rad bounds (m)
 
-       ! initalize 'change in floe size distribution' Variables
-       DFloeSizeNewIce(:,:)        = c0   ! change in floe size distribution due to new ice
-       DFloeSizeLateralGrowth(:,:) = c0   ! change in floe size distribution due to lateral growth
-       DFloeSizeLateralMelt(:,:)   = c0   ! change in floe size distribution due to lateral melt
-       DFloeSizeWeld(:,:)          = c0   ! change in floe size distribution due to welding
-       DFloeSizeWaves(:,:)         = c0   ! change in floe size distribution due to wave breaking
+       ! initalize variables for change in floe size distribution
+       dFloeSizeNewIce(:,:)        = c0   ! change in floe size distribution due to new ice
+       dFloeSizeLateralGrowth(:,:) = c0   ! change in floe size distribution due to lateral growth
+       dFloeSizeLateralMelt(:,:)   = c0   ! change in floe size distribution due to lateral melt
+       dFloeSizeWeld(:,:)          = c0   ! change in floe size distribution due to welding
+       dFloeSizeWaves(:,:)         = c0   ! change in floe size distribution due to wave breaking
 
        ! default: floes occupy the smallest floe size category in all thickness categories
-       FloeDistCat(:,:) = c0
-       FloeDistCat(1,:) = c1
+       floeDistCat(:,:) = c0
+       floeDistCat(1,:) = c1
        floeSizeDist(:,:,:) = c0
        floeSizeDist(1,:,:) = c1
 
        call icepack_init_fsd(                   &  
           nfsd=nFloeCategories,                 & ! number of floe size categories 
           ice_ic=config_initial_condition_type, & ! method of ice cover initialization 
-          floe_rad_c=FloeSizeBinCenter(:),      & ! fsd size bin centre in m (radius)
-          floe_binwidth=FloeSizeBinWidth(:),    & ! fsd size bin width in m (radius)
-          afsd=FloeDist)                          ! floe size distribution initalization tracer 
+          floe_rad_c=floeSizeBinCenter(:),      & ! fsd size bin centre in m (radius)
+          floe_binwidth=floeSizeBinWidth(:),    & ! fsd size bin width in m (radius)
+          afsd=floeDistribution)                  ! floe size distribution initalization tracer 
 
-       do iCell =1, nCellsSolve 
-          do iCategory =1,nCategories
-             do iFloeCategory = 1,nFloeCategories
-                if (iceAreaCategory(1,iCategory,iCell) > seaicePuny) FloeDistCat(iFloeCategory,iCategory) = FloeDist(iFloeCategory)
+       do iCell = 1, nCellsSolve 
+          do iCategory = 1, nCategories
+             do iFloeCategory = 1, nFloeCategories
+                if (iceAreaCategory(1,iCategory,iCell) > seaicePuny) then
+                   floeDistCat(iFloeCategory,iCategory) = floeDistribution(iFloeCategory)
+                endif
              enddo
           enddo
-          call icepack_cleanup_fsd(nCategories, nFloeCategories, FloeDistCat) ! renormalize ?? 
-          do iCategory =1,nCategories
-             do iFloeCategory = 1,nFloeCategories
-                floeSizeDist(iFloeCategory,iCategory,iCell) = FloeDistCat(iFloeCategory,iCategory)
+
+          call icepack_cleanup_fsd(nCategories, nFloeCategories, floeDistCat) ! renormalize ?? 
+          
+          do iCategory = 1, nCategories
+             do iFloeCategory = 1, nFloeCategories
+                floeSizeDist(iFloeCategory,iCategory,iCell) = floeDistCat(iFloeCategory,iCategory)
              enddo
           enddo
        enddo !iCell
@@ -540,19 +542,19 @@ subroutine init_column_waves(domain)
 
     !variables
     real(kind=RKIND), dimension(:), pointer :: &
-         WaveFrequency,      &
-         WaveFreqBinWidth,   &
-         SignificantWaveHeight
+         waveFrequency,      &
+         waveFreqBinWidth,   &
+         significantWaveHeight
 
     real(kind=RKIND), dimension(:,:), pointer :: &
-         WaveSpectra
+         waveSpectra
 
     !local variables
     integer :: iCell
     integer :: i
     real(kind=RKIND), dimension(:),allocatable :: &
-         WaveFrequency_TEMP,      &
-         WaveFreqBinWidth_TEMP
+         waveFrequency_TEMP,      &
+         waveFreqBinWidth_TEMP
 
    call MPAS_pool_get_config(domain % configs, "config_xfreq", config_xfreq)
    call MPAS_pool_get_config(domain % configs, "config_freq1", config_freq1)
@@ -566,25 +568,26 @@ subroutine init_column_waves(domain)
       call MPAS_pool_get_dimension(mesh, "nCellsSolve", nCellsSolve)
       call MPAS_pool_get_dimension(block % dimensions, "nFrequencies", nFrequencies)
 
-      call MPAS_pool_get_array(wave_coupling, "SignificantWaveHeight", SignificantWaveHeight)
-      call MPAS_pool_get_array(wave_coupling, "WaveSpectra", WaveSpectra)
-      call MPAS_pool_get_array(wave_coupling, "WaveFrequency", WaveFrequency)
-      call MPAS_pool_get_array(wave_coupling, "WaveFreqBinWidth", WaveFreqBinWidth)
+      call MPAS_pool_get_array(wave_coupling, "significantWaveHeight", significantWaveHeight)
+      call MPAS_pool_get_array(wave_coupling, "waveSpectra", waveSpectra)
+      call MPAS_pool_get_array(wave_coupling, "waveFrequency", waveFrequency)
+      call MPAS_pool_get_array(wave_coupling, "waveFreqBinWidth", waveFreqBinWidth)
 
-      allocate(WaveFrequency_TEMP(nFrequencies+2))
-      allocate(WaveFreqBinWidth_TEMP(nFrequencies+2))
+      allocate(waveFrequency_TEMP(nFrequencies+2))
+      allocate(waveFreqBinWidth_TEMP(nFrequencies+2))
 
-      !initalize Wave Frequencies (same as in WW3)
+      !initalize Wave Frequencies (same calculation as used in WW3)
       call shr_calc_wave_freq(nFrequencies, config_freq1, config_xfreq, &
-                              WaveFrequency_TEMP, &
-                              WaveFreqBinWidth_TEMP)
+                              waveFrequency_TEMP, &
+                              waveFreqBinWidth_TEMP)
 
-      WaveFrequency = WaveFrequency_TEMP(2:nFrequencies-1) ! remove frequency 'tails' (these are only need in WW3, not MPAS-SI)
-      WaveFreqBinWidth = WaveFreqBinWidth_TEMP(2:nFrequencies-1) 
+      ! remove frequency 'tails' (which are only needed in WW3, not MPAS-SI)
+      waveFrequency = waveFrequency_TEMP(2:nFrequencies-1) 
+      waveFreqBinWidth = waveFreqBinWidth_TEMP(2:nFrequencies-1) 
 
       ! initialize HS and Spectra
-      SignificantWaveHeight(:) = c0   
-      WaveSpectra(:,:)        = c0
+      significantWaveHeight(:) = c0   
+      waveSpectra(:,:)        = c0
 
       block => block % next
     end do !block
@@ -2410,11 +2413,11 @@ subroutine init_column_waves(domain)
          verticalGrid, &
          interfaceBiologyGrid, &
          frazilGrowthDiagnostic, &
-         WaveFrequency,      &
-         WaveFreqBinWidth,   &
+         waveFrequency,      &
+         waveFreqBinWidth,   &
          SignificantWaveHeight,&
-         FloeSizeBinCenter,  &
-         FloeSizeBinWidth
+         floeSizeBinCenter,  &
+         floeSizeBinWidth
 
     real(kind=RKIND), dimension(:,:), pointer :: &
          iceAreaCategoryInitial, &
@@ -2423,12 +2426,12 @@ subroutine init_column_waves(domain)
          oceanBioFluxes, &
          oceanBioConcentrations, &
          initialSalinityProfile, & 
-         WaveSpectra, &
-         DFloeSizeNewIce, &
-         DFloeSizeLateralGrowth, &
-         DFloeSizeLateralMelt, &
-         DFloeSizeWaves, &
-         DFloeSizeWeld
+         waveSpectra, &
+         dFloeSizeNewIce, &
+         dFloeSizeLateralGrowth, &
+         dFloeSizeLateralMelt, &
+         dFloeSizeWaves, &
+         dFloeSizeWeld
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          iceAreaCategory, &
@@ -2539,18 +2542,18 @@ subroutine init_column_waves(domain)
        call MPAS_pool_get_array(ocean_coupling, "seaFreezingTemperature", seaFreezingTemperature)
        call MPAS_pool_get_array(ocean_coupling, "seaSurfaceSalinity", seaSurfaceSalinity)
 
-       call MPAS_pool_get_array(wave_coupling, "SignificantWaveHeight", SignificantWaveHeight)
-       call MPAS_pool_get_array(wave_coupling, "WaveSpectra", WaveSpectra)
-       call MPAS_pool_get_array(wave_coupling, "WaveFrequency", WaveFrequency)
-       call MPAS_pool_get_array(wave_coupling, "WaveFreqBinWidth", WaveFreqBinWidth)
+       call MPAS_pool_get_array(wave_coupling, "significantWaveHeight", significantWaveHeight)
+       call MPAS_pool_get_array(wave_coupling, "waveSpectra", waveSpectra)
+       call MPAS_pool_get_array(wave_coupling, "waveFrequency", waveFrequency)
+       call MPAS_pool_get_array(wave_coupling, "waveFreqBinWidth", waveFreqBinWidth)
 
-       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
-       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinWidth", FloeSizeBinWidth)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeNewIce", DFloeSizeNewIce)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralGrowth", DFloeSizeLateralGrowth)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeLateralMelt", DFloeSizeLateralMelt)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWeld", DFloeSizeWeld)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
+       call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinCenter", floeSizeBinCenter)
+       call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinWidth", floeSizeBinWidth)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeNewIce", dFloeSizeNewIce)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeLateralGrowth", dFloeSizeLateralGrowth)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeLateralMelt", dFloeSizeLateralMelt)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeWeld", dFloeSizeWeld)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeWaves", dFloeSizeWaves)
 
        call MPAS_pool_get_array(ocean_fluxes, "oceanFreshWaterFlux", oceanFreshWaterFlux)
        call MPAS_pool_get_array(ocean_fluxes, "oceanSaltFlux", oceanSaltFlux)
@@ -2684,16 +2687,16 @@ subroutine init_column_waves(domain)
 !               H2_16O_ocn=, & ! optional - ocean concentration of H2_16O (kg/kg) 
 !               H2_18O_ocn=, & ! optional - ocean concentration of H2_18O (kg/kg)
                nfsd=nFloeCategories, &
-               wave_sig_ht=SignificantWaveHeight(iCell), &
-               wave_spectrum=WaveSpectra(:,iCell),    &
-               wavefreq=WaveFrequency(:),       &
-               dwavefreq=WaveFreqBinWidth(:),      &
-               d_afsd_latg=DFloeSizeLateralGrowth(:,iCell),    &
-               d_afsd_newi=DFloeSizeNewIce(:,iCell),   &
-               d_afsd_latm=DFloeSizeLateralMelt(:,iCell),   &
-               d_afsd_weld=DFloeSizeWeld(:,iCell),   &
-               floe_rad_c=FloeSizeBinCenter(:), &  
-               floe_binwidth=FloeSizeBinWidth(:))
+               wave_sig_ht=significantWaveHeight(iCell), &
+               wave_spectrum=waveSpectra(:,iCell),    &
+               wavefreq=waveFrequency(:),       &
+               dwavefreq=waveFreqBinWidth(:),      &
+               d_afsd_latg=dFloeSizeLateralGrowth(:,iCell),    &
+               d_afsd_newi=dFloeSizeNewIce(:,iCell),   &
+               d_afsd_latm=dFloeSizeLateralMelt(:,iCell),   &
+               d_afsd_weld=dFloeSizeWeld(:,iCell),   &
+               floe_rad_c=floeSizeBinCenter(:), &  
+               floe_binwidth=floeSizeBinWidth(:))
 
           abortFlag = icepack_warnings_aborted()
           call seaice_icepack_write_warnings(abortFlag)
@@ -3564,14 +3567,14 @@ subroutine init_column_waves(domain)
     real(kind=RKIND), dimension(:), pointer :: &
          iceAreaCell, & ! ice area fraction
          iceVolumeCell, & ! ice volume per unit area
-         FloeSizeBinLower, & ! fsd size bin lower bound in m (radius)
-         FloeSizeBinCenter, & ! fsd size bin center in m (radius)
-         WaveFrequency, & ! wave frequencies
-         WaveFreqBinWidth   ! wave frequency bin widths
+         floeSizeBinLower, & ! fsd size bin lower bound in m (radius)
+         floeSizeBinCenter, & ! fsd size bin center in m (radius)
+         waveFrequency, & ! wave frequencies
+         waveFreqBinWidth   ! wave frequency bin widths
 
     real(kind=RKIND), dimension(:,:), pointer :: &
-         WaveSpectra, & ! ocean surface wave spectrum as a function of frequency
-         DFloeSizeWaves ! change in fsd due to waves
+         waveSpectra, & ! ocean surface wave spectrum as a function of frequency
+         dFloeSizeWaves ! change in fsd due to waves
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          iceAreaCategory ! ice area fraction per category
@@ -3612,18 +3615,18 @@ subroutine init_column_waves(domain)
 
        call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
 
-       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinLower", FloeSizeBinLower)
-       call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
-       call MPAS_pool_get_array(floe_size_distribution, "DFloeSizeWaves", DFloeSizeWaves)
-       call MPAS_pool_get_array(wave_coupling, "WaveSpectra", WaveSpectra)
-       call MPAS_pool_get_array(wave_coupling, "WaveFrequency", WaveFrequency)
-       call MPAS_pool_get_array(wave_coupling, "WaveFreqBinWidth", WaveFreqBinWidth)
+       call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinLower", floeSizeBinLower)
+       call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinCenter", floeSizeBinCenter)
+       call MPAS_pool_get_array(floe_size_distribution, "dFloeSizeWaves", dFloeSizeWaves)
+       call MPAS_pool_get_array(wave_coupling, "waveSpectra", waveSpectra)
+       call MPAS_pool_get_array(wave_coupling, "waveFrequency", waveFrequency)
+       call MPAS_pool_get_array(wave_coupling, "waveFreqBinWidth", waveFreqBinWidth)
 
        setGetPhysicsTracers = .true.
        setGetBGCTracers     = config_use_column_biogeochemistry
 
        do iCell = 1, nCellsSolve
-          DFloeSizeWaves(:,iCell) = c0
+          dFloeSizeWaves(:,iCell) = c0
 
           call set_cice_tracer_array_category(block, ciceTracerObject, &
                  tracerArrayCategory, iCell, setGetPhysicsTracers, setGetBGCTracers)
@@ -3637,13 +3640,13 @@ subroutine init_column_waves(domain)
                   aice = iceAreaCell(iCell), &
                   vice = iceVolumeCell(iCell), &
                   aicen = iceAreaCategory(1,:,iCell), &
-                  floe_rad_l = FloeSizeBinLower(:), &
-                  floe_rad_c = FloeSizeBinCenter(:), &
-                  wave_spectrum = WaveSpectra(:,iCell), &
-                  wavefreq = WaveFrequency(:), &
-                  dwavefreq = WaveFreqBinWidth(:), &
+                  floe_rad_l = floeSizeBinLower(:), &
+                  floe_rad_c = floeSizeBinCenter(:), &
+                  wave_spectrum = waveSpectra(:,iCell), &
+                  wavefreq = waveFrequency(:), &
+                  dwavefreq = waveFreqBinWidth(:), &
                   trcrn = tracerArrayCategory, &
-                  d_afsd_wave = DFloeSizeWaves(:,iCell))
+                  d_afsd_wave = dFloeSizeWaves(:,iCell))
 
           call get_cice_tracer_array_category(block, ciceTracerObject, &
                  tracerArrayCategory, iCell, setGetPhysicsTracers, setGetBGCTracers)
@@ -12221,10 +12224,10 @@ subroutine init_column_waves(domain)
          config_nFrequencies
 
     real(kind=RKIND), dimension(:), pointer :: &
-         FloeSizeDiameter
+         floeSizeDiameter
 
     real(kind=RKIND), dimension(:,:), pointer :: &
-         WaveSpectra
+         waveSpectra
 
     integer :: &
          config_thermodynamics_type_int, &
@@ -12460,8 +12463,8 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_config(domain % configs, "config_nFrequencies", config_nFrequencies)
     call MPAS_pool_get_subpool(domain % blocklist % structs, "wave_coupling", wave_coupling)
     call MPAS_pool_get_subpool(domain % blocklist % structs, "floe_size_distribution", floe_size_distribution)
-    call MPAS_pool_get_array(wave_coupling, "WaveSpectra", WaveSpectra) 
-    call MPAS_pool_get_array(floe_size_distribution, "FloeSizeDiameter",FloeSizeDiameter)
+    call MPAS_pool_get_array(wave_coupling, "waveSpectra", waveSpectra) 
+    call MPAS_pool_get_array(floe_size_distribution, "floeSizeDiameter",floeSizeDiameter)
 
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nGrainAgingTemperature", nGrainAgingTemperature)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nGrainAgingTempGradient", nGrainAgingTempGradient)

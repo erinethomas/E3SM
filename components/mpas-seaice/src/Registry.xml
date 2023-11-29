@@ -3938,51 +3938,55 @@
 
         <!-- floe size distribution -->
 	<var_struct name="floe_size_distribution" time_levs="1">
-		<var name="FloeSizeBinLower"
+		<var name="floeSizeBinLower"
 		     type="real"
 		     dimensions="nFloeCategories"
 		     icepack_name="floe_rad_l"
 		/>
-		<var name="FloeSizeBinCenter"
+		<var name="floeSizeBinCenter"
 		     type="real"
 		     dimensions="nFloeCategories"
 		     icepack_name="floe_rad_c"
 		/>
-		<var name="FloeSizeBinWidth"
+		<var name="floeSizeBinWidth"
 		     type="real"
 		     dimensions="nFloeCategories"
 		     icepack_name="floe_binwidth"
 		/>
-		<var name="DFloeSizeNewIce"
+		<var name="floeDistribution"
+		     type="real"
+		     dimensions="nFloeCategories"
+		/>
+		<var name="floeDistCat"
+		     type="real"
+		     dimensions="nFloeCategories nCategories"
+		/>
+		<var name="dFloeSizeNewIce"
 		     type="real"
 		     dimensions="nFloeCategories nCells Time"
 		     icepack_name="d_afsd_newi"
 		/>
-		<var name="DFloeSizeLateralGrowth"
+		<var name="dFloeSizeLateralGrowth"
 		     type="real"
 		     dimensions="nFloeCategories nCells Time"
 		     icepack_name="d_afsd_latg"
 		/>
-		<var name="DFloeSizeLateralMelt"
+		<var name="dFloeSizeLateralMelt"
 		     type="real"
 		     dimensions="nFloeCategories nCells Time"
 		     icepack_name="d_afsd_latm"
 		/>
-		<var name="DFloeSizeWaves"
+		<var name="dFloeSizeWaves"
 		     type="real"
 		     dimensions="nFloeCategories nCells Time"
 		     icepack_name="d_afsd_wave"
 		/>
-		<var name="DFloeSizeWeld"
+		<var name="dFloeSizeWeld"
 		     type="real"
 		     dimensions="nFloeCategories nCells Time"
 		     icepack_name="d_afsd_weld"
 		/>
-		<var name="FloeSizeDiameter"
-		     type="real"
-		     dimensions="nCells Time"
-		/>
-		<var name="FloeSizePerimeter"
+		<var name="floeSizeDiameter"
 		     type="real"
 		     dimensions="nCells Time"
 		/>
@@ -3991,22 +3995,22 @@
 
         <!-- wave coupling -->
 	<var_struct name="wave_coupling" time_levs="1">
-		<var name="WaveFrequency"
+		<var name="waveFrequency"
 		     type="real"
 		     dimensions="nFrequencies Time"
 		     icepack_name="wavefreq"
 		/>
-		<var name="WaveFreqBinWidth"
+		<var name="waveFreqBinWidth"
 		     type="real"
 		     dimensions="nFrequencies Time"
 		     icepack_name="dwavefreq"
 		/>
-		<var name="SignificantWaveHeight"
+		<var name="significantWaveHeight"
 		     type="real"
 		     dimensions="nCells Time"
 		     icepack_name="wave_sig_ht"
 		/>
-		<var name="WaveSpectra"
+		<var name="waveSpectra"
 		     type="real"
 		     dimensions="nFrequencies nCells Time"
 		     icepack_name="wave_spectrum"
