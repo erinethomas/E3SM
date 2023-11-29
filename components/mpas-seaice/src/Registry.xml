@@ -2044,6 +2044,7 @@
 			<var name="snowLiquidMass"/>
 			<var name="snowGrainRadius"/>
 			<var name="snowDensity"/>
+			<var name="floeSizeDist"/>
 			<var name="iceAge"/>
 			<var name="firstYearIceArea"/>
 			<var name="levelIceArea"/>
