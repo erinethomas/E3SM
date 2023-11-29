@@ -2201,7 +2201,7 @@ contains
       oceanDMSConcField,                &
       oceanDMSPConcField,               &
       oceanHumicsConcField,             &
-      SignificantWaveHeightField
+      significantWaveHeightField
 
    type (field2DReal), pointer ::       &
       oceanAlgaeConcField,              &
@@ -2216,7 +2216,7 @@ contains
       atmosDustFluxField,               &
       atmosWetDustFluxField,            &
       atmosDryDustFluxField,            &
-      WaveSpectraField
+      waveSpectraField
 
    real (kind=RKIND), dimension(:), pointer :: &
       seaSurfaceTemperature,       &
@@ -2251,7 +2251,7 @@ contains
       carbonToNitrogenRatioAlgae,  &
       carbonToNitrogenRatioDON,    &
       DOCPoolFractions,            &
-      SignificantWaveHeight
+      significantWaveHeight
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeConc,              &
@@ -2266,7 +2266,7 @@ contains
       atmosDustFlux,               &
       atmosWetDustFlux,            &
       atmosDryDustFlux,            &
-      WaveSpectra
+      waveSpectra
 
 !-----------------------------------------------------------------------
 !
@@ -2330,8 +2330,8 @@ contains
 
       if (config_use_column_waves) then
          call mpas_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
-         call mpas_pool_get_array(waveCoupling, 'SignificantWaveHeight', SignificantWaveHeight)
-         call mpas_pool_get_array(waveCoupling, 'WaveSpectra', WaveSpectra)
+         call mpas_pool_get_array(waveCoupling, 'significantWaveHeight', significantWaveHeight)
+         call mpas_pool_get_array(waveCoupling, 'waveSpectra', waveSpectra)
       endif
       
       if (config_use_aerosols) then
@@ -2382,9 +2382,9 @@ contains
         seaSurfaceTiltV(i)             = x2i_i % rAttr(index_x2i_So_dhdy, n)
 
         if (config_use_column_waves) then
-          SignificantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
+          significantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
           do iFreq = 1,nFrequencies
-             WaveSpectra(iFreq,i)      = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
+             waveSpectra(iFreq,i)      = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
           enddo
         endif
 
@@ -2584,8 +2584,8 @@ contains
 
    if (config_use_column_waves) then
      call mpas_pool_get_subpool(domain % blocklist % structs, 'wave_coupling', waveCoupling)
-     call mpas_pool_get_field(waveCoupling, 'SignificantWaveHeight', SignificantWaveHeightField)
-     call mpas_pool_get_field(waveCoupling, 'WaveSpectra', WaveSpectraField)
+     call mpas_pool_get_field(waveCoupling, 'significantWaveHeight', significantWaveHeightField)
+     call mpas_pool_get_field(waveCoupling, 'waveSpectra', waveSpectraField)
    endif
 
    call mpas_pool_get_field(atmosCoupling, 'airLevelHeight', airLevelHeightField)
@@ -2646,7 +2646,7 @@ contains
    call mpas_dmpar_exch_halo_field(seaSurfaceTiltVField)
 
    if (config_use_column_waves) then
-      call mpas_dmpar_exch_halo_field(SignificantWaveHeightField)
+      call mpas_dmpar_exch_halo_field(significantWaveHeightField)
       call mpas_dmpar_exch_halo_field(waveSpectraField)
    endif
 
@@ -2826,8 +2826,8 @@ contains
       oceanDustIronFlux,           &
       carbonToNitrogenRatioAlgae,  &
       carbonToNitrogenRatioDON,    &
-      FloeSizeBinCenter,           &
-      FloeSizeDiameter
+      floeSizeBinCenter,           &
+      floeSizeDiameter
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeFlux,              &
@@ -2908,8 +2908,8 @@ contains
          call MPAS_pool_get_subpool(block_ptr % structs, "icestate", icestate)
          call MPAS_pool_get_subpool(block_ptr % structs, "tracers", tracers)
          call MPAS_pool_get_array(icestate, "iceAreaCategoryInitial", iceAreaCategoryInitial)
-         call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
-         call MPAS_pool_get_array(floe_size_distribution, "FloeSizeDiameter",FloeSizeDiameter)
+         call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinCenter", floeSizeBinCenter)
+         call MPAS_pool_get_array(floe_size_distribution, "floeSizeDiameter",floeSizeDiameter)
          call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
          call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
       endif
@@ -3030,13 +3030,13 @@ contains
                worky = 0.0_RKIND
                do iCategory=1,nCategories
                   do iFloeCategory=1,nFloeCategories
-                     workx = workx + FloeSizeBinCenter(iFloeCategory) * iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
+                     workx = workx + floeSizeBinCenter(iFloeCategory) * iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
                      worky = worky + iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
                   enddo
                enddo     
                if (worky > 0.0_RKIND ) workx = 2.0_RKIND*workx / worky
-               FloeSizeDiameter(i) = MAX(2.0_RKIND*FloeSizeBinCenter(1),workx) 
-               i2x_i % rAttr(index_i2x_Si_ifloe, n)  = FloeSizeDiameter(i)
+               floeSizeDiameter(i) = MAX(2.0_RKIND*floeSizeBinCenter(1),workx) 
+               i2x_i % rAttr(index_i2x_Si_ifloe, n)  = floeSizeDiameter(i)
             endif ! end floe size distribution
 
             !--- a/i fluxes computed by ice
