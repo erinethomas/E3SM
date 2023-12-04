@@ -755,8 +755,8 @@ contains
       if (tempLogicalConfig) then
         call MPAS_pool_get_config(domain % configs, "config_use_column_waves", tempLogicalConfig)
         if (.not.tempLogicalConfig) then
-          call mpas_log_write('FloeSizeDistribution requires column wave breaking.', MPAS_LOG_CRIT)
-          call mpas_log_write('Either a) turn FSD off or b) include wave component (either dwav or ww3)', MPAS_LOG_ERR)
+          call mpas_log_write('FloeSizeDistribution requires column wave breaking.', MPAS_LOG_ERR)
+          call mpas_log_write('Either a) turn FSD off or b) include wave component (either dwav or ww3)', MPAS_LOG_CRIT)
         endif
       endif
     else if (trim(tempCharConfig) == "column_package") then
