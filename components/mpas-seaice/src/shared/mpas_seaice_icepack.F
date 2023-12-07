@@ -393,7 +393,9 @@ contains
          floe_size_distribution
 
     character(len=StrKIND), pointer :: config_initial_condition_type
-    ! dimensions
+    logical, pointer :: config_do_restart
+
+    !dimensions
     integer, pointer ::   &
          nCellsSolve,     &
          nCategories, &
@@ -424,6 +426,7 @@ contains
     character (len=35) :: c_fsd_range 
 
     call MPAS_pool_get_config(domain % configs, "config_initial_condition_type",config_initial_condition_type)
+    call MPAS_pool_get_config(domain % configs, "config_do_restart",config_do_restart)
 
     block => domain % blocklist
     do while (associated(block))
@@ -464,36 +467,38 @@ contains
        dFloeSizeWeld(:,:)          = c0   ! change in floe size distribution due to welding
        dFloeSizeWaves(:,:)         = c0   ! change in floe size distribution due to wave breaking
 
-       ! default: floes occupy the smallest floe size category in all thickness categories
-       floeDistCat(:,:) = c0
-       floeDistCat(1,:) = c1
-       floeSizeDist(:,:,:) = c0
-       floeSizeDist(1,:,:) = c1
+       if (.not. config_do_restart) then
+          ! default: floes occupy the smallest floe size category in all thickness categories
+          floeDistCat(:,:) = c0
+          floeDistCat(1,:) = c1
+          floeSizeDist(:,:,:) = c0
+          floeSizeDist(1,:,:) = c1
 
-       call icepack_init_fsd(                   &  
-          nfsd=nFloeCategories,                 & ! number of floe size categories 
-          ice_ic=config_initial_condition_type, & ! method of ice cover initialization 
-          floe_rad_c=floeSizeBinCenter(:),      & ! fsd size bin centre in m (radius)
-          floe_binwidth=floeSizeBinWidth(:),    & ! fsd size bin width in m (radius)
-          afsd=floeDistribution)                  ! floe size distribution initalization tracer 
+          call icepack_init_fsd(                   &  
+             nfsd=nFloeCategories,                 & ! number of floe size categories 
+             ice_ic=config_initial_condition_type, & ! method of ice cover initialization 
+             floe_rad_c=floeSizeBinCenter(:),      & ! fsd size bin centre in m (radius)
+             floe_binwidth=floeSizeBinWidth(:),    & ! fsd size bin width in m (radius)
+             afsd=floeDistribution)                  ! floe size distribution initalization tracer 
 
-       do iCell = 1, nCellsSolve 
-          do iCategory = 1, nCategories
-             do iFloeCategory = 1, nFloeCategories
-                if (iceAreaCategory(1,iCategory,iCell) > seaicePuny) then
-                   floeDistCat(iFloeCategory,iCategory) = floeDistribution(iFloeCategory)
-                endif
+          do iCell = 1, nCellsSolve 
+             do iCategory = 1, nCategories
+                do iFloeCategory = 1, nFloeCategories
+                   if (iceAreaCategory(1,iCategory,iCell) > seaicePuny) then
+                      floeDistCat(iFloeCategory,iCategory) = floeDistribution(iFloeCategory)
+                   endif
+                enddo
              enddo
-          enddo
 
-          call icepack_cleanup_fsd(nCategories, nFloeCategories, floeDistCat) ! renormalize ?? 
+             call icepack_cleanup_fsd(nCategories, nFloeCategories, floeDistCat) ! renormalize ?? 
           
-          do iCategory = 1, nCategories
-             do iFloeCategory = 1, nFloeCategories
-                floeSizeDist(iFloeCategory,iCategory,iCell) = floeDistCat(iFloeCategory,iCategory)
+             do iCategory = 1, nCategories
+                do iFloeCategory = 1, nFloeCategories
+                   floeSizeDist(iFloeCategory,iCategory,iCell) = floeDistCat(iFloeCategory,iCategory)
+                enddo
              enddo
-          enddo
-       enddo !iCell
+          enddo !iCell
+       endif        
 
        block => block % next
 
@@ -531,6 +536,8 @@ subroutine init_column_waves(domain)
          mesh, &
          wave_coupling
 
+    logical, pointer :: config_do_restart
+    
     ! dimensions
     integer, pointer ::   &
          nCellsSolve,     &
@@ -558,6 +565,7 @@ subroutine init_column_waves(domain)
 
    call MPAS_pool_get_config(domain % configs, "config_xfreq", config_xfreq)
    call MPAS_pool_get_config(domain % configs, "config_freq1", config_freq1)
+   call MPAS_pool_get_config(domain % configs, "config_do_restart",config_do_restart)
 
    block => domain % blocklist
    do while (associated(block))
@@ -586,8 +594,10 @@ subroutine init_column_waves(domain)
       waveFreqBinWidth = waveFreqBinWidth_TEMP(2:nFrequencies-1) 
 
       ! initialize HS and Spectra
-      significantWaveHeight(:) = c0   
-      waveSpectra(:,:)        = c0
+      if (.not. config_do_restart) then
+         significantWaveHeight(:) = c0   
+         waveSpectra(:,:)        = c0
+      endif
 
       block => block % next
     end do !block
