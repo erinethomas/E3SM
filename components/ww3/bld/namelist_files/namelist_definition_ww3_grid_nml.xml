@@ -406,6 +406,14 @@
        valid_values="">
 </entry>
  
+<!-- SIC4 -->
+<entry id="ic4method"
+       type="real"
+       category="sic4"
+       group="sic4"
+       valid_values="">
+</entry>
+
 <!-- SDB1 -->
  
 <entry id="bjalfa"

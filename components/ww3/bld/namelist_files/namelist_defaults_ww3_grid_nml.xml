@@ -101,6 +101,9 @@ attributes to express the dependency.
 <wdthcg>1.50</wdthcg>
 <wdthth>1.50</wdthth>
  
+<!-- SIC4 -->
+<ic4method>1</ic4method>
+
 <!-- UNST -->
  
 <ugobcauto>.true.</ugobcauto>
