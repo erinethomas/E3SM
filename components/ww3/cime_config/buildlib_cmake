@@ -77,7 +77,9 @@ def buildlib(bldroot, installpath, case):
 y
 """.format(sf90, scc, tmpdir))
 
-    run_bld_cmd_ensure_logging("./w3_setup {} -s E3SM < w3_setup.inp".format(modeldir), logger, from_dir=bindir)
+    #run_bld_cmd_ensure_logging("./w3_setup {} -s E3SM < w3_setup.inp".format(modeldir), logger, from_dir=bindir)
+    run_bld_cmd_ensure_logging("./w3_setup {} -s E3SMv3 < w3_setup.inp".format(modeldir), logger, from_dir=bindir)
+    
     os.remove(inp_file)
 
     # Generate pre-processed WW3 source code
