@@ -256,7 +256,7 @@ contains
 
   !--------------------------------------------------------------------------
 
-  subroutine mrg_x2i_run_mct( cdata_i, a2x_i, o2x_i, x2i_i )
+  subroutine mrg_x2i_run_mct( cdata_i, a2x_i, o2x_i, w2x_i, x2i_i )
 
     !-----------------------------------------------------------------------
     !
@@ -265,6 +265,7 @@ contains
     type(seq_cdata),intent(in) :: cdata_i
     type(mct_aVect),intent(in) :: a2x_i
     type(mct_aVect),intent(in) :: o2x_i
+    type(mct_aVect),intent(in) :: w2x_i
     type(mct_aVect),intent(inout):: x2i_i
     !
     ! Local variables
@@ -345,6 +346,7 @@ contains
 
     call mct_aVect_copy(aVin=o2x_i, aVout=x2i_i, vector=mct_usevector)
     call mct_aVect_copy(aVin=a2x_i, aVout=x2i_i, vector=mct_usevector)
+    call mct_aVect_copy(aVin=w2x_i, aVout=x2i_i, vector=mct_usevector)
 
     ! Merge total snow and precip for ice input
     ! Scale total precip and runoff by flux_epbalfact
