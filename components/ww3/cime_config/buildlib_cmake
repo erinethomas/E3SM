@@ -39,6 +39,7 @@ def buildlib(bldroot, installpath, case):
     exeroot        = case.get_value("EXEROOT")
     ninst_value    = case.get_value("NINST_VALUE")
     rundir         = case.get_value("RUNDIR")
+    compset       = case.get_value("COMPSET")
 
     # Define WW3 repository directories
     repodir  = "{}/components/ww3/src".format(srcroot)
@@ -76,10 +77,11 @@ def buildlib(bldroot, installpath, case):
 
 y
 """.format(sf90, scc, tmpdir))
-
-    #run_bld_cmd_ensure_logging("./w3_setup {} -s E3SM < w3_setup.inp".format(modeldir), logger, from_dir=bindir)
-    run_bld_cmd_ensure_logging("./w3_setup {} -s E3SMv3 < w3_setup.inp".format(modeldir), logger, from_dir=bindir)
-    
+    # pick correct switch file for E3SM compset.'E3SM' uses IC2, 'E3SM_wavice' uses IC4M8 - requires MPAS-SI,icepack,FSD
+    if "MPASSI" in compset:
+       run_bld_cmd_ensure_logging("./w3_setup {} -s E3SM_wavice < w3_setup.inp".format(modeldir), logger, from_dir=bindir)
+    else: 
+       run_bld_cmd_ensure_logging("./w3_setup {} -s E3SM < w3_setup.inp".format(modeldir), logger, from_dir=bindir)
     os.remove(inp_file)
 
     # Generate pre-processed WW3 source code
