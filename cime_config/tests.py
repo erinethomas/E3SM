@@ -914,6 +914,12 @@ _TESTS = {
             "SMS_D_Ln3.ne30pg2_IcoswISC30E3r5_wQU225Icos30E3r5.WCYCL1850-WW3",
             )
     },
+    
+    "e3sm_wavice_developer" : {
+        "time"    : "0:45:00",
+        "tests"   : (
+            )
+    },
 
     # super-BFB OCN
     "e3sm_superbfb_ocn_opt" : { # opt + pureMPI
