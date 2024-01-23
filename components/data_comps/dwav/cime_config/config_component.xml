@@ -14,7 +14,7 @@
     <desc wav="DWAV[%NULL][%CLIMO][%FSD]">Data wave model (DWAV)</desc>
     <desc option="NULL">null mode</desc>
     <desc option="CLIMO">climatological mode</desc>
-    <desc option="FSD">wave forcing for use in MPAS-SI floe size distribution(FSD) testing</desc>
+    <desc option="FSD"> for use in testing FSD in MPAS-SI</desc>
   </description>
 
   <entry id="COMP_WAV">
