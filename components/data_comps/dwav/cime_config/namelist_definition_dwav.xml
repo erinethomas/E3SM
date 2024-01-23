@@ -118,7 +118,7 @@
     <desc>Stream data file path(s).</desc>
     <values>
       <value stream="climo">waveclim.mon.ww3a.150612.nc</value>
-      <value stream="FSD">dwav_fsd.2000.nc</value>
+      <value stream="FSD">dwav_fsd.zeros.nc</value>
     </values>
   </entry>
 
