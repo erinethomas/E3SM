@@ -3186,9 +3186,6 @@ subroutine init_column_waves(domain)
          config_use_modal_aerosols, &
          config_use_column_biogeochemistry
 
-    character(len=strKIND), pointer :: &
-         config_snow_redistribution_scheme
-
     ! dimensions
     integer, pointer :: &
          nCellsSolve, &
@@ -3319,7 +3316,6 @@ subroutine init_column_waves(domain)
        call MPAS_pool_get_subpool(block % structs, "biogeochemistry", biogeochemistry)
 
        call MPAS_pool_get_config(block % configs, "config_dt", config_dt)
-       call MPAS_pool_get_config(block % configs, "config_snow_redistribution_scheme", config_snow_redistribution_scheme)
 
        call MPAS_pool_get_dimension(mesh, "nCellsSolve", nCellsSolve)
        call MPAS_pool_get_dimension(mesh, "nCategories", nCategories)
@@ -9702,6 +9698,7 @@ subroutine init_column_waves(domain)
          config_use_cesm_meltponds, &  ! deprecated
          config_use_level_meltponds, &
          config_use_topo_meltponds, &
+         config_include_pond_freshwater_feedback, &
          config_use_vertical_zsalinity, &      ! deprecated
          config_use_brine, &
          config_use_vertical_tracers, &
@@ -9763,6 +9760,7 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_config(domain % configs, "config_use_cesm_meltponds", config_use_cesm_meltponds) ! deprecated
     call MPAS_pool_get_config(domain % configs, "config_use_level_meltponds", config_use_level_meltponds)
     call MPAS_pool_get_config(domain % configs, "config_use_topo_meltponds", config_use_topo_meltponds)
+    call MPAS_pool_get_config(domain % configs, "config_include_pond_freshwater_feedback", config_include_pond_freshwater_feedback)
     call MPAS_pool_get_config(domain % configs, "config_ocean_heat_transfer_type", config_ocean_heat_transfer_type)
     call MPAS_pool_get_config(domain % configs, "config_sea_freezing_temperature_type", config_sea_freezing_temperature_type)
     call MPAS_pool_get_config(domain % configs, "config_use_brine", config_use_brine)
@@ -9796,13 +9794,28 @@ subroutine init_column_waves(domain)
     ! Check values
     !-----------------------------------------------------------------------
 
-    ! check config_thermodynamics_type value
-    if (trim(config_thermodynamics_type) == "zero layer") then
+    ! deprecate cesm ponds
+    if (config_use_cesm_meltponds) then
+       call mpas_log_write(&
+            "check_column_package_configs: config_use_cesm_meltponds = .true. but cesm ponds have been deprecated", &
+            messageType=MPAS_LOG_CRIT)
+    endif
+
+    ! deprecate vertical zSalinity
+    if (config_use_vertical_zsalinity) then
+       call mpas_log_write(&
+            "check_column_package_configs: config_use_vertical_zsalinity = .true. but vertical zSalinity has been deprecated", &
+            messageType=MPAS_LOG_CRIT)
+    endif
+
+    ! deprecate 0-layer thermo
+    if (trim(config_thermodynamics_type(1:4)) == "zero") then
        call mpas_log_write(&
             "check_column_package_configs: config_thermodynamics_type) = zero layer but 0-layer thermo has been deprecated", &
             messageType=MPAS_LOG_WARN)
     endif
 
+    ! check config_thermodynamics_type value
     if (.not. (trim(config_thermodynamics_type) == "BL99" .or. &
                trim(config_thermodynamics_type) == "mushy")) then
        call config_error("config_thermodynamics_type", config_thermodynamics_type, "'BL99' or 'mushy'")
@@ -9876,7 +9889,7 @@ subroutine init_column_waves(domain)
     endif
 
     ! check config_salt_flux_coupling_type
-    if (.not. trim(config_salt_flux_coupling_type) == "constant") then
+    if (trim(config_salt_flux_coupling_type) /= "constant") then
        call config_error("config_salt_flux_coupling_type", config_salt_flux_coupling_type, "'constant'")
     endif
 
@@ -9891,13 +9904,6 @@ subroutine init_column_waves(domain)
        call mpas_log_write(&
             'Check for inconsistencies in restart file: config_nIceLayers /= nIceLayers', &
             messageType=MPAS_LOG_CRIT)
-
-    ! deprecate cesm ponds
-    if (config_use_cesm_meltponds) then
-       call mpas_log_write(&
-            "check_column_package_configs: config_use_cesm_meltponds = .true. but cesm ponds have been deprecated", &
-            messageType=MPAS_LOG_CRIT)
-    endif
 
     !-----------------------------------------------------------------------
     ! Check combinations
@@ -9933,6 +9939,13 @@ subroutine init_column_waves(domain)
             messageType=MPAS_LOG_CRIT)
     endif
 
+    ! check level ponds and level ice
+    if (config_use_level_meltponds .and. .not. config_use_level_ice) then
+       call mpas_log_write(&
+            "check_column_package_configs: config_use_level_meltponds = .true. and config_use_level_ice = .false.", &
+            messageType=MPAS_LOG_CRIT)
+    endif
+
     ! check config_snow_to_ice_transition_depth and level ponds
     if (config_use_level_meltponds .and. abs(config_snow_to_ice_transition_depth) > seaicePuny) then
        call mpas_log_write(&
@@ -9940,17 +9953,35 @@ subroutine init_column_waves(domain)
             messageType=MPAS_LOG_CRIT)
     endif
 
-    ! check config_snow_redistribution_scheme
-      if (trim(config_snow_redistribution_scheme) == "ITDrdg".and. .not. config_use_effective_snow_density) then
+    if (config_use_level_meltponds .and. config_include_pond_freshwater_feedback) then
        call mpas_log_write(&
-         "check_column_package_configs: config_snow_redistribution = 'ITDrdg' but config_use_effective_snow_density is false", &
+            "check_column_package_configs: config_include_pond_freshwater_feedback is only available for topo ponds", &
+            messageType=MPAS_LOG_CRIT)
+    endif
+
+    ! check config_snow_redistribution_scheme
+    if (trim(config_snow_redistribution_scheme) == "ITDrdg".and. .not. config_use_effective_snow_density) then
+       call mpas_log_write(&
+            "check_column_package_configs: config_snow_redistribution = 'ITDrdg' but config_use_effective_snow_density is false", &
+            messageType=MPAS_LOG_CRIT)
+    endif
+    if (trim(config_snow_redistribution_scheme) == "ITDrdg".and. .not. config_use_level_ice) then
+       call mpas_log_write(&
+            "check_column_package_configs: config_snow_redistribution = 'ITDrdg' but config_use_level_ice = .false.", &
             messageType=MPAS_LOG_CRIT)
     endif
 
     ! check config_use_snow_liquid_ponds and config_use_snow_grain_radius
     if (config_use_snow_liquid_ponds .and. .not. config_use_snow_grain_radius) then
        call mpas_log_write(&
-         "check_column_package_configs: config_use_snow_liquid_ponds = true but config_use_snow_grain_radius = false", &
+            "check_column_package_configs: config_use_snow_liquid_ponds = true but config_use_snow_grain_radius = false", &
+            messageType=MPAS_LOG_CRIT)
+    endif
+
+    ! check snow grain radius and dEdd shortwave
+    if (config_use_snow_grain_radius .and. .not. (trim(config_shortwave_type(1:4)) == "dEdd")) then
+       call mpas_log_write(&
+            "check_column_package_configs: snow grain radius requires config_shortwave_type(1:4) ==  'dEdd'", &
             messageType=MPAS_LOG_CRIT)
     endif
 
@@ -9979,7 +10010,7 @@ subroutine init_column_waves(domain)
             messageType=MPAS_LOG_CRIT)
     endif
 
-    ! check not mushy physics and dont calculate surface temperature
+    ! check mushy physics and surface temperature calculation
     if (trim(config_thermodynamics_type) == "mushy" .and. .not. config_calc_surface_temperature) then
        call mpas_log_write(&
             "check_column_package_configs: config_thermodynamics_type = 'mushy' and config_calc_surface_temperature = .false.", &
@@ -10029,7 +10060,6 @@ subroutine init_column_waves(domain)
     endif
 
     ! check biogeochemistry flags:
-!    if (.not. config_use_column_biogeochemistry .and. (config_use_brine .or. config_use_vertical_zsalinity .or. &
     if (.not. config_use_column_biogeochemistry .and. (config_use_brine .or. &
         config_use_vertical_biochemistry .or. config_use_shortwave_bioabsorption .or. config_use_vertical_tracers .or. &
         config_use_skeletal_biochemistry .or. config_use_nitrate .or. config_use_carbon .or. config_use_chlorophyll .or. &
@@ -10038,13 +10068,6 @@ subroutine init_column_waves(domain)
        call mpas_log_write(&
             "check_column_package_configs: config_use_column_biogeochemistry = false. "//&
             "All biogeochemistry namelist flags must also be false", &
-            messageType=MPAS_LOG_CRIT)
-    endif
-
-    ! deprecate vertical zSalinity
-    if (config_use_vertical_zsalinity) then
-       call mpas_log_write(&
-            "check_column_package_configs: config_use_vertical_zsalinity = .true. but vertical zSalinity has been deprecated", &
             messageType=MPAS_LOG_CRIT)
     endif
 
@@ -12218,8 +12241,8 @@ subroutine init_column_waves(domain)
          config_wind_compaction_factor, &
          config_snow_redistribution_factor, &
          config_max_dry_snow_radius, &
-         config_floeshape, &
-         config_floediam
+         config_floediam, &
+         config_floeshape
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          snowEmpiricalGrowthParameterTau, &
@@ -12466,9 +12489,9 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_config(domain % configs, "config_snow_redistribution_factor", config_snow_redistribution_factor)
     call MPAS_pool_get_config(domain % configs, "config_max_dry_snow_radius", config_max_dry_snow_radius)
     call MPAS_pool_get_config(domain % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
-    call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
-    call MPAS_pool_get_config(domain % configs, "config_floeshape", config_floeshape)
     call MPAS_pool_get_config(domain % configs, "config_floediam", config_floediam)
+    call MPAS_pool_get_config(domain % configs, "config_floeshape", config_floeshape)
+    call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
     call MPAS_pool_get_config(domain % configs, "config_wave_spec_type", config_wave_spec_type)
     call MPAS_pool_get_config(domain % configs, "config_nFrequencies", config_nFrequencies)
     call MPAS_pool_get_subpool(domain % blocklist % structs, "wave_coupling", wave_coupling)
@@ -12479,6 +12502,7 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nGrainAgingTemperature", nGrainAgingTemperature)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nGrainAgingTempGradient", nGrainAgingTempGradient)
     call MPAS_pool_get_dimension(domain % blocklist % dimensions, "nGrainAgingSnowDensity", nGrainAgingSnowDensity)
+
     call MPAS_pool_get_subpool(domain % blocklist % structs, "snow", snow)
     call MPAS_pool_get_array(snow, "snowEmpiricalGrowthParameterTau", snowEmpiricalGrowthParameterTau)
     call MPAS_pool_get_array(snow, "snowEmpiricalGrowthParameterKappa", snowEmpiricalGrowthParameterKappa)
@@ -12647,7 +12671,7 @@ subroutine init_column_waves(domain)
          cp_ice_in               = seaiceFreshIceSpecificHeat, & !
          cp_ocn_in               = seaiceSeaWaterSpecificHeat, &
          hfrazilmin_in           = seaiceFrazilMinimumThickness, &
-         floediam_in             = config_floediam, & ! this parameter is only used if FSD is 'off'
+         floediam_in             = config_floediam, &
          depressT_in             = seaiceMeltingTemperatureDepression, &
          dragio_in               = config_ice_ocean_drag_coefficient, & ! calc_dragio not implemented
          !thickness_ocn_layer1_in = , &        ! not yet implemented in MPAS-SI (stealth feature)
@@ -13213,11 +13237,28 @@ subroutine init_column_waves(domain)
     !kitd = config_cice_int("config_itd_conversion_type", config_itd_conversion_type)
 
     ! kcatbound:
+    !  -1 = single category
     !   0 = old category boundary formula
     !   1 = new formula giving round numbers
     !   2 = WMO standard
     !   3 = asymptotic formula
     !kcatbound = config_cice_int("config_category_bounds_type", config_category_bounds_type)
+
+    !-----------------------------------------------------------------------
+    ! Parameters for floe sizes
+    !-----------------------------------------------------------------------
+
+    ! floediam:
+    ! effective floe diameter for lateral melt (m)
+    ! default value is 300m from Steele (1992; doi:10.1029/92JC01755)
+    !floediam = config_floediam
+
+
+    ! floeshape:
+    ! bulk floe shape constant for lateral melt (unitless coefficient)
+    ! default value is 0.66 from Rothrock and Thorndike (1984; doi:10.1029/JC089iC04p06477)
+    !floeshape = config_floeshape
+
 
     !-----------------------------------------------------------------------
     ! Parameters for melt ponds
@@ -16145,7 +16186,7 @@ subroutine init_column_waves(domain)
           surfaceTiltForceU   = 0.0_RKIND
           surfaceTiltForceV   = 0.0_RKIND
 
-          if (config_use_velocity_solver .and. trim(config_stress_divergence_scheme) == "weak") then !echmod BUG? - why is this here and wrapped in a config_use_column_physics conditional?
+          if (config_use_velocity_solver .and. trim(config_stress_divergence_scheme) == "weak") then
 
              call MPAS_pool_get_subpool(block % structs, "velocity_weak", velocityWeakPool)
 
