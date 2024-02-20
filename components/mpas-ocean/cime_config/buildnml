@@ -1021,6 +1021,7 @@ def buildnml(case, caseroot, compname):
                 lines.append('        packages="highFrequencyOutputAMPKG">')
                 lines.append('')
                 lines.append('    <stream name="mesh"/>')
+                lines.append('    <var name="xtime"/>')
                 lines.append('    <var name="peakWaveFrequency"/>')
                 lines.append('    <var name="peakWaveDirection"/>')
                 lines.append('    <var name="significantWaveHeight"/>')
