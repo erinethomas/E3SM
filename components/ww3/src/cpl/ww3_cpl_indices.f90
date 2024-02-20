@@ -39,7 +39,6 @@ module ww3_cpl_indices
   integer :: index_w2x_Sw_Charn    
   integer :: index_w2x_Sw_Ustar
   integer :: index_w2x_Sw_Z0
-
   integer :: index_w2x_Faww_Tawx     
   integer :: index_w2x_Faww_Tawy
   integer :: index_w2x_Fwow_Twox     
