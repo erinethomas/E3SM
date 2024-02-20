@@ -2707,6 +2707,7 @@ contains
        attname  = 'Sw_Charn'
        call metadata_set(attname, longname, stdname, units)
     endif
+
     !-----------------------------
     ! New xao_states diagnostic
     ! fields for history output only
