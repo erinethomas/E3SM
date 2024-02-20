@@ -2722,6 +2722,7 @@ contains
        attname  = 'Sw_Z0'
        call metadata_set(attname, longname, stdname, units)
     endif
+
     !-----------------------------
     ! New xao_states diagnostic
     ! fields for history output only
