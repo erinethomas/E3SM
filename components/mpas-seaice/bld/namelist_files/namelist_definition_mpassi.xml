@@ -292,8 +292,8 @@ Default: Defined in namelist_defaults.xml
 	category="dimensions" group="dimensions">
 The number of floe size categories to use.
 
-Valid values: 1, 12(default), 16, 24.
-Default: Defined in namelist_defaults.xml
+Valid values: 0,1,12,16,24.
+Default: 0 (No waves). Defined in namelist_defaults.xml
 </entry>
 
 <entry id="config_nIceLayers" type="integer"
@@ -316,7 +316,7 @@ Default: Defined in namelist_defaults.xml
         category="dimensions" group="dimensions">
 The number of frequencies used by the wave model.
 Valid values: 0,25,36,50.
-Default: 36. Defined by WW3.
+Default: 0 (no waves). Defined by WW3.
 </entry>
 
 <!-- initialize -->
