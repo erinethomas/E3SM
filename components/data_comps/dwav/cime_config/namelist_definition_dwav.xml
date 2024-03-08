@@ -52,6 +52,7 @@
       <value dwav_mode="NULL">null</value>
       <value dwav_mode="CLIMO">climo</value>
       <value dwav_mode="FSD">FSD</value>
+      <value dwav_mode="ZEROS">ZEROS</value>
     </values>
   </entry>
 
@@ -63,6 +64,7 @@
     <values>
        <value stream="climo">$DIN_LOC_ROOT/wav/dwav</value>
        <value stream="FSD">$DIN_LOC_ROOT/wav/dwav</value>
+       <value stream="ZEROS">$DIN_LOC_ROOT/wav/dwav</value>
     </values>
   </entry>
 
@@ -74,6 +76,7 @@
     <values>
       <value stream="climo">waveclim.mon.ww3a.150612.nc</value>
       <value stream="FSD">domain.dwav_fsd.wQU225EC30to60E2r2.220224.nc</value>
+      <value stream="ZEROS">domain.dwav_fsd.wQU225EC30to60E2r2.220224.nc</value>
     </values>
   </entry>
 
@@ -97,6 +100,13 @@
         area   area
         mask   mask
       </value>
+     <value stream="ZEROS">
+        time   time
+        xc     lon
+        yc     lat
+        area   area
+        mask   mask
+      </value>
     </values>
   </entry>
 
@@ -108,6 +118,7 @@
     <values>
       <value stream="climo">$DIN_LOC_ROOT/wav/dwav</value>
       <value stream="FSD">$DIN_LOC_ROOT/wav/dwav</value>
+      <value stream="ZEROS">$DIN_LOC_ROOT/wav/dwav</value>
     </values>
   </entry>
 
@@ -118,7 +129,8 @@
     <desc>Stream data file path(s).</desc>
     <values>
       <value stream="climo">waveclim.mon.ww3a.150612.nc</value>
-      <value stream="FSD">dwav_fsd.zeros.nc</value>
+      <value stream="FSD">dwav_fsd_2000.nc</value>
+      <value stream="ZEROS">dwav_fsd_zeros.nc</value>
     </values>
   </entry>
 
@@ -173,6 +185,47 @@
 	wavespec35 wavespec35
 	wavespec36 wavespec36
       </value>
+      <value stream="ZEROS">
+        Us Us
+	Vs Vs
+	hs hs
+	wavespec1 wavespec1
+	wavespec2 wavespec2
+	wavespec3 wavespec3
+	wavespec4 wavespec4
+	wavespec5 wavespec5
+	wavespec6 wavespec6
+	wavespec7 wavespec7
+	wavespec8 wavespec8
+	wavespec9 wavespec9
+	wavespec10 wavespec10
+	wavespec11 wavespec11
+	wavespec12 wavespec12
+	wavespec13 wavespec13
+	wavespec14 wavespec14
+	wavespec15 wavespec15
+	wavespec16 wavespec16
+	wavespec17 wavespec17
+	wavespec18 wavespec18
+	wavespec19 wavespec19
+	wavespec20 wavespec20
+	wavespec21 wavespec21
+	wavespec22 wavespec22
+	wavespec23 wavespec23
+	wavespec24 wavespec24
+	wavespec25 wavespec25
+	wavespec26 wavespec26
+	wavespec27 wavespec27
+	wavespec29 wavespec29
+	wavespec30 wavespec30
+	wavespec31 wavespec31
+	wavespec32 wavespec32
+	wavespec33 wavespec33
+	wavespec34 wavespec34
+	wavespec35 wavespec35
+	wavespec36 wavespec36
+      </value>
+    </values>
     </values>
   </entry>
 
@@ -194,6 +247,7 @@
     <values>
       <value stream="climo">1</value>
       <value stream="FSD">1</value>
+      <value stream="ZEROS">1</value>
     </values>
   </entry>
 
@@ -205,6 +259,7 @@
     <values>
       <value stream="climo">1</value>
       <value stream="FSD">1</value>
+      <value stream="ZEROS">1</value>
     </values>
   </entry>
 
@@ -216,6 +271,7 @@
     <values>
       <value   stream="climo">1</value>
       <value   stream="FSD">1</value>
+      <value   stream="ZEROS">1</value>
     </values>
   </entry>
 
