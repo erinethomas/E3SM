@@ -29,7 +29,7 @@
 
   <entry id="DWAV_MODE">
     <type>char</type>
-    <valid_values>NULL,CLIMO,FSD</valid_values>
+    <valid_values>NULL,CLIMO,FSD,ZEROS</valid_values>
     <default_value>NULL</default_value>
     <values match="last">
       <value compset="_DWAV%NULL">NULL</value>
