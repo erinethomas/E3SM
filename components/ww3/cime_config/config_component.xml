@@ -43,6 +43,29 @@
     <desc>Option to set WW3 Spectral Resolution.</desc>
   </entry>
     
+  <entry id="WAV_ICE_COUP">
+    <type>logical</type>
+    <valid_values>TRUE,FALSE</valid_values>
+    <default_value>FALSE</default_value>
+    <values>
+      <value compset="_MPASSI">TRUE</value>
+    </values>
+    <group>run_component_wav</group>
+    <file>env_run.xml</file>
+    <desc>WW3-ICE Coupling mode.</desc>
+  </entry>
+              
+  <entry id="WAV_OCN_COUP">
+    <type>logical</type>
+    <valid_values>TRUE,FALSE</valid_values>
+    <default_value>FALSE</default_value>
+    <values>
+      <value compset="_MPASO">TRUE</value>
+    </values>
+    <group>run_component_wav</group>
+    <file>env_run.xml</file>
+    <desc>WW3-OCN Coupling mode</desc>
+  </entry>
 
 
   <help>

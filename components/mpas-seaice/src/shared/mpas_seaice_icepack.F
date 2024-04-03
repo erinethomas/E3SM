@@ -410,12 +410,12 @@ contains
          floeDistribution
 
     real(kind=RKIND), dimension(:,:), pointer :: &
+         floeDistCat, &
          dFloeSizeNewIce, &
          dFloeSizeLateralGrowth, &
          dFloeSizeLateralMelt, &
          dFloeSizeWaves, &
-         dFloeSizeWeld, &
-         floeDistCat
+         dFloeSizeWeld
 
     real(kind=RKIND), dimension(:,:,:), pointer :: &
          iceAreaCategory, &
@@ -424,10 +424,12 @@ contains
     !local variables
     integer :: i,iCell, iCategory, iFloeCategory
     character (len=35) :: c_fsd_range 
+    character(len=icepack_char_len_long) :: tmp_config_initial_condition_type
 
     call MPAS_pool_get_config(domain % configs, "config_initial_condition_type",config_initial_condition_type)
     call MPAS_pool_get_config(domain % configs, "config_do_restart",config_do_restart)
 
+    tmp_config_initial_condition_type = trim(config_initial_condition_type)
     block => domain % blocklist
     do while (associated(block))
        call MPAS_pool_get_subpool(block % structs, "mesh", mesh)       
@@ -459,7 +461,7 @@ contains
           floe_rad_c=floeSizeBinCenter(:),    &  ! fsd size bin centre in m (radius)
           floe_binwidth=floeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
           c_fsd_range=c_fsd_range)               ! string for history output: fsd floe_rad bounds (m)
-
+       
        ! initalize variables for change in floe size distribution
        dFloeSizeNewIce(:,:)        = c0   ! change in floe size distribution due to new ice
        dFloeSizeLateralGrowth(:,:) = c0   ! change in floe size distribution due to lateral growth
@@ -476,7 +478,7 @@ contains
 
           call icepack_init_fsd(                   &  
              nfsd=nFloeCategories,                 & ! number of floe size categories 
-             ice_ic=config_initial_condition_type, & ! method of ice cover initialization 
+             ice_ic=tmp_config_initial_condition_type, & ! method of ice cover initialization 
              floe_rad_c=floeSizeBinCenter(:),      & ! fsd size bin centre in m (radius)
              floe_binwidth=floeSizeBinWidth(:),    & ! fsd size bin width in m (radius)
              afsd=floeDistribution)                  ! floe size distribution initalization tracer 
@@ -498,10 +500,8 @@ contains
                 enddo
              enddo
           enddo !iCell
-       endif        
-
+       endif       
        block => block % next
-
     end do !block
 
   end subroutine init_column_fsd
@@ -598,6 +598,8 @@ subroutine init_column_waves(domain)
          significantWaveHeight(:) = c0   
          waveSpectra(:,:)        = c0
       endif
+      deallocate(waveFrequency_TEMP)
+      deallocate(waveFreqBinWidth_TEMP)
 
       block => block % next
     end do !block
@@ -3657,11 +3659,6 @@ subroutine init_column_waves(domain)
           call get_cice_tracer_array_category(block, ciceTracerObject, &
                  tracerArrayCategory, iCell, setGetPhysicsTracers, setGetBGCTracers)
        enddo !iCell
-
-!      call icepack_warnings_flush(nu_diag)
-!      if (icepack_warnings_aborted()) call icedrv_system_abort(string=subname, &
-!          file=__FILE__, line=__LINE__)
-
 
        block => block % next
     enddo !do while

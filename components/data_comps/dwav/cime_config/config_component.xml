@@ -44,6 +44,32 @@
       default is copyall</desc>
   </entry>
 
+  <entry id="WAV_ICE_COUP">
+    <type>logical</type>
+    <valid_values>TRUE,FALSE</valid_values>
+    <default_value>FALSE</default_value>
+    <values>
+      <value compset="_DWAV%FSD">TRUE</value>
+      <value compset="_DWAV%ZEROS">TRUE</value>
+    </values>
+    <group>run_component_dwav</group>
+    <file>env_run.xml</file>
+    <desc>DWAV ICE Coupling mode.</desc>
+  </entry>
+	  
+  <entry id="WAV_OCN_COUP">
+    <type>logical</type>
+    <valid_values>TRUE,FALSE</valid_values>
+    <default_value>FALSE</default_value>
+    <values>
+      <value compset="_DWAV%FSD">FALSE</value>
+      <value compset="_DWAV%ZEROS">FALSE</value>
+    </values>
+    <group>run_component_dwav</group>
+    <file>env_run.xml</file>
+    <desc>DWAV OCN Coupling mode.</desc>
+  </entry>
+  
   <help>
     =========================================
     DWAV naming conventions

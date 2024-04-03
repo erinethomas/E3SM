@@ -181,6 +181,26 @@
     </values>
   </entry>
 
+  <entry id="wav_ice_coup" modify_via_xml="WAV_ICE_COUP">
+    <type>logical</type>
+    <category>seq_flds</category>
+    <group>seq_cplflds_inparm</group>
+    <desc> TRUE if wave ice coupling turned on. set to TRUE if WW3 and MPASSI are used in compset </desc>
+    <values>
+      <value>$WAV_ICE_COUP</value>
+    </values>
+  </entry>
+
+  <entry id="wav_ocn_coup" modify_via_xml="WAV_ICE_COUP">
+    <type>logical</type>
+    <category>seq_flds</category>
+    <group>seq_cplflds_inparm</group>
+    <desc>.true. if wave ocean coupling turned on. set to TRUE if WW3 and MPASO are used in compset</desc>
+    <values>
+      <value>$WAV_OCN_COUP</value>
+    </values>
+  </entry>
+
   <entry id="wav_nfreq">
     <type>integer</type>
     <category>seq_flds</category>
