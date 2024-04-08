@@ -1,0 +1,2 @@
+./xmlchange JOB_QUEUE=compute
+./xmlchange USER_REQUESTED_QUEUE=compute
