@@ -41,8 +41,8 @@
         </ntasks>
       </pes>
     </mach>
-    <mach name="chrysalis">
-      <pes compset=".*WW3" pesize="any">
+    <mach name="chrysalis|anvil">
+      <pes compset="WW3" pesize="any">
         <comment>seaice+wave chrysalis: 20 nodes pure mpi, ~47 SYPD</comment>
         <MAX_MPITASKS_PER_NODE>64</MAX_MPITASKS_PER_NODE>
         <MAX_TASKS_PER_NODE>64</MAX_TASKS_PER_NODE>
@@ -68,8 +68,8 @@
         </nthrds>
       </pes>
     </mach>
-    <mach name="chrysalis">
-      <pes compset=".*DWAV" pesize="any">
+    <mach name="chrysalis|anvil">
+      <pes compset="DWAV" pesize="any">
         <comment>seaice+wave chrysalis: 20 nodes pure mpi, ~47 SYPD</comment>
         <MAX_MPITASKS_PER_NODE>64</MAX_MPITASKS_PER_NODE>
         <MAX_TASKS_PER_NODE>64</MAX_TASKS_PER_NODE>
