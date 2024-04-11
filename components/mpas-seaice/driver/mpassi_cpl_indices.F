@@ -137,7 +137,7 @@ contains
 
   subroutine mpassi_cpl_indices_set( )
 
-    use seq_flds_mod, only : wav_nfreq
+    use seq_flds_mod, only : wav_nfreq, wav_ice_coup
     type(mct_aVect) :: i2x      ! temporary
     type(mct_aVect) :: x2i      ! temporary
 
@@ -239,13 +239,15 @@ contains
     index_x2i_Faxa_dstwet3  = mct_avect_indexra(x2i,'Faxa_dstwet3')
     index_x2i_Faxa_dstwet4  = mct_avect_indexra(x2i,'Faxa_dstwet4')
 
-    index_x2i_Sw_Hs         = mct_avect_indexra(x2i,'Sw_Hs')
-    allocate(index_x2i_Sw_wavespec(1:wav_nfreq))
-    do i = 1,wav_nfreq
-       write(freqnum,'(i2.2)') i
-       name = 'Sw_wavespec' // freqnum
-       index_x2i_Sw_wavespec(i)   = mct_avect_indexra(x2i,trim(name))
-    enddo
+    if (wav_ice_coup) then
+       index_x2i_Sw_Hs         = mct_avect_indexra(x2i,'Sw_Hs')
+       allocate(index_x2i_Sw_wavespec(1:wav_nfreq))
+       do i = 1,wav_nfreq
+          write(freqnum,'(i2.2)') i
+          name = 'Sw_wavespec' // freqnum
+          index_x2i_Sw_wavespec(i)   = mct_avect_indexra(x2i,trim(name))
+       enddo
+    endif
 
     index_x2i_So_algae1     = mct_avect_indexra(x2i,'So_algae1',perrWith='quiet')
     index_x2i_So_algae2     = mct_avect_indexra(x2i,'So_algae2',perrWith='quiet')

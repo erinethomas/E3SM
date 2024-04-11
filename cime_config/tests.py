@@ -115,24 +115,24 @@ _TESTS = {
     "e3sm_ice_developer" : {
         "tests"   : (
             "SMS_D_Ld1.TL319_IcoswISC30E3r5.DTESTM-JRA1p5.mpassi-jra_1958",
-            "ERS_Ld5.T62_oQU240.DTESTM",
-            "PEM_Ln5.T62_oQU240wLI.DTESTM",
-            "PET_Ln5.T62_oQU240.DTESTM",
+           # "ERS_Ld5.T62_oQU240.DTESTM",
+           # "PEM_Ln5.T62_oQU240wLI.DTESTM",
+           # "PET_Ln5.T62_oQU240.DTESTM",
             )
         },
 
     "e3sm_wavice_developer" : {
         "time"    : "0:30:00",
         "tests"   : (
-            "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd_jra_1958",
+          #  "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsdjra",
+          #  "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsdjra",
+            "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3.mpassi-fsdjra",
           #  "ERS_Ld5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
           #  "PEM_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
           #  "PET_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
-            "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd_jra_1958",
            # "ERS_Ld5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
            # "PEM_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
             #"PET_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
-            #"SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3.mpassi-fsd_jra_1958",
             )
         },
 

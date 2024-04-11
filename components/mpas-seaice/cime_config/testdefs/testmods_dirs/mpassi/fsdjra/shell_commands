@@ -3,5 +3,4 @@
 ./xmlchange DROF_STRM_YR_START=1958
 ./xmlchange DROF_STRM_YR_END=1958
 ./xmlchange JOB_QUEUE=compute
-./xmlchange USER_REQUESTED_QUEUE=compute
-
+./xmlchange USER_REQUESTED_QUEUE=compute  
