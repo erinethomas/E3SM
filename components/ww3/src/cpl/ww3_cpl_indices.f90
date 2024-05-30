@@ -51,6 +51,7 @@ contains
   subroutine ww3_cpl_indices_set( )
     
     use seq_flds_mod, only : wav_atm_coup, wav_ocn_coup
+    
     type(mct_aVect) :: w2x      ! temporary
     type(mct_aVect) :: x2w      ! temporary
 
