@@ -2195,52 +2195,54 @@ contains
            iceFraction(i) = x2o_o % rAttr(index_x2o_Si_ifrac, n)
         end if
 
-        if ( stokesDriftZonalWavenumberField % isActive ) then
-           stokesDriftZonalWavenumber(1,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_1, n)
-           stokesDriftZonalWavenumber(2,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_2, n)
-           stokesDriftZonalWavenumber(3,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_3, n)
-           stokesDriftZonalWavenumber(4,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_4, n)
-           stokesDriftZonalWavenumber(5,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_5, n)
-           stokesDriftZonalWavenumber(6,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_6, n)
-        end if
-        if ( stokesDriftMeridionalWavenumberField % isActive ) then
-           stokesDriftMeridionalWavenumber(1,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_1, n)
-           stokesDriftMeridionalWavenumber(2,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_2, n)
-           stokesDriftMeridionalWavenumber(3,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_3, n)
-           stokesDriftMeridionalWavenumber(4,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_4, n)
-           stokesDriftMeridionalWavenumber(5,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_5, n)
-           stokesDriftMeridionalWavenumber(6,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_6, n)
-        end if
-        if ( significantWaveHeightField % isActive ) then
-           significantWaveHeight(i) = x2o_o % rAttr(index_x2o_Sw_Hs, n)
-        end if
-        if ( peakWaveFrequencyField % isActive ) then
-           peakWaveFrequency(i) = x2o_o % rAttr(index_x2o_Sw_Fp, n)
-        end if
-        if ( peakWaveDirectionField % isActive ) then
-           peakWaveDirection(i) = x2o_o % rAttr(index_x2o_Sw_Dp, n)
-        end if
-        if ( charnockSeaStateField % isActive ) then
-           charnockSeaState(i) = x2o_o % rAttr(index_x2o_Sw_Charn, n)
-        end if
-        if ( waveSupportedZonalWindStressField  % isActive ) then
-           waveSupportedZonalWindStress(i) = x2o_o % rAttr(index_x2o_Faww_Tawx, n)
-        end if
-        if ( waveSupportedMeridionalWindStressField  % isActive ) then
-           waveSupportedMeridionalWindStress(i) = x2o_o % rAttr(index_x2o_Faww_Tawy, n)
-        end if
-        if ( waveToOceanZonalWindStressField  % isActive ) then
-           waveToOceanZonalWindStress(i) = x2o_o % rAttr(index_x2o_Fwow_Twox, n)
-        end if
-        if ( waveToOceanMeridionalWindStressField  % isActive ) then
-           waveToOceanMeridionalWindStress(i) = x2o_o % rAttr(index_x2o_Fwow_Twoy, n)
-        End if
-        if ( waveNetOceanZonalWindStressField  % isActive ) then
-           waveNetOceanZonalWindStress(i) = x2o_o % rAttr(index_x2o_Faow_Tocx, n)
-        end if
-        if ( waveNetOceanMeridionalWindStressField  % isActive ) then
-           waveNetOceanMeridionalWindStress(i) = x2o_o % rAttr(index_x2o_Faow_Tocy, n)
-        end if
+        if (wav_ocn_coup) then
+           if ( stokesDriftZonalWavenumberField % isActive ) then
+              stokesDriftZonalWavenumber(1,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_1, n)
+              stokesDriftZonalWavenumber(2,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_2, n)
+              stokesDriftZonalWavenumber(3,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_3, n)
+              stokesDriftZonalWavenumber(4,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_4, n)
+              stokesDriftZonalWavenumber(5,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_5, n)
+              stokesDriftZonalWavenumber(6,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_6, n)
+           end if
+           if ( stokesDriftMeridionalWavenumberField % isActive ) then
+              stokesDriftMeridionalWavenumber(1,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_1, n)
+              stokesDriftMeridionalWavenumber(2,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_2, n)
+              stokesDriftMeridionalWavenumber(3,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_3, n)
+              stokesDriftMeridionalWavenumber(4,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_4, n)
+              stokesDriftMeridionalWavenumber(5,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_5, n)
+              stokesDriftMeridionalWavenumber(6,i) = x2o_o % rAttr(index_x2o_Sw_vstokes_wavenumber_6, n)
+           end if
+           if ( significantWaveHeightField % isActive ) then
+              significantWaveHeight(i) = x2o_o % rAttr(index_x2o_Sw_Hs, n)
+           end if
+           if ( peakWaveFrequencyField % isActive ) then
+              peakWaveFrequency(i) = x2o_o % rAttr(index_x2o_Sw_Fp, n)
+           end if
+           if ( peakWaveDirectionField % isActive ) then
+              peakWaveDirection(i) = x2o_o % rAttr(index_x2o_Sw_Dp, n)
+           end if
+           if ( charnockSeaStateField % isActive ) then
+              charnockSeaState(i) = x2o_o % rAttr(index_x2o_Sw_Charn, n)
+           end if
+           if ( waveSupportedZonalWindStressField  % isActive ) then
+              waveSupportedZonalWindStress(i) = x2o_o % rAttr(index_x2o_Faww_Tawx, n)
+           end if
+           if ( waveSupportedMeridionalWindStressField  % isActive ) then
+              waveSupportedMeridionalWindStress(i) = x2o_o % rAttr(index_x2o_Faww_Tawy, n)
+           end if
+           if ( waveToOceanZonalWindStressField  % isActive ) then
+              waveToOceanZonalWindStress(i) = x2o_o % rAttr(index_x2o_Fwow_Twox, n)
+           end if
+           if ( waveToOceanMeridionalWindStressField  % isActive ) then
+              waveToOceanMeridionalWindStress(i) = x2o_o % rAttr(index_x2o_Fwow_Twoy, n)
+           end if
+           if ( waveNetOceanZonalWindStressField  % isActive ) then
+              waveNetOceanZonalWindStress(i) = x2o_o % rAttr(index_x2o_Faow_Tocx, n)
+           end if
+           if ( waveNetOceanMeridionalWindStressField  % isActive ) then
+              waveNetOceanMeridionalWindStress(i) = x2o_o % rAttr(index_x2o_Faow_Tocy, n)
+           end if
+        endif
 
         if (config_cvmix_kpp_use_theory_wave) then
            if ( windSpeed10mField% isActive ) then
