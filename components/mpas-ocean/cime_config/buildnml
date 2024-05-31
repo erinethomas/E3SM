@@ -38,6 +38,7 @@ def buildnml(case, caseroot, compname):
     ocn_sgr           = case.get_value("MPASO_SGR")
     ocn_bgc           = case.get_value("MPASO_BGC")
     ocn_tidal_mixing  = case.get_value("MPASO_TIDAL_MIXING")
+    wav_ocn_coup      = case.get_value("WAV_OCN_COUP")
     ocn_co2_type      = case.get_value("OCN_CO2_TYPE")
     atm_co2_const_val = case.get_value("CCSM_CO2_PPMV")
     ice_bgc           = case.get_value("MPASI_BGC")
