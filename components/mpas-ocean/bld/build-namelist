@@ -443,6 +443,8 @@ my $CONTINUE_RUN           = "$xmlvars{'CONTINUE_RUN'}";
 my $COMP_OCN               = "$xmlvars{'COMP_OCN'}";
 my $COMP_WAV               = "$xmlvars{'COMP_WAV'}";
 
+my $wav_ocn_coup           = "$xmlvars{'WAV_OCN_COUP'}";
+
 my $output_r = "./${CASE}.mpaso.r";
 my $output_h = "./${CASE}.mpaso.h";
 my $output_d = "./${CASE}.mpaso.d";
