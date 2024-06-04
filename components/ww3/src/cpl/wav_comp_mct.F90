@@ -855,25 +855,25 @@ CONTAINS
       ! add call to gptl timer
 
       ! send initial state to driver
-      do jsea=1, nseal
-         w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = 0.0
-         w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = 0.0
+      !do jsea=1, nseal
+      !   w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = 0.0
+      !   w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = 0.0
 
-         w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_2,jsea) = 0.0
-         w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_2,jsea) = 0.0
+      !   w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_2,jsea) = 0.0
+      !   w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_2,jsea) = 0.0
 
-         w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_3,jsea) = 0.0
-         w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_3,jsea) = 0.0
+      !   w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_3,jsea) = 0.0
+      !   w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_3,jsea) = 0.0
 
-         w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_4,jsea) = 0.0
-         w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_4,jsea) = 0.0
+      !   w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_4,jsea) = 0.0
+      !   w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_4,jsea) = 0.0
 
-         w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_5,jsea) = 0.0
-         w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_5,jsea) = 0.0
+      !   w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_5,jsea) = 0.0
+      !   w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_5,jsea) = 0.0
 
-         w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_6,jsea) = 0.0
-         w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_6,jsea) = 0.0
-      enddo
+      !   w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_6,jsea) = 0.0
+      !   w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_6,jsea) = 0.0
+      !enddo
 
       ! end redirection of share output to wav log
 
