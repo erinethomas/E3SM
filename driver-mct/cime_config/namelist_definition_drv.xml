@@ -335,6 +335,7 @@
     <values>
       <value>none</value>
       <value WAV_ICE_COUP="oneway">oneway</value>
+      <value WAV_ICE_COUP="twoway">twoway</value>
     </values>
   </entry>
 
