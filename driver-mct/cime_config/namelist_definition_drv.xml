@@ -209,11 +209,7 @@
     <type>char</type>
     <category>seq_flds</category>
     <group>seq_cplflds_inparm</group>
-<<<<<<< HEAD
     <desc>One- or Two-way coupling between Wave and Atm.</desc>
-=======
-    <desc>TRUE if wave atm coupling turned on.</desc>
->>>>>>> 182ad3e4a6 (testing wav_ocn_coup settings)
     <values>
       <value>none</value>
       <value WAV_ATM_COUP="one">one</value>
