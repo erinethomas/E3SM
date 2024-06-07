@@ -1208,11 +1208,11 @@ CONTAINS
          IY  = MAPSF(ISEA,2)
          if (MAPSTA(IY,IX) .eq. 1) then
 
-             w2x_w%rattr(index_w2x_Sw_Hs,jsea) = HS(jsea)
-            if (wav_atm_coup .or. wav_ocn_coup) then
+            if (wav_atm_coup .eq. 'two' .or. wav_ocn_coup .eq. 'two') then
                w2x_w%rattr(index_w2x_Sw_Charn,jsea) = CHARN(jsea)
             endif
-            if (wav_ocn_coup) then
+            if (wav_ocn_coup .eq. 'two') then
+               w2x_w%rattr(index_w2x_Sw_Hs,jsea) = HS(jsea)
                w2x_w%rattr(index_w2x_Sw_Fp,jsea) = FP0(jsea)
                w2x_w%rattr(index_w2x_Sw_Dp,jsea) = THP0(jsea)
                w2x_w%rattr(index_w2x_Faww_Tawx,jsea) = 1000*TAUWIX(jsea) !Conversion to N m^{-2} by multiplying by density of water (See eqn 2.99 WW3 Manual)
@@ -1241,12 +1241,12 @@ CONTAINS
                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_6,jsea) = USSP(jsea,nk+6)
             endif
           else
-             w2x_w%rattr(index_w2x_Sw_Hs,jsea) = 0.0
            
-             if (wav_atm_coup .or. wav_ocn_coup) then
+             if (wav_atm_coup .eq. 'two' .or. wav_ocn_coup .eq. 'two') then
                w2x_w%rattr(index_w2x_Sw_Charn,jsea) = 0.0
              endif
-             if (wav_ocn_coup) then
+             if (wav_ocn_coup .eq. 'two') then
+               w2x_w%rattr(index_w2x_Sw_Hs,jsea) = 0.0
                w2x_w%rattr(index_w2x_Sw_Fp,jsea) = 0.0
                w2x_w%rattr(index_w2x_Sw_Dp,jsea) = 0.0
                w2x_w%rattr(index_w2x_Faww_Tawx,jsea) = 0.0

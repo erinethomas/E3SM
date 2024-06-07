@@ -162,8 +162,9 @@ module seq_flds_mod
   logical            :: ocn_rof_two_way     ! .true. if river-ocean two-way coupling turned on
   logical            :: rof_sed             ! .true. if river model includes sediment
 
-  logical            :: wav_ocn_coup     ! .true. if wave-atm two-way coupling turned on
-  logical            :: wav_atm_coup     ! .true. if wave-atm two-way coupling turned on
+  character(len=CS)  :: wav_ocn_coup     ! 'two' if wave-ocean two-way coupling turned on
+  character(len=CS)  :: wav_atm_coup     ! 'two' if wave-atm two-way coupling turned on
+  character(len=CS)  :: wav_ice_coup     ! 'two' if wave-ice two-way coupling turned on
   !----------------------------------------------------------------------------
   ! metadata
   !----------------------------------------------------------------------------
@@ -389,7 +390,7 @@ contains
          ice_ncat, seq_flds_i2o_per_cat, flds_bgc_oi, &
          nan_check_component_fields, rof_heat, atm_flux_method, atm_gustiness, &
          rof2ocn_nutrients, lnd_rof_two_way, ocn_rof_two_way, rof_sed, &
-         wav_ocn_coup, wav_atm_coup
+         wav_ocn_coup, wav_atm_coup, wav_ice_coup
 
     ! user specified new fields
     integer,  parameter :: nfldmax = 200
@@ -432,8 +433,9 @@ contains
        lnd_rof_two_way   = .false.
        ocn_rof_two_way   = .false.
        rof_sed   = .false.
-       wav_ocn_coup = .false.
-       wav_atm_coup = .false.
+       wav_ocn_coup = 'none'
+       wav_atm_coup = 'none'
+       wav_ice_coup = 'none'
 
        unitn = shr_file_getUnit()
        write(logunit,"(A)") subname//': read seq_cplflds_inparm namelist from: '&
@@ -470,6 +472,7 @@ contains
     call shr_mpi_bcast(rof_sed,   mpicom)
     call shr_mpi_bcast(wav_ocn_coup, mpicom)
     call shr_mpi_bcast(wav_atm_coup, mpicom)
+    call shr_mpi_bcast(wav_ice_coup, mpicom)
 
     call glc_elevclass_init(glc_nec)
 
@@ -655,7 +658,7 @@ contains
        call seq_flds_add(x2r_states,"Sa_u")
        call seq_flds_add(a2x_states_to_rof,"Sa_u")
     endif
-    call seq_flds_add(x2w_states,"Sa_u")
+    if (wav_atm_coup .ne. 'none') call seq_flds_add(x2w_states,"Sa_u")
     longname = 'Zonal wind at the lowest model level'
     stdname  = 'eastward_wind'
     units    = 'm s-1'
@@ -670,7 +673,7 @@ contains
        call seq_flds_add(x2r_states,"Sa_v")
        call seq_flds_add(a2x_states_to_rof,"Sa_v")
     endif
-    call seq_flds_add(x2w_states,"Sa_v")
+    if (wav_atm_coup .ne. 'none')  call seq_flds_add(x2w_states,"Sa_v")
     longname = 'Meridional wind at the lowest model level'
     stdname  = 'northward_wind'
     units    = 'm s-1'
@@ -719,7 +722,7 @@ contains
        call seq_flds_add(x2r_states,"Sa_tbot")
        call seq_flds_add(a2x_states_to_rof,"Sa_tbot")
     endif
-    call seq_flds_add(x2w_states,"Sa_tbot")
+    if (wav_atm_coup .ne. 'none') call seq_flds_add(x2w_states,"Sa_tbot")
     longname = 'Temperature at the lowest model level'
     stdname  = 'air_temperature'
     units    = 'K'
@@ -1519,7 +1522,7 @@ contains
     ! Fractional ice coverage wrt ocean
     call seq_flds_add(i2x_states,"Si_ifrac")
     call seq_flds_add(x2o_states,"Si_ifrac")
-    call seq_flds_add(x2w_states,"Si_ifrac")
+    if (wav_ice_coup .ne. 'none') call seq_flds_add(x2w_states,"Si_ifrac")
     longname = 'Fractional ice coverage wrt ocean'
     stdname  = 'sea_ice_area_fraction'
     units    = '1'
@@ -1696,7 +1699,7 @@ contains
     ! Sea surface temperature
     call seq_flds_add(o2x_states,"So_t")
     call seq_flds_add(x2i_states,"So_t")
-    call seq_flds_add(x2w_states,"So_t")
+    if (wav_ocn_coup .ne. 'none') call seq_flds_add(x2w_states,"So_t")
 
     ! Sea surface  salinity
     call seq_flds_add(o2x_states,"So_s")
@@ -1710,7 +1713,7 @@ contains
     ! Zonal sea water velocity
     call seq_flds_add(o2x_states,"So_u")
     call seq_flds_add(x2i_states,"So_u")
-    call seq_flds_add(x2w_states,"So_u")
+    if (wav_ocn_coup .ne. 'none') call seq_flds_add(x2w_states,"So_u")
     longname = 'Zonal sea water velocity'
     stdname  = 'eastward_sea_water_velocity'
     units    = 'm s-1'
@@ -1720,7 +1723,7 @@ contains
     ! Meridional sea water velocity
     call seq_flds_add(o2x_states,"So_v")
     call seq_flds_add(x2i_states,"So_v")
-    call seq_flds_add(x2w_states,"So_v")
+    if (wav_ocn_coup .ne. 'none') call seq_flds_add(x2w_states,"So_v")
     longname = 'Meridional sea water velocity'
     stdname  = 'northward_sea_water_velocity'
     units    = 'm s-1'
@@ -1739,7 +1742,7 @@ contains
     call seq_flds_add(o2x_states,"So_ssh")
     call seq_flds_add(x2r_states,"So_ssh")
     call seq_flds_add(o2x_states_to_rof,"So_ssh")
-    call seq_flds_add(x2w_states,'So_ssh')
+    if (wav_ocn_coup .ne. 'none') call seq_flds_add(x2w_states,'So_ssh')
     longname = 'Sea surface height'
     stdname  = 'sea_surface_height'
     units    = 'm'
@@ -1757,7 +1760,7 @@ contains
 
     ! Boundary Layer Depth
     call seq_flds_add(o2x_states,"So_bldepth")
-    call seq_flds_add(x2w_states,"So_bldepth")
+    if (wav_ocn_coup .ne. 'none') call seq_flds_add(x2w_states,"So_bldepth")
     longname = 'Ocean Boundary Layer Depth'
     stdname  = 'ocean_boundary_layer_depth'
     units    = 'm'
@@ -2181,7 +2184,7 @@ contains
 
     ! Sea ice thickness
     call seq_flds_add(i2x_states,"Si_ithick")
-    call seq_flds_add(x2w_states,"Si_ithick")
+    if (wav_ice_coup .ne. 'none') call seq_flds_add(x2w_states,"Si_ithick")
     longname = 'Sea ice thickness'
     stdname  = 'sea_ice_thickness'
     units    = 'm'
@@ -2520,7 +2523,7 @@ contains
     !-----------------------------
     ! wav->ocn and ocn->wav
     !-----------------------------
-    if (wav_ocn_coup) then
+    if (wav_ocn_coup == 'two') then
        call seq_flds_add(w2x_states,'Sw_Hs')
        call seq_flds_add(x2o_states,'Sw_Hs')
        longname = 'Significant wave height'
@@ -2528,8 +2531,7 @@ contains
        units    = 'm'
        attname  = 'Sw_Hs'
        call metadata_set(attname, longname, stdname, units)
-    endif
-    if (wav_ocn_coup) then
+       
        call seq_flds_add(w2x_states,'Sw_ustokes_wavenumber_1')
        call seq_flds_add(x2o_states,'Sw_ustokes_wavenumber_1')
        longname = 'Partitioned Stokes drift u component, wavenumber 1'
@@ -2691,9 +2693,9 @@ contains
        call metadata_set(attname, longname, stdname, units)
     endif
 
-    if (wav_atm_coup .or. wav_ocn_coup) then
+    if (wav_atm_coup == 'two' or wav_ocn_coup == 'two') then
        call seq_flds_add(w2x_states,'Sw_Charn')
-       call seq_flds_add(x2o_states,'Sw_Charn')
+       if (wav_ocn_coup == 'two') call seq_flds_add(x2o_states,'Sw_Charn')
        longname = 'Charnock coefficent based on sea state'
        stdname  = 'Charnock_coefficent_based_on_sea_state'
        units    = ''

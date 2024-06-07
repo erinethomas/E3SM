@@ -70,11 +70,11 @@ contains
     index_x2w_So_bldepth = mct_avect_indexra(x2w,'So_bldepth') ! Boundary layer depth
     index_x2w_So_ssh     = mct_avect_indexra(x2w,'So_ssh')     ! Sea surface height 
 
-    index_w2x_Sw_Hs = mct_avect_indexra(w2x,'Sw_Hs') ! Significant wave height
-    if (wav_ocn_coup .or. wav_atm_coup) then
+    if (wav_ocn_coup .eq. 'two' .or. wav_atm_coup .eq. 'two') then
        index_w2x_Sw_Charn     = mct_avect_indexra(w2x,'Sw_Charn') ! Charnock coeff accounting for the wave stress (Janssen 1989, 1991)
     endif
-    if (wav_ocn_coup) then
+    if (wav_ocn_coup .eq. 'two') then
+       index_w2x_Sw_Hs = mct_avect_indexra(w2x,'Sw_Hs') ! Significant wave height
        index_w2x_Sw_Fp = mct_avect_indexra(w2x,'Sw_Fp') ! Peak wave freqency  
        index_w2x_Sw_Dp = mct_avect_indexra(w2x,'Sw_Dp') ! Peak wave direction
        index_w2x_Faww_Tawx    = mct_avect_indexra(w2x,'Faww_Tawx')  ! Zonal Wave supported stress (Stress from atmosphere to waves)
