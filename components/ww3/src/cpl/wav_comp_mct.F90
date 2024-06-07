@@ -1202,6 +1202,7 @@ CONTAINS
                
                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = USSP(jsea,1)
                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = USSP(jsea,nk+1)
+               
                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_2,jsea) = USSP(jsea,2)
                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_2,jsea) = USSP(jsea,nk+2)
 
