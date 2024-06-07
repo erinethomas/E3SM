@@ -69,17 +69,11 @@ contains
     index_x2w_So_bldepth = mct_avect_indexra(x2w,'So_bldepth') ! Boundary layer depth
     index_x2w_So_ssh     = mct_avect_indexra(x2w,'So_ssh')     ! Sea surface height 
 
-    index_w2x_Sw_Hs = mct_avect_indexra(w2x,'Sw_Hs') ! Significant wave height
-
-    if (wav_ice_coup) then
-       allocate(index_w2x_Sw_wavespec(1:wav_nfreq))
-       do i = 1,wav_nfreq
-          write(freqnum,'(i2.2)') i
-          name = 'Sw_wavespec' // freqnum
-          index_w2x_Sw_wavespec(i) = mct_avect_indexra(w2x,trim(name)) ! full wave spectrum (fcn of frq)
-       enddo 
+    if (wav_ocn_coup .eq. 'two' .or. wav_atm_coup .eq. 'two') then
+       index_w2x_Sw_Charn     = mct_avect_indexra(w2x,'Sw_Charn') ! Charnock coeff accounting for the wave stress (Janssen 1989, 1991)
     endif
-    if (wav_ocn_coup) then
+    if (wav_ocn_coup .eq. 'two') then
+       index_w2x_Sw_Hs = mct_avect_indexra(w2x,'Sw_Hs') ! Significant wave height
        index_w2x_Sw_Fp = mct_avect_indexra(w2x,'Sw_Fp') ! Peak wave freqency  
        index_w2x_Sw_Dp = mct_avect_indexra(w2x,'Sw_Dp') ! Peak wave direction
        index_w2x_Sw_ustokes_wavenumber_1 = mct_avect_indexra(w2x,'Sw_ustokes_wavenumber_1') ! partitioned Stokes drift u 1
