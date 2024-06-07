@@ -2195,7 +2195,7 @@ contains
            iceFraction(i) = x2o_o % rAttr(index_x2o_Si_ifrac, n)
         end if
 
-        if (wav_ocn_coup) then
+        if (wav_ocn_coup == 'two') then
            if ( stokesDriftZonalWavenumberField % isActive ) then
               stokesDriftZonalWavenumber(1,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_1, n)
               stokesDriftZonalWavenumber(2,i) = x2o_o % rAttr(index_x2o_Sw_ustokes_wavenumber_2, n)
