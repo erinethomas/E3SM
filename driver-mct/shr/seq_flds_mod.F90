@@ -2693,7 +2693,7 @@ contains
        call metadata_set(attname, longname, stdname, units)
     endif
 
-    if (wav_atm_coup == 'two' or wav_ocn_coup == 'two') then
+    if (wav_atm_coup == 'two' .or. wav_ocn_coup == 'two') then
        call seq_flds_add(w2x_states,'Sw_Charn')
        if (wav_ocn_coup == 'two') call seq_flds_add(x2o_states,'Sw_Charn')
        longname = 'Charnock coefficent based on sea state'
