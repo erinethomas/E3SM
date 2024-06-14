@@ -1,0 +1,3 @@
+config_nFloeCategories = 12
+config_use_column_waves = .true.
+config_use_floe_size_distribution = .true.
