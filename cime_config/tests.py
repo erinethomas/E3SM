@@ -121,17 +121,27 @@ _TESTS = {
             )
         },
 
+    "e3sm_wav_developer" : {
+        "time"    : "0:45:00",
+        "tests"   : (
+            #"SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3.mpassi-fsdjra",
+            #"SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.WCYCL1850-WW3.allactive-wc1850_WW3",
+            #"PEM_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3.mpassi-fsd",
+            #"PET_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3.mpassi-fsd",
+            "ERS.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3.mpassi-fsd",
+            )
+    },
+
     "e3sm_wavice_developer" : {
         "time"    : "0:30:00",
         "tests"   : (
-          #  "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsdjra",
-          #  "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsdjra",
-            "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3.mpassi-fsdjra",
-          #  "ERS_Ld5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
-          #  "PEM_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
-          #  "PET_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
-           # "ERS_Ld5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
-           # "PEM_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
+            #"SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsdjra",
+            #"ERS_Ld5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
+            #"PEM_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
+            #"PET_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
+            #"SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsdjra",
+            #"ERS_Ld5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
+            "PEM_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
             #"PET_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
             )
         },
@@ -750,15 +760,6 @@ _TESTS = {
             )
     },
 
-    "e3sm_wav_developer" : {
-        "time"    : "0:45:00",
-        "tests"   : (
-            "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3.ww3-jra_1958",
-            "PEM_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3",
-            "PET_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3",
-            "ERS.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3",
-            )
-    },
     
 
     # super-BFB OCN

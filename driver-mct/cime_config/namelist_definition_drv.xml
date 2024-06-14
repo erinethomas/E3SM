@@ -192,7 +192,7 @@
     </values>
   </entry>
 
-  <entry id="wav_ocn_coup" modify_via_xml="WAV_ICE_COUP">
+  <entry id="wav_ocn_coup" modify_via_xml="WAV_OCN_COUP">
     <type>logical</type>
     <category>seq_flds</category>
     <group>seq_cplflds_inparm</group>
