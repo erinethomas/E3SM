@@ -753,12 +753,11 @@ contains
         call mpas_pool_get_subpool(block_ptr % structs, 'scratch', scratchPool)
 
         call ocn_forcing_build_fraction_absorbed_array(meshPool, statePool, forcingPool, ierr, 1)
+        call ocn_frazil_forcing_build_arrays(domain, meshPool, forcingPool, statePool, ierr)
         call mpas_timer_start("land_ice_build_arrays", .false.)
         call ocn_surface_land_ice_fluxes_build_arrays(meshPool, forcingPool, scratchPool, &
                                                       statePool, err=ierr)
         call mpas_timer_stop("land_ice_build_arrays")
-
-        call ocn_frazil_forcing_build_arrays(domain, meshPool, forcingPool, statePool, ierr)
 
         block_ptr => block_ptr % next
     end do
@@ -1095,15 +1094,13 @@ contains
             call mpas_pool_get_subpool(block_ptr % structs, 'scratch', scratchPool)
 
             call ocn_forcing_build_fraction_absorbed_array(meshPool, statePool, forcingPool, ierr, 1)
-
+            call ocn_frazil_forcing_build_arrays(domain, meshPool, forcingPool, statePool, ierr)
             call mpas_timer_start("land_ice_build_arrays", .false.)
             call ocn_surface_land_ice_fluxes_build_arrays(meshPool, &
                                                           forcingPool, scratchPool, statePool, ierr)
             call mpas_timer_stop("land_ice_build_arrays")
             call ocn_surface_land_ice_fluxes_accumulate_fluxes(meshPool, forcingPool, &
                                                                statePool, dt, ierr)
-
-            call ocn_frazil_forcing_build_arrays(domain, meshPool, forcingPool, statePool, ierr)
 
             call ocn_eddy_compute_mixed_layer_depth(statePool, forcingPool)
             if (config_use_GM .or. config_submesoscale_enable) then
@@ -2702,7 +2699,12 @@ contains
                                                avgOceanSurfaceDOCSemiLabile, &
                                                avgOceanSurfaceFeParticulate, &
                                                avgOceanSurfaceFeDissolved, &
-                                               ssh
+                                               ssh, &
+                                               avgLandIceFreshwaterFlux, &
+                                               avgRemovedRiverRunoffFlux, &
+                                               avgRemovedIceRunoffFlux, &
+                                               avgLandIceHeatFlux, &
+                                               avgRemovedIceRunoffHeatFlux
 
    real (kind=RKIND), dimension(:,:), pointer :: avgTracersSurfaceValue, avgSurfaceVelocity, &
                                                  avgSSHGradient, avgOceanSurfacePhytoC, &
@@ -2711,6 +2713,7 @@ contains
    real (kind=RKIND) :: surfaceFreezingTemp
 
    logical, pointer :: frazilIceActive,          &
+                       config_remove_AIS_coupler_runoff, &
                        config_use_ecosysTracers, &
                        config_use_DMSTracers,    &
                        config_use_MacroMoleculesTracers,  &
@@ -2727,6 +2730,7 @@ contains
    call mpas_pool_get_package(domain % packages, 'frazilIceActive', frazilIceActive)
    call mpas_pool_get_config(domain % configs, 'config_use_ecosysTracers', config_use_ecosysTracers)
    call mpas_pool_get_config(domain % configs, 'config_land_ice_flux_mode', config_land_ice_flux_mode)
+   call mpas_pool_get_config(domain % configs, 'config_remove_AIS_coupler_runoff', config_remove_AIS_coupler_runoff)
    call mpas_pool_get_config(domain % configs, 'config_use_DMSTracers', config_use_DMSTracers)
    call mpas_pool_get_config(domain % configs, 'config_use_MacroMoleculesTracers', config_use_MacroMoleculesTracers)
    call mpas_pool_get_config(domain % configs, 'config_use_ecosysTracers_sea_ice_coupling',  &
@@ -2768,6 +2772,17 @@ contains
         call mpas_pool_get_array(forcingPool, 'frazilSurfacePressure', frazilSurfacePressure)
         call mpas_pool_get_array(statePool, 'accumulatedFrazilIceMass', accumulatedFrazilIceMass, 1)
      end if
+
+     ! Cryo fields
+     if (trim(config_land_ice_flux_mode) == 'standalone' .or. trim(config_land_ice_flux_mode) == 'data') then
+        call mpas_pool_get_array(forcingPool, 'avgLandIceFreshwaterFlux', avgLandIceFreshwaterFlux)
+        call mpas_pool_get_array(forcingPool, 'avgLandIceHeatFlux', avgLandIceHeatFlux)
+     endif
+     if (config_remove_AIS_coupler_runoff) then
+        call mpas_pool_get_array(forcingPool, 'avgRemovedRiverRunoffFlux', avgRemovedRiverRunoffFlux)
+        call mpas_pool_get_array(forcingPool, 'avgRemovedIceRunoffFlux', avgRemovedIceRunoffFlux)
+        call mpas_pool_get_array(forcingPool, 'avgRemovedIceRunoffHeatFlux', avgRemovedIceRunoffHeatFlux)
+     endif
 
      ! BGC fields
      if (config_use_ecosysTracers) then
@@ -2820,6 +2835,17 @@ contains
 
        o2x_o % rAttr(index_o2x_Faoo_h2otemp, n) = avgTotalFreshWaterTemperatureFlux(i) * rho_sw * cp_sw
 
+       ! Cryo fields
+       if (trim(config_land_ice_flux_mode) == 'standalone' .or. trim(config_land_ice_flux_mode) == 'data') then
+          o2x_o % rAttr(index_o2x_Foxo_ismw, n)  = avgLandIceFreshwaterFlux(i)
+          o2x_o % rAttr(index_o2x_Foxo_ismh, n)  = avgLandIceHeatFlux(i)
+       endif
+       if (config_remove_AIS_coupler_runoff) then
+          o2x_o % rAttr(index_o2x_Foxo_rrofl, n) = avgRemovedRiverRunoffFlux(i)
+          o2x_o % rAttr(index_o2x_Foxo_rrofi, n) = avgRemovedIceRunoffFlux(i)
+          o2x_o % rAttr(index_o2x_Foxo_rrofih, n) = avgRemovedIceRunoffHeatFlux(i)
+       endif
+
        if ( frazilIceActive ) then
           ! negative when frazil ice can be melted
           keepFrazil = .true.
@@ -2855,6 +2881,10 @@ contains
 
              o2x_o % rAttr(index_o2x_Fioo_q, n)  = 0.0_RKIND
              o2x_o % rAttr(index_o2x_Fioo_frazil, n) = 0.0_RKIND
+             if (trim(config_land_ice_flux_mode) == 'standalone' .or. trim(config_land_ice_flux_mode) == 'data') then
+                o2x_o % rAttr(index_o2x_Foxo_q_li, n) = accumulatedFrazilIceMass(i) * config_frazil_heat_of_fusion / ocn_cpl_dt
+                o2x_o % rAttr(index_o2x_Foxo_frazil_li, n) = accumulatedFrazilIceMass(i) / ocn_cpl_dt
+             endif
 
           end if
 
@@ -3983,7 +4013,12 @@ contains
                                                    avgOceanSurfaceDOCSemiLabile, &
                                                    avgOceanSurfaceFeParticulate, &
                                                    avgOceanSurfaceFeDissolved, &
-                                                   ssh
+                                                   ssh, &
+                                                   avgLandIceFreshwaterFlux, &
+                                                   avgRemovedRiverRunoffFlux, &
+                                                   avgRemovedIceRunoffFlux, &
+                                                   avgLandIceHeatFlux, &
+                                                   avgRemovedIceRunoffHeatFlux
    
       real (kind=RKIND), dimension(:,:), pointer :: avgTracersSurfaceValue, avgSurfaceVelocity, &
                                                       avgSSHGradient, avgOceanSurfacePhytoC, &
@@ -3992,6 +4027,7 @@ contains
       real (kind=RKIND) :: surfaceFreezingTemp
    
       logical, pointer :: frazilIceActive,          &
+                           config_remove_AIS_coupler_runoff, &
                            config_use_ecosysTracers, &
                            config_use_DMSTracers,    &
                            config_use_MacroMoleculesTracers,  &
@@ -4008,6 +4044,7 @@ contains
       call mpas_pool_get_package(domain % packages, 'frazilIceActive', frazilIceActive)
       call mpas_pool_get_config(domain % configs, 'config_use_ecosysTracers', config_use_ecosysTracers)
       call mpas_pool_get_config(domain % configs, 'config_land_ice_flux_mode', config_land_ice_flux_mode)
+      call mpas_pool_get_config(domain % configs, 'config_remove_AIS_coupler_runoff', config_remove_AIS_coupler_runoff)
       call mpas_pool_get_config(domain % configs, 'config_use_DMSTracers', config_use_DMSTracers)
       call mpas_pool_get_config(domain % configs, 'config_use_MacroMoleculesTracers', config_use_MacroMoleculesTracers)
       call mpas_pool_get_config(domain % configs, 'config_use_ecosysTracers_sea_ice_coupling',  &
@@ -4049,6 +4086,16 @@ contains
             call mpas_pool_get_array(forcingPool, 'frazilSurfacePressure', frazilSurfacePressure)
             call mpas_pool_get_array(statePool, 'accumulatedFrazilIceMass', accumulatedFrazilIceMass, 1)
          end if
+
+        if (trim(config_land_ice_flux_mode) == 'standalone' .or. trim(config_land_ice_flux_mode) == 'data') then
+           call mpas_pool_get_array(forcingPool, 'avgLandIceFreshwaterFlux', avgLandIceFreshwaterFlux)
+           call mpas_pool_get_array(forcingPool, 'avgLandIceHeatFlux', avgLandIceHeatFlux)
+        endif
+        if (config_remove_AIS_coupler_runoff) then
+           call mpas_pool_get_array(forcingPool, 'avgRemovedRiverRunoffFlux', avgRemovedRiverRunoffFlux)
+           call mpas_pool_get_array(forcingPool, 'avgRemovedIceRunoffFlux', avgRemovedIceRunoffFlux)
+           call mpas_pool_get_array(forcingPool, 'avgRemovedIceRunoffHeatFlux', avgRemovedIceRunoffHeatFlux)
+        endif
    
          ! BGC fields
          if (config_use_ecosysTracers) then
@@ -4100,7 +4147,17 @@ contains
             o2x_om(n, index_o2x_So_dhdy) = avgSSHGradient(index_avgMeridionalSSHGradient, i)
    
             o2x_om(n, index_o2x_Faoo_h2otemp) = avgTotalFreshWaterTemperatureFlux(i) * rho_sw * cp_sw
-   
+
+            if (trim(config_land_ice_flux_mode) == 'standalone' .or. trim(config_land_ice_flux_mode) == 'data') then
+               o2x_om(n, index_o2x_Foxo_ismw)  = avgLandIceFreshwaterFlux(i)
+               o2x_om(n, index_o2x_Foxo_ismh)  = avgLandIceHeatFlux(i)
+            endif
+            if (config_remove_AIS_coupler_runoff) then
+               o2x_om(n, index_o2x_Foxo_rrofl) = avgRemovedRiverRunoffFlux(i)
+               o2x_om(n, index_o2x_Foxo_rrofi) = avgRemovedIceRunoffFlux(i)
+               o2x_om(n, index_o2x_Foxo_rrofih) = avgRemovedIceRunoffHeatFlux(i)
+            endif
+
             if ( frazilIceActive ) then
                ! negative when frazil ice can be melted
                keepFrazil = .true.
@@ -4136,7 +4193,10 @@ contains
    
                   o2x_om(n, index_o2x_Fioo_q)      = 0.0_RKIND
                   o2x_om(n, index_o2x_Fioo_frazil) = 0.0_RKIND
-   
+                  if (trim(config_land_ice_flux_mode) == 'standalone' .or. trim(config_land_ice_flux_mode) == 'data') then
+                     o2x_om(n, index_o2x_Foxo_q_li)      = accumulatedFrazilIceMass(i) * config_frazil_heat_of_fusion / ocn_cpl_dt
+                     o2x_om(n, index_o2x_Foxo_frazil_li) = accumulatedFrazilIceMass(i) / ocn_cpl_dt
+                  endif
                end if
    
                ! Reset SeaIce Energy and Accumulated Frazil Ice

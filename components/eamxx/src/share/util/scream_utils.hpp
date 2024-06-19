@@ -11,6 +11,7 @@
 #include <list>
 #include <algorithm>
 #include <map>
+#include <iostream>
 
 namespace scream {
 
@@ -346,6 +347,12 @@ check_mpi_call (int err, const std::string& context) {
       "  - err code: " + std::to_string(err) + "\n"
       "  - context: " + context + "\n");
 }
+
+// Find the full filename list from patterns
+std::vector<std::string> filename_glob(const std::vector<std::string>& patterns);
+
+// Use globloc for each filename pattern
+std::vector<std::string> globloc(const std::string& pattern);
 
 } // namespace scream
 
