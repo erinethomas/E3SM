@@ -239,7 +239,7 @@ contains
     index_x2i_Faxa_dstwet3  = mct_avect_indexra(x2i,'Faxa_dstwet3')
     index_x2i_Faxa_dstwet4  = mct_avect_indexra(x2i,'Faxa_dstwet4')
 
-    if (wav_ice_coup) then
+    if (wav_ice_coup .eq. 'two') then
        index_x2i_Sw_Hs         = mct_avect_indexra(x2i,'Sw_Hs')
        allocate(index_x2i_Sw_wavespec(1:wav_nfreq))
        do i = 1,wav_nfreq

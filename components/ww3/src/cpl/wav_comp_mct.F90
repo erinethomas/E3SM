@@ -1223,50 +1223,22 @@ CONTAINS
                w2x_w%rattr(index_w2x_Fwow_Twoy,jsea) = 0.0
                w2x_w%rattr(index_w2x_Faow_Tocx,jsea) = 0.0
                w2x_w%rattr(index_w2x_Faow_Tocy,jsea) = 0.0
-
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_2,jsea) = USSP(jsea,2)
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_2,jsea) = USSP(jsea,nk+2)
-
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_3,jsea) = USSP(jsea,3)
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_3,jsea) = USSP(jsea,nk+3)
-
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_4,jsea) = USSP(jsea,4)
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_4,jsea) = USSP(jsea,nk+4)
-
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_5,jsea) = USSP(jsea,5)
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_5,jsea) = USSP(jsea,nk+5)
-
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_6,jsea) = USSP(jsea,6)
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_6,jsea) = USSP(jsea,nk+6)
-             endif
-          else
-
-             w2x_w%rattr(index_w2x_Sw_Hs,jsea) = 0.0
-             if (wav_ice_coup) then 
+               w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_2,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_2,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_3,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_3,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_4,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_4,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_5,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_5,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_6,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_6,jsea) = 0.0
+             if (wav_ice_coup .eq. 'two') then 
                 do ifreq=1,nk 
                    w2x_w%rattr(index_w2x_Sw_wavespec(ifreq),jsea) = 0.0
                 enddo
-             endif
-             if (wav_ocn_coup) then
-                w2x_w%rattr(index_w2x_Sw_Fp,jsea) = 0.0
-                w2x_w%rattr(index_w2x_Sw_Dp,jsea) = 0.0 
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_1,jsea) = 0.0
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_1,jsea) = 0.0
-
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_2,jsea) = 0.0
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_2,jsea) = 0.0
-
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_3,jsea) = 0.0
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_3,jsea) = 0.0
-
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_4,jsea) = 0.0
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_4,jsea) = 0.0
-
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_5,jsea) = 0.0
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_5,jsea) = 0.0
-
-                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_6,jsea) = 0.0
-                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_6,jsea) = 0.0
              endif
           endif
       enddo

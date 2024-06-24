@@ -2215,7 +2215,7 @@ contains
     call metadata_set(attname, longname, stdname, units)
 
     ! Wave spectra
-    if (wav_ice_coup) then
+    if (wav_ice_coup .eq. 'two') then
        do num = 1, wav_nfreq
           write(cnum,'(i2.2)') num
           name = 'Sw_wavespec' // cnum

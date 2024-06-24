@@ -89,6 +89,14 @@ contains
        index_w2x_Sw_ustokes_wavenumber_6 = mct_avect_indexra(w2x,'Sw_ustokes_wavenumber_6') ! partitioned Stokes drift u 6
        index_w2x_Sw_vstokes_wavenumber_6 = mct_avect_indexra(w2x,'Sw_vstokes_wavenumber_6') ! partitioned Stokes drift v 6
     endif
+    if (wav_ice_coup .eq. 'two') then
+       allocate(index_w2x_Sw_wavespec(1:wav_nfreq))
+       do i = 1,wav_nfreq
+          write(freqnum,'(i2.2)') i
+          name = 'Sw_wavespec' // freqnum
+          index_w2x_Sw_wavespec(i) = mct_avect_indexra(w2x,trim(name)) ! full wave spectrum (fcn of frq)
+       enddo
+    endif
     call mct_aVect_clean(x2w)
     call mct_aVect_clean(w2x)
 
