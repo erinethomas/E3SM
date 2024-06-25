@@ -679,7 +679,6 @@ if ($COMP_WAV eq 'ww3' and $COMP_OCN eq 'mpaso' ) {
 #################################
 
 if ($COMP_WAV eq 'ww3' and $COMP_OCN eq 'mpaso' ) {
->>>>>>> 8a2186d245 (chnage all wave coupling namelists from boolean to char.)
 	add_default($nl, 'config_use_active_wave', 'val'=>'.true.');
 } else {
 	add_default($nl, 'config_use_active_wave', 'val'=>'.false.');
