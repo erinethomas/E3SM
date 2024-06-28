@@ -2752,7 +2752,6 @@ contains
          call MPAS_pool_get_array(icestate, "iceAreaCategoryInitial", iceAreaCategoryInitial)
          call MPAS_pool_get_array(floe_size_distribution, "FloeSizeBinCenter", FloeSizeBinCenter)
          call MPAS_pool_get_array(floe_size_distribution, "FloeSizeDiameter",FloeSizeDiameter)
-         call MPAS_pool_get_array(floe_size_distribution, "FloeSizePerimeter",FloeSizePerimeter)
          call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
          call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
       endif
@@ -3107,6 +3106,15 @@ contains
       real (kind=RKIND),      intent(in)   :: seaSurfaceSalinity
 
 ! !OUTPUT PARAMETERS:
+      real (kind=RKIND),      intent(out)  :: frazilMassFlux
+      character(len=strKIND), pointer   :: config_thermodynamics_type
+      character(len=strKIND), pointer   :: config_column_physics_type
+!EOP
+!BOC
+!-----------------------------------------------------------------------
+!
+!  local variables
+!
 !-----------------------------------------------------------------------
    real(kind=RKIND) :: &
       Si0new,          &
