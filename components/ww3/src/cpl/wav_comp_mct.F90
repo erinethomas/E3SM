@@ -1241,13 +1241,13 @@ CONTAINS
 
                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_6,jsea) = USSP(jsea,6)
                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_6,jsea) = USSP(jsea,nk+6)
-               
+             endif
+             if (wav_ice_coup .eq. 'two') then 
                do ifreq=1,nk 
                   w2x_w%rattr(index_w2x_Sw_wavespec(ifreq),jsea) = EF(jsea,ifreq)
                enddo
-            endif
+             endif
           else
-           
              if (wav_atm_coup .eq. 'two' .or. wav_ocn_coup .eq. 'two') then
                w2x_w%rattr(index_w2x_Sw_Charn,jsea) = 0.0
              endif
@@ -1279,7 +1279,8 @@ CONTAINS
 
                w2x_w%rattr(index_w2x_Sw_ustokes_wavenumber_6,jsea) = 0.0
                w2x_w%rattr(index_w2x_Sw_vstokes_wavenumber_6,jsea) = 0.0
-
+             endif
+             if (wav_ice_coup .eq. 'two') then
                do ifreq=1,nk 
                   w2x_w%rattr(index_w2x_Sw_wavespec(ifreq),jsea) = 0.0
                enddo
