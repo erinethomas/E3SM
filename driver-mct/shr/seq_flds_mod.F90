@@ -2209,7 +2209,7 @@ contains
     call metadata_set(attname, longname, stdname, units)
 
     ! Significant Wave Height
-    if (wav_ocn_coup .eq. 'two' .or. wav_ice_coup .eq. 'two')
+    if (wav_ocn_coup .eq. 'two' .or. wav_ice_coup .eq. 'two') then
        call seq_flds_add(w2x_states,'Sw_Hs')
        if (wav_ice_coup .eq. 'two') call seq_flds_add(x2i_states,'Sw_Hs')
        if (wav_ocn_coup .eq. 'two') call seq_flds_add(x2o_states,'Sw_Hs')
