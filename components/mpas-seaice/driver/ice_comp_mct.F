@@ -935,17 +935,6 @@ contains
         call memmon_dump_fort('memmon.out','ice_init_mct:end::',lbnum)
         call memmon_reset_addr()
     endif
-!----------------------------------------------------------------------------
-
-    call shr_file_setLogUnit (shrlogunit)
-    call shr_file_setLogLevel(shrloglev)
-
-#if defined (_MEMTRACE)
-    if(iam  == 0) then
-        lbnum=1
-        call memmon_dump_fort('memmon.out','ice_init_mct:end::',lbnum)
-        call memmon_reset_addr()
-    endif
 #endif
     call mpas_log_write('=== Completed ice_init_mct ===', flushNow=.true.)
 
