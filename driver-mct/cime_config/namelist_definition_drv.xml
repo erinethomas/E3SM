@@ -238,6 +238,8 @@
       <value>none</value>
       <value WAV_ICE_COUP="one">one</value>
       <value WAV_ICE_COUP="two">two</value>
+    </values>
+  </entry>
     
   <entry id="wav_nfreq">
     <type>integer</type>
