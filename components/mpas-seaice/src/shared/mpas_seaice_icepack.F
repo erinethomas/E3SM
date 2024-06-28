@@ -425,9 +425,12 @@ contains
     !local variables
     integer :: i,iCell, iCategory, iFloeCategory
     character (len=35) :: c_fsd_range 
+    character(len=icepack_char_len_long) :: tmp_config_initial_condition_type
 
     call MPAS_pool_get_config(domain % configs, "config_initial_condition_type",config_initial_condition_type)
     call MPAS_pool_get_config(domain % configs, "config_do_restart",config_do_restart)
+    
+    tmp_config_initial_condition_type = trim(config_initial_condition_type)
 
     block => domain % blocklist
     do while (associated(block))
@@ -477,7 +480,7 @@ contains
 
           call icepack_init_fsd(                   &  
              nfsd=nFloeCategories,                 & ! number of floe size categories 
-             ice_ic=config_initial_condition_type, & ! method of ice cover initialization 
+             ice_ic=tmp_config_initial_condition_type, & ! method of ice cover initialization 
              floe_rad_c=floeSizeBinCenter(:),      & ! fsd size bin centre in m (radius)
              floe_binwidth=floeSizeBinWidth(:),    & ! fsd size bin width in m (radius)
              afsd=floeDistribution)                  ! floe size distribution initalization tracer 
@@ -599,6 +602,9 @@ subroutine init_column_waves(domain)
          significantWaveHeight(:) = c0   
          waveSpectra(:,:)        = c0
       endif
+
+      deallocate(waveFrequency_TEMP)
+      deallocate(waveFreqBinWidth_TEMP)
 
       block => block % next
     end do !block
