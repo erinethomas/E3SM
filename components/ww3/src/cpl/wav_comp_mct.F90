@@ -1219,14 +1219,14 @@ CONTAINS
                w2x_w%rattr(index_w2x_Fwow_Twoy,jsea) = 1000*TAUOY(jsea)
                w2x_w%rattr(index_w2x_Faow_Tocx,jsea) = TAUOCX(jsea)
                w2x_w%rattr(index_w2x_Faow_Tocy,jsea) = TAUOCY(jsea)
-               
+            endif
+            if (wav_ice_coup .eq. 'two') then 
                do ifreq=1,nk 
                   w2x_w%rattr(index_w2x_Sw_wavespec(ifreq),jsea) = EF(jsea,ifreq)
                enddo
             endif
-         else
-
-            if (wav_atm_coup .eq. 'two' .or. wav_ocn_coup .eq. 'two') then
+          else
+             if (wav_atm_coup .eq. 'two' .or. wav_ocn_coup .eq. 'two') then
                w2x_w%rattr(index_w2x_Sw_Charn,jsea) = 0.0
             endif
             if (wav_ocn_coup .eq. 'two') then
@@ -1258,7 +1258,8 @@ CONTAINS
                w2x_w%rattr(index_w2x_Fwow_Twoy,jsea) = 0.0
                w2x_w%rattr(index_w2x_Faow_Tocx,jsea) = 0.0
                w2x_w%rattr(index_w2x_Faow_Tocy,jsea) = 0.0
-             
+             endif
+             if (wav_ice_coup .eq. 'two') then
                do ifreq=1,nk 
                   w2x_w%rattr(index_w2x_Sw_wavespec(ifreq),jsea) = 0.0
                enddo
