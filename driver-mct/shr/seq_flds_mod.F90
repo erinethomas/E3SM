@@ -2201,7 +2201,7 @@ contains
 
     ! Sea ice floe Size
     call seq_flds_add(i2x_states,"Si_ifloe")
-    call seq_flds_add(x2w_states,"Si_ifloe")
+    if (wav_ice_coup .eq. 'two') call seq_flds_add(x2w_states,"Si_ifloe")
     longname = 'Sea ice floe size'
     stdname  = 'sea_ice_floe_size'
     units    = 'm'
@@ -2209,17 +2209,19 @@ contains
     call metadata_set(attname, longname, stdname, units)
 
     ! Significant Wave Height
-    call seq_flds_add(w2x_states,'Sw_Hs')
-    call seq_flds_add(x2i_states,'Sw_Hs')
-    call seq_flds_add(x2o_states,'Sw_Hs')
-    longname = 'Significant wave height'
-    stdname  = 'significant_wave_height'
-    units    = 'm'
-    attname  = 'Sw_Hs'
-    call metadata_set(attname, longname, stdname, units)
+    if (wav_ocn_coup .eq. 'two' .or. wav_ice_coup .eq. 'two')
+       call seq_flds_add(w2x_states,'Sw_Hs')
+       if (wav_ice_coup .eq. 'two') call seq_flds_add(x2i_states,'Sw_Hs')
+       if (wav_ocn_coup .eq. 'two') call seq_flds_add(x2o_states,'Sw_Hs')
+       longname = 'Significant wave height'
+       stdname  = 'significant_wave_height'
+       units    = 'm'
+       attname  = 'Sw_Hs'
+       call metadata_set(attname, longname, stdname, units)
+    endif
 
     ! Wave spectra
-    if (wav_nfreq > 0) then
+    if (wav_ice_coup .eq. 'two') then
        do num = 1, wav_nfreq
           write(cnum,'(i2.2)') num
           name = 'Sw_wavespec' // cnum
