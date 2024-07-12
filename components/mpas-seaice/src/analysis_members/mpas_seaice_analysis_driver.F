@@ -36,6 +36,7 @@ module seaice_analysis_driver
    use seaice_pointwise_stats
    use seaice_unit_conversion
    use seaice_ice_shelves
+   use seaice_floe_size
 !   use seaice_TEM_PLATE
 
    implicit none
@@ -168,6 +169,7 @@ contains
       call mpas_pool_add_config(analysisMemberList, 'timeSeriesStatsDaily', 1)
       call mpas_pool_add_config(analysisMemberList, 'timeSeriesStatsMonthly', 1)
       call mpas_pool_add_config(analysisMemberList, 'timeSeriesStatsClimatology', 1)
+      call mpas_pool_add_config(analysisMemberList, 'floeSize', 1)
 !     call mpas_pool_add_config(analysisMemberList, 'temPlate', 1)
 
       ! DON'T EDIT BELOW HERE
@@ -1114,6 +1116,8 @@ contains
          call seaice_bootstrap_time_series_stats(domain, timeSeriesClimatologyTAG, err_tmp)
       else if ( analysisMemberName(1:nameLength) == 'timeSeriesStatsCustom' ) then
          call seaice_bootstrap_time_series_stats(domain, timeSeriesCustomTAG, err_tmp)
+     else if ( analysisMemberName(1:nameLength) == 'floeSize' ) then
+        call seaice_bootstrap_floe_size(domain, '', err_tmp)
 !     else if ( analysisMemberName(1:nameLength) == 'surfaceAreaWeightedAverages' ) then
 !        call seaice_bootstrap_surface_area_weighted_averages(domain, '', err_tmp)
 !     else if ( analysisMemberName(1:nameLength) == 'TEMPLATE' ) then
@@ -1186,6 +1190,8 @@ contains
          call seaice_init_time_series_stats(domain, timeSeriesClimatologyTAG, err_tmp)
       else if ( analysisMemberName(1:nameLength) == 'timeSeriesStatsCustom' ) then
          call seaice_init_time_series_stats(domain, timeSeriesCustomTAG, err_tmp)
+      else if ( analysisMemberName(1:nameLength) == 'floeSize' ) then
+         call seaice_init_floe_size(domain, '', err_tmp)
 !     else if ( analysisMemberName(1:nameLength) == 'surfaceAreaWeightedAverages' ) then
 !        call seaice_init_surface_area_weighted_averages(domain, '', err_tmp)
 !     else if ( analysisMemberName(1:nameLength) == 'TEMPLATE' ) then
@@ -1253,6 +1259,8 @@ contains
          call seaice_precompute_ice_shelves(domain, '', timeLevel, err_tmp)
       else if ( analysisMemberName(1:nameLength) == 'icePresent' ) then
          call seaice_precompute_ice_present(domain, '', timeLevel, err_tmp)
+      else if ( analysisMemberName(1:nameLength) == 'floeSize' ) then
+         call seaice_precompute_floe_size(domain, '', timeLevel, err_tmp)
       !else if ( analysisMemberName(1:nameLength) == 'timeSeriesStatsDaily' ) then
       !   call seaice_precompute_time_series_stats(domain, timeSeriesDailyTAG, timeLevel, err_tmp)
       !else if ( analysisMemberName(1:nameLength) == 'timeSeriesStatsMonthly' ) then
@@ -1334,6 +1342,8 @@ contains
          call seaice_compute_time_series_stats(domain, timeLevel, timeSeriesClimatologyTAG, err_tmp)
       else if ( analysisMemberName(1:nameLength) == 'timeSeriesStatsCustom' ) then
          call seaice_compute_time_series_stats(domain, timeLevel, timeSeriesCustomTAG, err_tmp)
+      else if ( analysisMemberName(1:nameLength) == 'floeSize' ) then
+         call seaice_compute_floe_size(domain, '', timeLevel, err_tmp)
 !     else if ( analysisMemberName(1:nameLength) == 'surfaceAreaWeightedAverages' ) then
 !        call seaice_compute_surface_area_weighted_averages(domain, '', timeLevel, err_tmp)
 !     else if ( analysisMemberName(1:nameLength) == 'TEMPLATE' ) then
@@ -1406,6 +1416,8 @@ contains
          call seaice_restart_time_series_stats(domain, timeSeriesClimatologyTAG, err_tmp)
       else if ( analysisMemberName(1:nameLength) == 'timeSeriesStatsCustom' ) then
          call seaice_restart_time_series_stats(domain, timeSeriesCustomTAG, err_tmp)
+      else if ( analysisMemberName(1:nameLength) == 'floeSize' ) then
+         call seaice_restart_floe_size(domain, '', err_tmp)
 !     else if ( analysisMemberName(1:nameLength) == 'surfaceAreaWeightedAverages' ) then
 !        call seaice_restart_surface_area_weighted_averages(domain, '', err_tmp)
 !     else if ( analysisMemberName(1:nameLength) == 'TEMPLATE' ) then
@@ -1478,6 +1490,8 @@ contains
          call seaice_finalize_time_series_stats(domain, timeSeriesClimatologyTAG, err_tmp)
       else if ( analysisMemberName(1:nameLength) == 'timeSeriesStatsCustom' ) then
          call seaice_finalize_time_series_stats(domain, timeSeriesCustomTAG, err_tmp)
+      else if ( analysisMemberName(1:nameLength) == 'floeSize' ) then
+         call seaice_finalize_floe_size(domain, '', err_tmp)
 !     else if ( analysisMemberName(1:nameLength) == 'surfaceAreaWeightedAverages' ) then
 !        call seaice_finalize_surface_area_weighted_averages(domain, '', err_tmp)
 !     else if ( analysisMemberName(1:nameLength) == 'TEMPLATE' ) then
