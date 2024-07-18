@@ -99,6 +99,7 @@ list(APPEND RAW_SOURCES
   core_seaice/analysis_members/mpas_seaice_pointwise_stats.F
   core_seaice/analysis_members/mpas_seaice_unit_conversion.F
   core_seaice/analysis_members/mpas_seaice_ice_shelves.F
+  core_seaice/analysis_members/mpas_seaice_floe_size.F
 )
 
 # model_forward (DISABLE qsmp for these)

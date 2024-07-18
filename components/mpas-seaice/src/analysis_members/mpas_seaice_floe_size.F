@@ -1,4 +1,4 @@
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+!||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 !
 !  seaice_floe_size
 !
@@ -291,6 +291,7 @@ contains
 
       real (kind=RKIND), dimension(:), pointer ::  areaCell, dcEdge, dvEdge
 
+      real( kind=RKIND), dimension(:), pointer :: floePerimeter
       err = 0
 
       dminfo = domain % dminfo
@@ -318,10 +319,17 @@ contains
          call mpas_pool_get_array(meshPool, 'maxLevelEdgeTop', maxLevelEdgeTop)
          call mpas_pool_get_array(meshPool, 'maxLevelVertexBot', maxLevelVertexBot)
 
+
+         ! initialize
+         floePerimeter(:) = 0.0_RKIND
+
          ! Computations which are functions of nCells, nEdges, or nVertices
          ! must be placed within this block loop
          ! Here are some example loops
          do iCell = 1,nCellsSolve
+            
+            ! floePerimeter = some calculation
+          
             do k = 1, maxLevelCell(iCell)
                do iTracer = 1, num_tracers
                ! computations on tracers(iTracer,k, iCell)
