@@ -2212,11 +2212,13 @@ contains
         seaSurfaceTiltU(i)             = x2i_i % rAttr(index_x2i_So_dhdx, n)
         seaSurfaceTiltV(i)             = x2i_i % rAttr(index_x2i_So_dhdy, n)
 
-        if (config_use_column_waves) then
-          significantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
-          do iFreq = 1,nFrequencies
-             waveSpectra(iFreq,i)      = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
-          enddo
+        if (wav_ice_coup == 'two') then
+           if (config_use_column_waves) then
+              significantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
+              do iFreq = 1,nFrequencies
+                 waveSpectra(iFreq,i)      = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
+              enddo
+           endif
         endif
 
         if (trim(config_ocean_surface_type) == "free") then ! free surface (MPAS-O)
