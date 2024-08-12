@@ -280,6 +280,7 @@ contains
 
   subroutine prep_ice_merge(flux_epbalfact, a2x_i, o2x_i, r2x_i, g2x_i, w2x_i, x2i_i )
 
+    use seq_flds_mod, only: wav_ice_coup
     !-----------------------------------------------------------------------
     !
     ! Arguments
@@ -444,7 +445,7 @@ contains
     call mct_aVect_copy(aVin=o2x_i, aVout=x2i_i, vector=mct_usevector, sharedIndices=o2x_SharedIndices)
     call mct_aVect_copy(aVin=a2x_i, aVout=x2i_i, vector=mct_usevector, sharedIndices=a2x_SharedIndices)
     call mct_aVect_copy(aVin=g2x_i, aVout=x2i_i, vector=mct_usevector, sharedIndices=g2x_SharedIndices)
-    call mct_aVect_copy(aVin=w2x_i, aVout=x2i_i, vector=mct_usevector, sharedIndices=w2x_SharedIndices)
+    if(wav_ice_coup == 'two') call mct_aVect_copy(aVin=w2x_i, aVout=x2i_i, vector=mct_usevector, sharedIndices=w2x_SharedIndices)
 
     ! Merge total snow and precip for ice input
     ! Scale total precip and runoff by flux_epbalfact
