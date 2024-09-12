@@ -3853,6 +3853,7 @@
     <required_gridmap grid1="ocn_grid" grid2="wav_grid">WAV2OCN_SMAPNAME</required_gridmap>
     <required_gridmap grid1="ocn_grid" grid2="wav_grid">WAV2OCN_FMAPNAME</required_gridmap>
     <required_gridmap grid1="ocn_grid" grid2="wav_grid">ICE2WAV_SMAPNAME</required_gridmap> <!-- ??? -->
+    <required_gridmap grid1="ocn_grid" grid2="wav_grid">WAV2ICE_SMAPNAME</required_gridmap> <!-- ??? -->
     <!-- <required_gridmap grid1="ocn_grid" grid2="rof_grid" not_compset="_POP">ROF2OCN_FMAPNAME</required_gridmap> ?? -->
     <required_gridmap grid1="ocn_grid" grid2="rof_grid">ROF2OCN_LIQ_RMAPNAME</required_gridmap>
     <required_gridmap grid1="ocn_grid" grid2="rof_grid">ROF2OCN_ICE_RMAPNAME</required_gridmap>
@@ -5334,8 +5335,9 @@
     </gridmap>
 
     <gridmap ocn_grid="IcoswISC30E3r5" wav_grid="wQU225Icos30E3r5">
-      <map name="WAV2OCN_SMAPNAME">cpl/gridmaps/wQU225Icos30E3r5/map_wQU225Icos30E3r5_to_IcoswISC30E3r5_esmfbilin.20240910.nc</map>
       <map name="WAV2OCN_FMAPNAME">cpl/gridmaps/wQU225Icos30E3r5/map_wQU225Icos30E3r5_to_IcoswISC30E3r5_esmfaave.20240910.nc</map>
+      <map name="WAV2OCN_SMAPNAME">cpl/gridmaps/wQU225Icos30E3r5/map_wQU225Icos30E3r5_to_IcoswISC30E3r5_esmfbilin.20240910.nc</map>
+      <map name="WAV2ICE_SMAPNAME">cpl/gridmaps/wQU225Icos30E3r5/map_wQU225Icos30E3r5_to_IcoswISC30E3r5_esmfbilin.20240910.nc</map>
       <map name="OCN2WAV_SMAPNAME">cpl/gridmaps/wQU225Icos30E3r5/map_IcoswISC30E3r5_to_wQU225Icos30E3r5_esmfbilin.20240910.nc</map>
       <map name="ICE2WAV_SMAPNAME">cpl/gridmaps/wQU225Icos30E3r5/map_IcoswISC30E3r5_to_wQU225Icos30E3r5_esmfbilin.20240910.nc</map>
     </gridmap>
