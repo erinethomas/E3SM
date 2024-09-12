@@ -1496,6 +1496,8 @@ def buildnml(case, caseroot, compname):
                 lines.append('    <var name="peakWaveDirection"/>')
                 lines.append('    <var name="significantWaveHeight"/>')
                 lines.append('    <var name="langmuirNumber"/>')
+                lines.append('    <var name="iceFraction"/>')
+                lines.append('    <var name="charnockSeaState"/>')
 
             lines.append('</stream>')
             lines.append('')
