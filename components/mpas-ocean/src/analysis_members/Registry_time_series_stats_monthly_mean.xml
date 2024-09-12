@@ -227,5 +227,11 @@
 			<var_array name="totalFreshWaterTemperatureFlux"/>
 			<var name="icebergFreshWaterFlux"/>
 			<var name="icebergHeatFlux"/>
+			<var name="peakWaveFrequency"/>
+			<var name="peakWaveDirection"/>
+			<var name="significantWaveHeight"/>
+                        <var name="langmuirNumber"/>
+			<var name="iceFraction"/>
+			<var name="charnockSeaState"/>
 		</stream>
 	</streams>
