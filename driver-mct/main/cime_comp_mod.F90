@@ -1763,6 +1763,7 @@ contains
     glc_c2_ice = .false.
     glcshelf_c2_ocn = .false.
     glcshelf_c2_ice = .false.
+    wav_c2_atm = .false.
     wav_c2_ocn = .false.
     wav_c2_ice = .false.
     iac_c2_atm = .false.
@@ -1814,6 +1815,7 @@ contains
        if (glcice_present .and. iceberg_prognostic) glc_c2_ice = .true.
     endif
     if (wav_present) then
+       if (atm_prognostic) wav_c2_atm = .true.
        if (ocn_prognostic) wav_c2_ocn = .true.
        if (ice_prognostic) wav_c2_ice = .true.
     endif
@@ -1903,6 +1905,7 @@ contains
        write(logunit,F0L)'glc_c2_ice            = ',glc_c2_ice
        write(logunit,F0L)'glcshelf_c2_ocn       = ',glcshelf_c2_ocn
        write(logunit,F0L)'glcshelf_c2_ice       = ',glcshelf_c2_ice
+       write(logunit,F0L)'wav_c2_atm            = ',wav_c2_atm
        write(logunit,F0L)'wav_c2_ocn            = ',wav_c2_ocn
        write(logunit,F0L)'wav_c2_ice            = ',wav_c2_ice
        write(logunit,F0L)'iac_c2_lnd            = ',iac_c2_lnd
