@@ -424,7 +424,6 @@ contains
 
     !local variables
     integer :: i,iCell, iCategory, iFloeCategory
-    character (len=35) :: c_fsd_range 
     character(len=icepack_char_len_long) :: tmp_config_initial_condition_type
 
     call MPAS_pool_get_config(domain % configs, "config_initial_condition_type",config_initial_condition_type)
@@ -458,11 +457,9 @@ contains
        call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
 
        call icepack_init_fsd_bounds(          &
-          nfsd=nFloeCategories,               &  ! number of floe size categories
-          floe_rad_l=floeSizeBinLower(:),     &  ! fsd size lower bound in m (radius)
-          floe_rad_c=floeSizeBinCenter(:),    &  ! fsd size bin centre in m (radius)
-          floe_binwidth=floeSizeBinWidth(:),  &  ! fsd size bin width in m (radius)
-          c_fsd_range=c_fsd_range)               ! string for history output: fsd floe_rad bounds (m)
+          floe_rad_l_out=floeSizeBinLower(:),     &  ! fsd size lower bound in m (radius)
+          floe_rad_c_out=floeSizeBinCenter(:),    &  ! fsd size bin centre in m (radius)
+          floe_binwidth_out=floeSizeBinWidth(:))   ! fsd size bin width in m (radius)
 
        ! initalize variables for change in floe size distribution
        dFloeSizeNewIce(:,:)        = c0   ! change in floe size distribution due to new ice
@@ -479,10 +476,7 @@ contains
           floeSizeDist(1,:,:) = c1
 
           call icepack_init_fsd(                   &  
-             nfsd=nFloeCategories,                 & ! number of floe size categories 
              ice_ic=tmp_config_initial_condition_type, & ! method of ice cover initialization 
-             floe_rad_c=floeSizeBinCenter(:),      & ! fsd size bin centre in m (radius)
-             floe_binwidth=floeSizeBinWidth(:),    & ! fsd size bin width in m (radius)
              afsd=floeDistribution)                  ! floe size distribution initalization tracer 
 
           do iCell = 1, nCellsSolve 
@@ -494,7 +488,7 @@ contains
                 enddo
              enddo
 
-             call icepack_cleanup_fsd(nCategories, nFloeCategories, floeDistCat) ! renormalize ?? 
+             call icepack_cleanup_fsd(floeDistCat) ! renormalize ?? 
           
              do iCategory = 1, nCategories
                 do iFloeCategory = 1, nFloeCategories
@@ -1717,7 +1711,8 @@ subroutine init_column_waves(domain)
          iceBodyAerosol, &
          snowIceMass, &
          snowLiquidMass, &
-         snowGrainRadius
+         snowGrainRadius, &
+         floeSizeDist
 
     integer, dimension(:), pointer :: &
          indexToCellID
@@ -1815,6 +1810,7 @@ subroutine init_column_waves(domain)
        call MPAS_pool_get_array(tracers, "snowIceMass", snowIceMass, 1)
        call MPAS_pool_get_array(tracers, "snowLiquidMass", snowLiquidMass, 1)
        call MPAS_pool_get_array(tracers, "snowGrainRadius", snowGrainRadius, 1)
+       call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist,1)
 
        call MPAS_pool_get_array(velocity_solver, "uVelocity", uVelocity)
        call MPAS_pool_get_array(velocity_solver, "vVelocity", vVelocity)
@@ -2137,7 +2133,8 @@ subroutine init_column_waves(domain)
                mlt_onset=meltOnset(iCell), &
                frz_onset=freezeOnset(iCell), &
                yday=dayOfYear, &
-               prescribed_ice=config_use_prescribed_ice)
+               prescribed_ice=config_use_prescribed_ice, &
+               afsdn=floeSizeDist(:,:,iCell))
 
           abortFlag = icepack_warnings_aborted()
           call seaice_icepack_write_warnings(abortFlag)
@@ -2656,7 +2653,6 @@ subroutine init_column_waves(domain)
 !               HDO_ocn=, & ! optional - ocean concentration of HDO (kg/kg)
 !               H2_16O_ocn=, & ! optional - ocean concentration of H2_16O (kg/kg) 
 !               H2_18O_ocn=, & ! optional - ocean concentration of H2_18O (kg/kg)
-               nfsd=nFloeCategories, &
                wave_sig_ht=significantWaveHeight(iCell), &
                wave_spectrum=waveSpectra(:,iCell),    &
                wavefreq=waveFrequency(:),       &
@@ -2664,9 +2660,7 @@ subroutine init_column_waves(domain)
                d_afsd_latg=dFloeSizeLateralGrowth(:,iCell),    &
                d_afsd_newi=dFloeSizeNewIce(:,iCell),   &
                d_afsd_latm=dFloeSizeLateralMelt(:,iCell),   &
-               d_afsd_weld=dFloeSizeWeld(:,iCell),   &
-               floe_rad_c=floeSizeBinCenter(:), &  
-               floe_binwidth=floeSizeBinWidth(:))
+               d_afsd_weld=dFloeSizeWeld(:,iCell))
 
           do iBioTracers = 1, ciceTracerObject % nBioTracers
              oceanBioFluxes(iBioTracers,iCell) = oceanBioFluxes(iBioTracers,iCell) + oceanBioFluxesTemp(iBioTracers,iCell)
@@ -3536,14 +3530,10 @@ subroutine init_column_waves(domain)
           call icepack_step_wavefracture(&
                   wave_spec_type = config_wave_spec_type, &
                   dt = dynamicsTimeStep, &
-                  ncat = nCategories, &
-                  nfsd = nFloeCategories, &
                   nfreq = nFrequencies, &
                   aice = iceAreaCell(iCell), &
                   vice = iceVolumeCell(iCell), &
                   aicen = iceAreaCategory(1,:,iCell), &
-                  floe_rad_l = floeSizeBinLower(:), &
-                  floe_rad_c = floeSizeBinCenter(:), &
                   wave_spectrum = waveSpectra(:,iCell), &
                   wavefreq = waveFrequency(:), &
                   dwavefreq = waveFreqBinWidth(:), &
