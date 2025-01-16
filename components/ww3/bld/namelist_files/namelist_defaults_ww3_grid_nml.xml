@@ -103,6 +103,7 @@ attributes to express the dependency.
  
 <!-- SIC4 -->
 <ic4method>1</ic4method>
+<ic4numerics>.false.</ic4numerics>
 
 <!-- UNST -->
  
