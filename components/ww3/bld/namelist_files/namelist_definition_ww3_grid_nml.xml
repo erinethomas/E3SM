@@ -413,6 +413,12 @@
        group="sic4"
        valid_values="">
 </entry>
+<entry id="ic4numerics"
+       type="logical"
+       category="sic4"
+       group="sic4"
+       valid_values="">
+</entry>
 
 <!-- SDB1 -->
  
