@@ -2346,7 +2346,7 @@
     </model_grid>
 
     <model_grid alias="CFSR_wQU225EC60to30" compset="_WW3">
-	    <grid name="atm">CFSR</grid>
+      <grid name="atm">CFSR</grid>
       <grid name="lnd">null</grid>
       <grid name="ocnice">null</grid>
       <grid name="rof">null</grid>
@@ -2405,7 +2405,7 @@
       <mask>oQU120</mask>
     </model_grid>
 
-    <model_grid alias="TL319_EC30to60E2r2_wQU225EC30to60E2r2" >
+    <model_grid alias="TL319_EC30to60E2r2_wQU225EC30to60E2r2">
       <grid name="atm">TL319</grid>
       <grid name="lnd">TL319</grid>
       <grid name="ocnice">EC30to60E2r2</grid>
