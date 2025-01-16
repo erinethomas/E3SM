@@ -626,7 +626,7 @@ contains
          seaiceDegreesToRadians
 
     use icepack_intfc, only: &
-         icepack_init_enthalpy, &
+         icepack_init_trcr, &
          icepack_enthalpy_snow, &
          icepack_warnings_aborted
 
@@ -756,7 +756,7 @@ contains
              snowVolumeCategory(1,1,iCell) = config_initial_snow_volume
              surfaceTemperature(1,1,iCell) = -1.0_RKIND
 
-             call icepack_init_enthalpy(&
+             call icepack_init_trcr(&
                   airTemperature(iCell), &
                   seaFreezingTemperature(iCell), &
                   initialSalinityProfile(:,iCell), &
@@ -801,7 +801,7 @@ contains
          seaiceDegreesToRadians
 
     use icepack_intfc, only: &
-         icepack_init_enthalpy, &
+         icepack_init_trcr, &
          icepack_enthalpy_snow, &
          icepack_warnings_aborted
 
@@ -929,7 +929,7 @@ contains
                 snowVolumeCategory(1,iCategory,iCell) = min(iceAreaCategory(1,iCategory,iCell) * initialCategorySnowThickness, &
                      0.2_RKIND * iceVolumeCategory(1,iCategory,iCell))
 
-                call icepack_init_enthalpy(&
+                call icepack_init_trcr(&
                      airTemperature(iCell), &
                      seaFreezingTemperature(iCell), &
                      initialSalinityProfile(:,iCell), &
@@ -1136,7 +1136,7 @@ contains
          seaiceDegreesToRadians
 
     use icepack_intfc, only: &
-         icepack_init_enthalpy, &
+         icepack_init_trcr, &
          icepack_enthalpy_snow, &
          icepack_warnings_aborted
 
@@ -1235,7 +1235,7 @@ contains
              iceVolumeCategory(1,iCategory,iCell)  = config_initial_ice_volume
              snowVolumeCategory(1,iCategory,iCell) = config_initial_snow_volume
 
-             call icepack_init_enthalpy(&
+             call icepack_init_trcr(&
                   airTemperature(iCell), &
                   seaFreezingTemperature(iCell), &
                   initialSalinityProfile(:,iCell), &
@@ -1285,7 +1285,7 @@ contains
          seaiceDegreesToRadians
 
     use icepack_intfc, only: &
-         icepack_init_enthalpy, &
+         icepack_init_trcr, &
          icepack_enthalpy_snow, &
          icepack_warnings_aborted
 
@@ -1428,7 +1428,7 @@ contains
                 snowVolumeCategory(1,iCategory,iCell) = min(iceAreaCategory(1,iCategory,iCell) * initialCategorySnowThickness, &
                      0.2_RKIND * iceVolumeCategory(1,iCategory,iCell))
 
-                call icepack_init_enthalpy(&
+                call icepack_init_trcr(&
                      airTemperature(iCell), &
                      seaFreezingTemperature(iCell), &
                      initialSalinityProfile(:,iCell), &
