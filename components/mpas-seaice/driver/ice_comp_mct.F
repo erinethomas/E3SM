@@ -3098,8 +3098,10 @@ contains
 
 ! !OUTPUT PARAMETERS:
       real (kind=RKIND),      intent(out)  :: frazilMassFlux
+
       character(len=strKIND), pointer   :: config_thermodynamics_type
       character(len=strKIND), pointer   :: config_column_physics_type
+
 !EOP
 !BOC
 !-----------------------------------------------------------------------
