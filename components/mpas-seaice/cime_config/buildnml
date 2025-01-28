@@ -853,9 +853,6 @@ def buildnml(case, caseroot, compname):
             lines.append('    <var name="snowVolumeCell"/>')
             lines.append('    <var name="uVelocityGeo"/>')
             lines.append('    <var name="vVelocityGeo"/>')
-            if ("WW3" in compset or "DWAV%FSD" in compset or "DWAV%ZEROS" in compset): 
-                lines.append('    <var name="significantWaveHeight"/> ')
-                lines.append('    <var name="floeSizeDiameter"/> ')
             lines.append('</stream>')
             lines.append('')
             lines.append('<stream name="timeSeriesStatsDailyRestart"')
@@ -947,19 +944,16 @@ def buildnml(case, caseroot, compname):
             lines.append('    <var name="pondAreaCell"/>')
             
             if ("WW3" in compset or "DWAV%FSD" in compset or "DWAV%ZEROS" in compset): 
-                lines.append('    <var name="waveFrequency"/> ')
-                lines.append('    <var name="significantWaveHeight"/> ')
-                lines.append('    <var name="waveSpectra"/> ')
-                lines.append('    <var name="floeSizeBinLower"/>')
-                lines.append('    <var name="floeSizeBinCenter"/>')
-                lines.append('    <var name="floeSizeBinWidth"/>')
                 lines.append('    <var name="floeSizeDiameter"/> ')
                 lines.append('    <var name="dFloeSizeNewIce"/> ')
                 lines.append('    <var name="dFloeSizeLateralGrowth"/> ')
                 lines.append('    <var name="dFloeSizeLateralMelt"/> ')
                 lines.append('    <var name="dFloeSizeWeld"/> ')
                 lines.append('    <var name="dFloeSizeWaves"/> ')
-
+            
+            if ("WW3" in compset and "DOCN" in compset): # in D-cases  
+                lines.append('    <var name="significantWaveHeight"/> ')
+            
             if iceberg_mode != 'none':
                 lines.append('    <var name="bergFreshwaterFlux"/>')
                 lines.append('    <var name="bergLatentHeatFlux"/>')
