@@ -2422,7 +2422,7 @@
       <grid name="rof">JRA025</grid>
       <grid name="glc">null</grid>
       <grid name="wav">wQU225Icos30E3r5</grid>
-      <mask>EC30to60E2r2</mask>
+      <mask>IcoswISC30E3r5</mask>
     </model_grid>
 
     <model_grid alias="TL319_IcoswISC30E3r5_wQU225Icos30E3r5">
