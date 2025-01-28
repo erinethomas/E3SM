@@ -151,20 +151,6 @@ _TESTS = {
             )
         },
 
-    "e3sm_wavice_developer" : {
-        "time"    : "0:30:00",
-        "tests"   : (
-            "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd_jra_1958",
-          #  "ERS_Ld5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
-          #  "PEM_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
-          #  "PET_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-DWAV.mpassi-fsd",
-            "SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd_jra_1958",
-           # "ERS_Ld5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
-           # "PEM_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
-            #"PET_Ln5.TL319_EC30to60E2r2_wQU225EC30to60E2r2.DTESTM-JRA1p5-WW3.mpassi-fsd",
-            #"SMS_D_Ln3.TL319_EC30to60E2r2_wQU225EC30to60E2r2.GMPAS-JRA1p5-WW3.mpassi-fsd_jra_1958",
-            )
-        },
 
     "eam_condidiag" : {
         "tests"   : (
@@ -930,11 +916,6 @@ _TESTS = {
             )
     },
     
-    "e3sm_wavice_developer" : {
-        "time"    : "0:45:00",
-        "tests"   : (
-            )
-    },
 
     # super-BFB OCN
     "e3sm_superbfb_ocn_opt" : { # opt + pureMPI

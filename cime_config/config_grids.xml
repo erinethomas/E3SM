@@ -5325,8 +5325,8 @@
     </gridmap>
     
     <gridmap atm_grid="TL319" wav_grid="wQU225Icos30E3r5">
-      <map name="ATM2WAV_SMAPNAME">cpl/gridmaps/wQU225EC30to60E2r2/map_TL319_to_wQU225Icos30E3r5_esmfbilin.20250128.nc</map>
-      <map name="WAV2ATM_SMAPNAME">cpl/gridmaps/wQU225EC30to60E2r2/map_wQU225Icos30E3r5_to_TL319_esmfbilin.20250128.nc</map>
+      <map name="ATM2WAV_SMAPNAME">cpl/gridmaps/wQU225Icos30E3r5/map_TL319_to_wQU225Icos30E3r5_esmfbilin.20250128.nc</map>
+      <map name="WAV2ATM_SMAPNAME">cpl/gridmaps/wQU225Icos30E3r5/map_wQU225Icos30E3r5_to_TL319_esmfbilin.20250128.nc</map>
     </gridmap>
 
     <gridmap atm_grid="TL319" wav_grid="wQU225Icos30E3r5">
