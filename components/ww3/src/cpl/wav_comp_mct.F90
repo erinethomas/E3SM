@@ -137,7 +137,7 @@
                           usspf
       use w3wdatmd, only: time, w3ndat, w3setw, wlv, va, ust, ice 
       use w3adatmd, only: ussp, w3naux, w3seta, sxx, sxy, syy, fliwnd, flcold, dw, cg, wn, hs, fp0, thp0, &
-                          charn, tauwix, tauwiy, tauox, tauoy, tauocx, tauocy, user0
+                          charn, tauwix, tauwiy, tauox, tauoy, tauocx, tauocy, usero
       use w3idatmd, only: inflags1, inflags2,w3seti, w3ninp
       USE W3IDATMD, ONLY: TC0, CX0, CY0, TCN, CXN, CYN, ICEP1, ICEP5, TI1, TI5
       USE W3IDATMD, ONLY: TW0, WX0, WY0, DT0, TWN, WXN, WYN, DTN
