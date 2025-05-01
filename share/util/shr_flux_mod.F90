@@ -368,7 +368,13 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
         !--- neutral coefficients, z/L = 0.0 ---
         stable = 0.5_R8 + sign(0.5_R8 , delt)
         if (wav_atm_coup .eq. 'two') then
-           cdn_wav = cdn_wave(loc_karman,zref,z0wav)
+           if (z0wav(n) == 0.0_R8 ) then 
+              write(s_logunit,*) 'ET EDIT: z0wav IS ZERO: ', z0wav(n)
+              cdn_wav = cdn_wave(loc_karman,zref,0.0001_R8)
+           else
+              write(s_logunit,*) 'ET EDIT: z0wav NOT ZERO: ', z0wav(n)
+              cdn_wav = cdn_wave(loc_karman,zref,z0wav(n))
+           endif
            rdn = sqrt(cdn_wav)
            ! rdn calculated from Z0 will be constant
         else
@@ -379,19 +385,23 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
         ren    = 0.0346_R8 !cexcd
 
         !--- ustar, tstar, qstar ---
-        write(s_logunit,*) 'ET EDIT: ustar first', ustar
         if (wav_atm_coup .eq. 'two') then
-           ustar = ustar_wav
+           if (ustarwav(n) == 0.0_R8 ) then 
+              write(s_logunit,*) 'ET EDIT: ustarwav IS ZERO:', ustarwav(n)
+              ustar = ustarwav(n)+0.001_R8
+              write(s_logunit,*) 'ET EDIT: ustarwav zero update', ustar
+           else
+              ustar = ustarwav(n)
+              write(s_logunit,*) 'ET EDIT: ustarwav NOT zero:', ustar
+           endif
         else
            ustar = rdn * vmag
         endif
         tstar = rhn * delt
         qstar = ren * delq
         ustar_prev = ustar*2.0_R8
-        write(s_logunit,*) 'ET EDIT: z0', z0wav
-        write(s_logunit,*) 'ET EDIT: cdn_wav:', cdn_wav
-        write(s_logunit,*) 'ET EDIT: rdn:', rdn
-        write(s_logunit,*) 'ET EDIT: ustar first', ustar
+        write(s_logunit,*) 'ET EDIT: cdn_wav first:', cdn_wav
+        write(s_logunit,*) 'ET EDIT: rdn first:', rdn
         if (present(wsresp) .and. present(tau_est)) prev_tau = tau_est(n)
         tau_diff = 1.e100_R8
         wind_adj = wind0
@@ -444,6 +454,8 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
 
            !--- update ustar, tstar, qstar using updated, shifted coeffs --
            ustar = rd * vmag
+           write(s_logunit,*) 'ET EDIT: number iterations', iter
+           write(s_logunit,*) 'ET EDIT: ustar iterations', ustar
            tstar = rh * delt
            qstar = re * delq
 
@@ -1156,21 +1168,6 @@ END subroutine shr_flux_atmOcn_UA
 !===============================================================================
 ! Functions used by default surface flux scheme for Wave Coupling
 !===============================================================================
-function z0_wave(charn, us, g) result(z0wav)
-       implicit none
-
-       ! input variables
-       real(R8), intent(in) :: charn ! charcnock parameter
-       real(R8), intent(in) :: us ! u star
-       real(R8), intent(in) :: g ! gravity
-
-       ! local variables
-       real(R8) :: z0wav
-
-       z0wav = charn * (us**2) / g
-
-end function z0_wave
-
 function cdn_wave(kappa,zr,z0) result(cdn_wav)
        implicit none
        
@@ -1186,8 +1183,8 @@ function cdn_wave(kappa,zr,z0) result(cdn_wav)
        a = zr / z0 
        b = log(a)
        cdn_wav = (kappa**2) / (b**2)  
-
 end function cdn_wave
+
 !===============================================================================
 ! Functions/subroutines used by UA surface flux scheme.
 !===============================================================================

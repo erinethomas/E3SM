@@ -137,7 +137,7 @@
                           usspf
       use w3wdatmd, only: time, w3ndat, w3setw, wlv, va, ust, ice 
       use w3adatmd, only: ussp, w3naux, w3seta, sxx, sxy, syy, fliwnd, flcold, dw, cg, wn, hs, fp0, thp0, &
-                          charn, tauwix, tauwiy, tauox, tauoy, tauocx, tauocy, usero
+                          charn, z0,ustar2, tauwix, tauwiy, tauox, tauoy, tauocx, tauocy
       use w3idatmd, only: inflags1, inflags2,w3seti, w3ninp
       USE W3IDATMD, ONLY: TC0, CX0, CY0, TCN, CXN, CYN, ICEP1, ICEP5, TI1, TI5
       USE W3IDATMD, ONLY: TW0, WX0, WY0, DT0, TWN, WXN, WYN, DTN
@@ -1188,8 +1188,8 @@ CONTAINS
 
              if (wav_ocn_coup .eq. 'twoway' .or. wav_atm_coup .eq. 'twoway') then
                w2x_w%rattr(index_w2x_Sw_Charn,jsea) = CHARN(jsea)
-               w2x_w%rattr(index_w2x_Sw_Ustar,jsea) = UST(jsea) ! Friction velocity
-               w2x_w%rattr(index_w2x_Sw_Z0,jsea) = USERO(jsea,1) ! Z0 surface roughness length
+               w2x_w%rattr(index_w2x_Sw_Ustar,jsea) = USTAR2(jsea) ! Friction velocity
+               w2x_w%rattr(index_w2x_Sw_Z0,jsea) = Z0(jsea) ! Z0 surface roughness length
             endif
             if (wav_ocn_coup .eq. 'twoway') then
                w2x_w%rattr(index_w2x_Sw_Hs,jsea) = HS(jsea)

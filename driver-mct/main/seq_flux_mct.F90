@@ -307,7 +307,7 @@ contains
     charnsea = 0.0_r8
     allocate( ustarwav(nloc),stat=ier)
     if(ier/=0) call mct_die(subName,'allocate ustarwav',ier)
-    ustarwav = 0.0_r8
+    ustarwav = 0.0_r8 
     allocate( z0wav(nloc),stat=ier)
     if(ier/=0) call mct_die(subName,'allocate z0wav',ier)
     z0wav = 0.0_r8
