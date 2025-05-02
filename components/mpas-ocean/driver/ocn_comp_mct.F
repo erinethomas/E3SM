@@ -2460,18 +2460,10 @@ contains
               peakWaveDirection(i) = x2o_o % rAttr(index_x2o_Sw_Dp, n)
            end if
            if ( z0wavField % isActive ) then
-              if (runtype == 'initial') then 
-                 z0wav(i) = .01_R8
-              else
-                 z0wav(i) = x2o_o % rAttr(index_x2o_Sw_Z0, n)
-              endif
+              z0wav(i) = x2o_o % rAttr(index_x2o_Sw_Z0, n)
            end if
            if ( ustarwavField % isActive ) then
-              if (runtype == 'initial') then 
-                 ustarwav(i) = 1.0_R8
-              else
-                 ustarwav(i) = x2o_o % rAttr(index_x2o_Sw_Ustar, n)
-              endif
+              ustarwav(i) = x2o_o % rAttr(index_x2o_Sw_Ustar, n)
            end if
            if ( charnockSeaStateField % isActive ) then
               charnockSeaState(i) = x2o_o % rAttr(index_x2o_Sw_Charn, n)
