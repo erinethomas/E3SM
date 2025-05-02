@@ -369,10 +369,8 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
         stable = 0.5_R8 + sign(0.5_R8 , delt)
         if (wav_atm_coup .eq. 'two') then
            if (z0wav(n) == 0.0_R8 ) then 
-              write(s_logunit,*) 'ET EDIT: z0wav IS ZERO: ', z0wav(n)
               cdn_wav = cdn_wave(loc_karman,zref,0.0001_R8)
            else
-              write(s_logunit,*) 'ET EDIT: z0wav NOT ZERO: ', z0wav(n)
               cdn_wav = cdn_wave(loc_karman,zref,z0wav(n))
            endif
            rdn = sqrt(cdn_wav)
@@ -387,12 +385,9 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
         !--- ustar, tstar, qstar ---
         if (wav_atm_coup .eq. 'two') then
            if (ustarwav(n) == 0.0_R8 ) then 
-              write(s_logunit,*) 'ET EDIT: ustarwav IS ZERO:', ustarwav(n)
-              ustar = ustarwav(n)+0.001_R8
-              write(s_logunit,*) 'ET EDIT: ustarwav zero update', ustar
+              ustar = ustarwav(n)+0.1_R8
            else
               ustar = ustarwav(n)
-              write(s_logunit,*) 'ET EDIT: ustarwav NOT zero:', ustar
            endif
         else
            ustar = rdn * vmag
@@ -455,7 +450,7 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
            !--- update ustar, tstar, qstar using updated, shifted coeffs --
            ustar = rd * vmag
            write(s_logunit,*) 'ET EDIT: number iterations', iter
-           write(s_logunit,*) 'ET EDIT: ustar iterations', ustar
+           write(s_logunit,*) 'ET EDIT: ustar iteration', ustar
            tstar = rh * delt
            qstar = re * delq
 
@@ -471,6 +466,8 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
               vmag = max(seq_flux_atmocn_minwind, vmag)
            end if
         enddo
+        write(s_logunit,*) 'ET EDIT final num iter:', iter
+        write(s_logunit,*) 'ET EDIT: final ustar:', ustar
         if (iter < 1) then
            write(s_logunit,*) ustar,ustar_prev,flux_con_tol,flux_con_max_iter
            call shr_sys_abort('No iterations performed ' // errMsg(sourcefile, __LINE__))
