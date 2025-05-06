@@ -367,7 +367,7 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
         !------------------------------------------------------------
         !--- neutral coefficients, z/L = 0.0 ---
         stable = 0.5_R8 + sign(0.5_R8 , delt)
-        if (wav_atm_coup .eq. 'two') then
+        if (wav_atm_coup .eq. 'twoway') then
            if (z0wav(n) == 0.0_R8 ) then 
               cdn_wav = cdn_wave(loc_karman,zref,0.0001_R8)
            else
@@ -383,7 +383,7 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
         ren    = 0.0346_R8 !cexcd
 
         !--- ustar, tstar, qstar ---
-        if (wav_atm_coup .eq. 'two') then
+        if (wav_atm_coup .eq. 'twoway') then
            if (ustarwav(n) == 0.0_R8 ) then 
               ustar = ustarwav(n)+0.1_R8
            else
@@ -430,7 +430,7 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
            psimh  = -5.0_R8*hol*stable + (1.0_R8-stable)*psimhu(xqq)
            psixh  = -5.0_R8*hol*stable + (1.0_R8-stable)*psixhu(xqq)
  
-           if (wav_atm_coup .ne. 'two') then
+           if (wav_atm_coup .ne. 'twoway') then
               !--- shift wind speed using old coefficient ---
               rd   = rdn / max(1.0_R8 + rdn/loc_karman*(alz-psimh), 1.e-3_r8)
               u10n = vmag * rd / rdn
@@ -570,7 +570,7 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
             endif
          endif
         ssq    = 0.98_R8 * qsat(ts(n)) / rbot(n)   ! sea surf hum (kg/kg)
-        if (wav_atm_coup .eq. 'two') then 
+        if (wav_atm_coup .eq. 'twoway') then 
            call cor30a(ubot(n),vbot(n),tbot(n),qbot(n),rbot(n) &  ! in atm params
                  & ,us(n),vs(n),ts(n),ssq                   &  ! in surf params
                  & ,zpbl,zbot(n),zbot(n),zref,ztref,ztref   &  ! in heights
@@ -2695,7 +2695,7 @@ zrt=zrft ! reference height for st.diagn.T,q
     tsr = (dt-dter*jcool)*von/(log(zt/zot10)-psit_30(zt/L10))
     qsr = (dq-dqer*jcool)*von/(log(zq/zot10)-psit_30(zq/L10))
 
-    if (wav_atm_coup .eq. 'two') then
+    if (wav_atm_coup .eq. 'twoway') then
        charn = charnsea !use Charnock coefficient from active wave model (Janssen 1989, 1991)
     else
        ! parametrisation for Charney parameter (section 3c of Fairall et al. 2003)
