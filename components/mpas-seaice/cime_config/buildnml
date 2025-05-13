@@ -853,6 +853,8 @@ def buildnml(case, caseroot, compname):
             lines.append('    <var name="snowVolumeCell"/>')
             lines.append('    <var name="uVelocityGeo"/>')
             lines.append('    <var name="vVelocityGeo"/>')
+            if ("WW3" in compset or "DWAV%FSD" in compset or "DWAV%ZEROS" in compset): 
+                lines.append('    <var name="floeSizeDiameter"/> ')
             lines.append('</stream>')
             lines.append('')
             lines.append('<stream name="timeSeriesStatsDailyRestart"')
