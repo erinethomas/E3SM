@@ -844,11 +844,6 @@ contains
           call mpas_log_write('Either a) turn FSD off or b) include wave component (either dwav or ww3)', MPAS_LOG_CRIT)
         endif
       endif
-    else if (trim(tempCharConfig) == "column_package") then
-      call seaice_column_coupling_prep(domain)
-      if (tempLogicalConfig) then
-        call mpas_log_write('FloeSizeDistribution not available in column_package. Either turn FSD off or use icepack column physics.', MPAS_LOG_CRIT)
-      endif
     endif ! config_column_physics_type
 !-----------------------------------------------------------------------
 !
@@ -2370,7 +2365,7 @@ contains
         seaSurfaceTiltU(i)             = x2i_i % rAttr(index_x2i_So_dhdx, n)
         seaSurfaceTiltV(i)             = x2i_i % rAttr(index_x2i_So_dhdy, n)
 
-        if (wav_ice_coup == 'two') then
+        if (wav_ice_coup == 'twoway') then
            if (config_use_column_waves) then
               significantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
               do iFreq = 1,nFrequencies
