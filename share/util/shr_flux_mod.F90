@@ -396,8 +396,6 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
         tstar = rhn * delt
         qstar = ren * delq
         ustar_prev = ustar*2.0_R8
-        write(s_logunit,*) 'ET EDIT: cdn_wav first:', cdn_wav
-        write(s_logunit,*) 'ET EDIT: rdn first:', rdn
         if (present(wsresp) .and. present(tau_est)) prev_tau = tau_est(n)
         tau_diff = 1.e100_R8
         wind_adj = wind0
@@ -450,8 +448,6 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
 
            !--- update ustar, tstar, qstar using updated, shifted coeffs --
            ustar = rd * vmag
-           write(s_logunit,*) 'ET EDIT: number iterations', iter
-           write(s_logunit,*) 'ET EDIT: ustar iteration', ustar
            tstar = rh * delt
            qstar = re * delq
 
@@ -467,8 +463,6 @@ SUBROUTINE shr_flux_atmOcn(nMax  ,zbot  ,ubot  ,vbot  ,thbot ,   &
               vmag = max(seq_flux_atmocn_minwind, vmag)
            end if
         enddo
-        write(s_logunit,*) 'ET EDIT final num iter:', iter
-        write(s_logunit,*) 'ET EDIT: final ustar:', ustar
         if (iter < 1) then
            write(s_logunit,*) ustar,ustar_prev,flux_con_tol,flux_con_max_iter
            call shr_sys_abort('No iterations performed ' // errMsg(sourcefile, __LINE__))
