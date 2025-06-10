@@ -413,12 +413,6 @@
        group="sic4"
        valid_values="">
 </entry>
-<entry id="ic4numerics"
-       type="logical"
-       category="sic4"
-       group="sic4"
-       valid_values="">
-</entry>
 
 <!-- SDB1 -->
  
@@ -1015,6 +1009,12 @@
 </entry>
 <entry id="btbet"
        type="real"
+       category="misc"
+       group="misc"
+       valid_values="">
+</entry>
+<entry id="icnumerics"
+       type="logical"
        category="misc"
        group="misc"
        valid_values="">

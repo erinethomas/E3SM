@@ -397,8 +397,9 @@ if ($NML_TYPE eq "ww3_grid_nml") {
 
     add_default($nl, 'uostfilelocal', 'val'=>"'${DIN_LOC_ROOT}/wav/ww3/obstructions_local.${WAV_GRID}${WAV_SPEC}.rtd.in'");
     add_default($nl, 'uostfileshadow', 'val'=>"'${DIN_LOC_ROOT}/wav/ww3/obstructions_shadow.${WAV_GRID}${WAV_SPEC}.rtd.in'");
+
     add_default($nl, 'ic4method', 'val'=>"8");
-    add_default($nl, 'ic4numerics', 'val'=>".true.");
+    add_default($nl, 'icnumerics', 'val'=>".true.");
 }
 
 #-----------------------------------------------------------------------------------------------

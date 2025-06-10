@@ -103,7 +103,6 @@ attributes to express the dependency.
  
 <!-- SIC4 -->
 <ic4method>1</ic4method>
-<ic4numerics>.false.</ic4numerics>
 
 <!-- UNST -->
  
@@ -207,6 +206,7 @@ attributes to express the dependency.
 <noleap>.false.</noleap>
 <trckcmpr>.true.</trckcmpr>
 <btbet>1.20</btbet>
+<icnumerics>.false.</icnumerics>
 
 <!-- rotd -->
 
