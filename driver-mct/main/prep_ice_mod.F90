@@ -445,7 +445,7 @@ contains
     call mct_aVect_copy(aVin=o2x_i, aVout=x2i_i, vector=mct_usevector, sharedIndices=o2x_SharedIndices)
     call mct_aVect_copy(aVin=a2x_i, aVout=x2i_i, vector=mct_usevector, sharedIndices=a2x_SharedIndices)
     call mct_aVect_copy(aVin=g2x_i, aVout=x2i_i, vector=mct_usevector, sharedIndices=g2x_SharedIndices)
-    if(wav_ice_coup == 'two') call mct_aVect_copy(aVin=w2x_i, aVout=x2i_i, vector=mct_usevector, sharedIndices=w2x_SharedIndices)
+    if(wav_ice_coup == 'twoway') call mct_aVect_copy(aVin=w2x_i, aVout=x2i_i, vector=mct_usevector, sharedIndices=w2x_SharedIndices)
 
     ! Merge total snow and precip for ice input
     ! Scale total precip and runoff by flux_epbalfact
