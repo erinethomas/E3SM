@@ -3321,6 +3321,12 @@
 		     description="Average prognostic snow density over snow layer"
 		     packages="pkgColumnTracerEffectiveSnowDensity"
 		/>
+	        <var name="floeSizeDistCell"
+		     type="real"
+		     dimensions="nFloeCategories nCells Time"
+		     units="1"
+		     description="Floe Size Distribution over Floe Size Category"
+		/>
 		<var name="iceAgeCell"
 		     type="real"
 		     dimensions="nCells Time"

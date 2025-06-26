@@ -7459,11 +7459,13 @@ subroutine init_column_waves(domain)
          config_use_topo_meltponds, &
          config_use_aerosols, &
          config_use_effective_snow_density, &
-         config_use_snow_grain_radius
+         config_use_snow_grain_radius, &
+         config_use_floe_size_distribution
 
     integer, pointer :: &
          nIceLayers, &
          nSnowLayers, &
+         nFloeCategories, &
          nAerosols
 
     type(MPAS_pool_type), pointer :: &
@@ -7490,7 +7492,8 @@ subroutine init_column_waves(domain)
          snowIceMassCell, &
          snowLiquidMassCell, &
          snowGrainRadiusCell, &
-         snowDensityCell
+         snowDensityCell, &
+         floeSizeDistCell
 
     integer :: &
          nTracers, &
@@ -7504,10 +7507,12 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_config(block % configs, "config_use_aerosols", config_use_aerosols)
     call MPAS_pool_get_config(block % configs, "config_use_effective_snow_density", config_use_effective_snow_density)
     call MPAS_pool_get_config(block % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
+    call MPAS_pool_get_config(block % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
     call MPAS_pool_get_dimension(block % dimensions, "nIceLayers", nIceLayers)
     call MPAS_pool_get_dimension(block % dimensions, "nSnowLayers", nSnowLayers)
     call MPAS_pool_get_dimension(block % dimensions, "nAerosols", nAerosols)
+    call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
 
     call MPAS_pool_get_subpool(block % structs, "tracers_aggregate", tracers_aggregate)
 
@@ -7530,6 +7535,7 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_array(tracers_aggregate, "snowLiquidMassCell", snowLiquidMassCell)
     call MPAS_pool_get_array(tracers_aggregate, "snowDensityCell", snowDensityCell)
     call MPAS_pool_get_array(tracers_aggregate, "snowGrainRadiusCell", snowGrainRadiusCell)
+    call MPAS_pool_get_array(tracers_aggregate, "floeSizeDistCell", floeSizeDistCell)
 
     nTracers = 1
 
@@ -7601,6 +7607,12 @@ subroutine init_column_waves(domain)
        nTracers = nTracers + nSnowLayers
     endif
 
+    !floe size distribution
+    if (config_use_floe_size_distribution) then
+       tracerArrayCell(nTracers:nTracers+nFloeCategories-1) = floeSizeDistCell(:,iCell)
+       nTracers = nTracers + nFloeCategories
+    endif   
+
     ! aerosols
     if (config_use_aerosols) then
        do iAerosol = 1, nAerosols
@@ -7646,11 +7658,13 @@ subroutine init_column_waves(domain)
          config_use_topo_meltponds, &
          config_use_aerosols, &
          config_use_effective_snow_density, &
-         config_use_snow_grain_radius
+         config_use_snow_grain_radius, &
+         config_use_floe_size_distribution
 
     integer, pointer :: &
          nIceLayers, &
          nSnowLayers, &
+         nFloeCategories, &
          nAerosols
 
     type(MPAS_pool_type), pointer :: &
@@ -7677,7 +7691,8 @@ subroutine init_column_waves(domain)
          snowIceMassCell, &
          snowLiquidMassCell, &
          snowGrainRadiusCell, &
-         snowDensityCell
+         snowDensityCell, &
+         floeSizeDistCell
 
     integer :: &
          nTracers, &
@@ -7691,10 +7706,12 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_config(block % configs, "config_use_aerosols", config_use_aerosols)
     call MPAS_pool_get_config(block % configs, "config_use_effective_snow_density", config_use_effective_snow_density)
     call MPAS_pool_get_config(block % configs, "config_use_snow_grain_radius", config_use_snow_grain_radius)
+    call MPAS_pool_get_config(block % configs, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
     call MPAS_pool_get_dimension(block % dimensions, "nIceLayers", nIceLayers)
     call MPAS_pool_get_dimension(block % dimensions, "nSnowLayers", nSnowLayers)
     call MPAS_pool_get_dimension(block % dimensions, "nAerosols", nAerosols)
+    call MPAS_pool_get_dimension(block % dimensions, "nFloeCategories", nFloeCategories)
 
     call MPAS_pool_get_subpool(block % structs, "tracers_aggregate", tracers_aggregate)
 
@@ -7717,6 +7734,7 @@ subroutine init_column_waves(domain)
     call MPAS_pool_get_array(tracers_aggregate, "snowLiquidMassCell", snowLiquidMassCell)
     call MPAS_pool_get_array(tracers_aggregate, "snowDensityCell", snowDensityCell)
     call MPAS_pool_get_array(tracers_aggregate, "snowGrainRadiusCell", snowGrainRadiusCell)
+    call MPAS_pool_get_array(tracers_aggregate, "floeSizeDistCell", floeSizeDistCell)
 
     nTracers = 1
 
@@ -7787,6 +7805,12 @@ subroutine init_column_waves(domain)
        snowGrainRadiusCell(:,iCell) = tracerArrayCell(nTracers:nTracers+nSnowLayers-1)
        nTracers = nTracers + nSnowLayers
     endif
+
+    !floe size distribution
+    if (config_use_floe_size_distribution) then
+       floeSizeDistCell(:,iCell) = tracerArrayCell(nTracers:nTracers+nFloeCategories-1)
+       nTracers = nTracers + nFloeCategories
+    endif   
 
     ! aerosols
     if (config_use_aerosols) then

@@ -2727,7 +2727,7 @@ contains
       tauyo,           &
       basalPressure
    
-   real(kind=RKIND) :: workx, worky
+   real(kind=RKIND) :: worka
 
    type (block_type), pointer :: &
       block_ptr
@@ -2824,6 +2824,9 @@ contains
       oceanDissolvedIronFlux,      &
       iceAreaCategoryInitial
 
+   real (kind=RKIND), dimension(:,:), pointer :: &
+      floeSizeDistCell           
+
    real (kind=RKIND), dimension(:,:,:), pointer :: &
       floeSizeDist,                &
       iceAreaCategory
@@ -2897,6 +2900,7 @@ contains
          call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinCenter", floeSizeBinCenter)
          call MPAS_pool_get_array(floe_size_distribution, "floeSizeDiameter",floeSizeDiameter)
          call MPAS_pool_get_array(tracers, "floeSizeDist", floeSizeDist, 1)
+         call MPAS_pool_get_array(tracersAggregate, "floeSizeDistCell", floeSizeDistCell, 1)
          call MPAS_pool_get_array(tracers, "iceAreaCategory", iceAreaCategory, 1)
       endif
 
@@ -3012,16 +3016,15 @@ contains
             i2x_i % rAttr(index_i2x_Si_ithick,n)  = iceVolumeCell(i) / ailohi
             
             if (config_use_floe_size_distribution) then 
-               workx = 0.0_RKIND
-               worky = 0.0_RKIND
+               worka = 0.0_RKIND
                do iCategory=1,nCategories
                   do iFloeCategory=1,nFloeCategories
-                     workx = workx + floeSizeBinCenter(iFloeCategory) * iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
-                     worky = worky + iceAreaCategoryInitial(iCategory,i) * floeSizeDist(iFloeCategory,iCategory,i)
+                     worka = worka + (floeSizeDist(iFloeCategory, iCategory,i) &
+                                      * floeSizeBinCenter(iFloeCategory) &
+                                      * iceAreaCategory(1,iCategory,i) / iceAreaCell(i))
                   enddo
                enddo     
-               if (worky > 0.0_RKIND ) workx = 2.0_RKIND*workx / worky
-               floeSizeDiameter(i) = MAX(2.0_RKIND*floeSizeBinCenter(1),workx) 
+               floeSizeDiameter(i) = 2.0_RKIND*worka
                i2x_i % rAttr(index_i2x_Si_ifloe, n)  = floeSizeDiameter(i)
             endif ! end floe size distribution
 
