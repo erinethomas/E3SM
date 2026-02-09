@@ -2427,7 +2427,6 @@ subroutine init_column_waves(domain)
          categoryThicknessLimits, &
          frazilGrowthDiagnostic, &
          waveFrequency,      &
-         waveFreqBinWidth, &   ! wave frequency bin widths
          significantWaveHeight,&
          floeSizeBinCenter,  &
          floeSizeBinWidth
@@ -2545,7 +2544,6 @@ subroutine init_column_waves(domain)
        call MPAS_pool_get_array(wave_coupling, "significantWaveHeight", significantWaveHeight)
        call MPAS_pool_get_array(wave_coupling, "waveSpectra", waveSpectra)
        call MPAS_pool_get_array(wave_coupling, "waveFrequency", waveFrequency)
-       call MPAS_pool_get_array(wave_coupling, "waveFreqBinWidth", waveFreqBinWidth)
 
        call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinCenter", floeSizeBinCenter)
        call MPAS_pool_get_array(floe_size_distribution, "floeSizeBinWidth", floeSizeBinWidth)
@@ -2656,8 +2654,7 @@ subroutine init_column_waves(domain)
 !               H2_18O_ocn=, & ! optional - ocean concentration of H2_18O (kg/kg)
                wave_sig_ht=significantWaveHeight(iCell), &
                wave_spectrum=waveSpectra(:,iCell),    &
-               wavefreq=waveFrequency(:),     & 
-               dwavefreq = waveFreqBinWidth(:), & 
+               wavefreq=waveFrequency(:),       &
                d_afsd_latg=dFloeSizeLateralGrowth(:,iCell),    &
                d_afsd_newi=dFloeSizeNewIce(:,iCell),   &
                d_afsd_latm=dFloeSizeLateralMelt(:,iCell),   &
