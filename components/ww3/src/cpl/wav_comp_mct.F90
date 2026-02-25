@@ -137,7 +137,7 @@
                           usspf
       use w3wdatmd, only: time, w3ndat, w3setw, wlv, va, ust, ice 
       use w3adatmd, only: ussp, w3naux, w3seta, sxx, sxy, syy, fliwnd, flcold, dw, cg, wn, hs, fp0, thp0, &
-                          charn, z0,ustar2, tauwix, tauwiy, tauox, tauoy, tauocx, tauocy, ef
+                          charn, z0,ustar2, tauwix, tauwiy, tauox, tauoy, tauocx, tauocy, ef, tauice
       use w3idatmd, only: inflags1, inflags2,w3seti, w3ninp
       USE W3IDATMD, ONLY: TC0, CX0, CY0, TCN, CXN, CYN, ICEP1, ICEP5, TI1, TI5
       USE W3IDATMD, ONLY: TW0, WX0, WY0, DT0, TWN, WXN, WYN, DTN
@@ -180,6 +180,7 @@
                                     index_w2x_Sw_Charn, index_w2x_Sw_Ustar, index_w2x_Sw_Z0,              &
                                     index_w2x_Faww_Tawx, index_w2x_Faww_Tawy, index_w2x_Fwow_Twox,        &
                                     index_w2x_Fwow_Twoy, index_w2x_Faow_Tocx, index_w2x_Faow_Tocy,        &
+                                    index_w2x_Fwiw_Twix, index_w2x_Fwiw_Twiy,                             &
                                     index_w2x_Sw_wavespec
 
 
@@ -1180,7 +1181,8 @@ CONTAINS
       ! rotate surface stress variables for momentum coupling 
       call w3xyrtn(nseal, TAUWIX(1:nseal), TAUWIY(1:nseal), AnglDL)
       call w3xyrtn(nseal, TAUOX(1:nseal), TAUOY(1:nseal), AnglDL)
-      call w3xyrtn(nseal, TAUOCX(1:nseal), TAUOCY(1:nseal), AnglDL)
+      call w3xyrtn(nseal, TAUOCX(1:nseal), TAUOCY(1:nseal), AnglDL) 
+      call w3xyrtn(nseal, TAUICE(1:nseal,1), TAUICE(1:nseal,2), AnglDL)
 
       ! copy ww3 data to coupling datatype
       do jsea=1, nseal
@@ -1229,6 +1231,8 @@ CONTAINS
                do ifreq=1,nk
                   w2x_w%rattr(index_w2x_Sw_wavespec(ifreq),jsea) = EF(jsea,ifreq)
                enddo
+               w2x_w%rattr(index_w2x_Fwiw_Twix,jsea) = TAUICE(jsea,1)
+               w2x_w%rattr(index_w2x_Fwiw_Twiy,jsea) = TAUICE(jsea,2)
             endif
          else
             if (wav_ocn_coup .eq. 'twoway' .or. wav_atm_coup .eq. 'twoway') then
@@ -1270,6 +1274,8 @@ CONTAINS
                do ifreq=1,nk
                   w2x_w%rattr(index_w2x_Sw_wavespec(ifreq),jsea) = 0.0
                enddo
+               w2x_w%rattr(index_w2x_Fwiw_Twix,jsea) = 0.0
+               w2x_w%rattr(index_w2x_Fwiw_Twiy,jsea) = 0.0
             endif
          endif
       enddo

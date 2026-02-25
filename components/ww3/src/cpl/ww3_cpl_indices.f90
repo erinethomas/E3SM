@@ -46,6 +46,8 @@ module ww3_cpl_indices
   integer :: index_w2x_Fwow_Twoy
   integer :: index_w2x_Faow_Tocx    
   integer :: index_w2x_Faow_Tocy
+  integer :: index_w2x_Fwiw_Twix    
+  integer :: index_w2x_Fwiw_Twiy
 
   integer,dimension(:),allocatable :: index_w2x_Sw_wavespec
 contains
@@ -115,6 +117,8 @@ contains
           name = 'Sw_wavespec' // freqnum
           index_w2x_Sw_wavespec(i) = mct_avect_indexra(w2x,trim(name)) ! full wave spectrum (fcn of frq)
        enddo
+       index_w2x_Fwiw_Twix   = mct_avect_indexra(w2x,'Fwiw_Twix')  ! Zonal Wave to Ice stress
+       index_w2x_Fwiw_Twiy   = mct_avect_indexra(w2x,'Fwiw_Twiy')  ! Meridional Wave to Ice stress
     endif
     call mct_aVect_clean(x2w)
     call mct_aVect_clean(w2x)
