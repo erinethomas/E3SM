@@ -701,12 +701,6 @@ contains
     integer :: &
          iCell
 
-      call MPAS_pool_get_config(domain % configs, "config_use_halo_exch", config_use_halo_exch)
-      if (config_use_halo_exch) then
-           call MPAS_dmpar_field_halo_exch(domain, 'waveIceStressUCell')
-           call MPAS_dmpar_field_halo_exch(domain, 'waveIceStressVCell')
-      endif
-
     blockPtr => domain % blocklist
     do while (associated(blockPtr))
 
@@ -1554,6 +1548,12 @@ contains
 
     integer :: &
          iCell
+
+      call MPAS_pool_get_config(domain % configs, "config_use_halo_exch", config_use_halo_exch)
+      if (config_use_halo_exch) then
+           call MPAS_dmpar_field_halo_exch(domain, 'waveIceStressUCell')
+           call MPAS_dmpar_field_halo_exch(domain, 'waveIceStressVCell')
+      endif
 
     blockPtr => domain % blocklist
     do while (associated(blockPtr))
