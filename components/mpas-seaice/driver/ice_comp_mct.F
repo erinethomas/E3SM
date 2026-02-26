@@ -2236,7 +2236,9 @@ contains
       carbonToNitrogenRatioAlgae,  &
       carbonToNitrogenRatioDON,    &
       DOCPoolFractions,            &
-      significantWaveHeight
+      significantWaveHeight,       &
+      waveIceStressUCell,          &
+      waveIceStressVCell
 
    real (kind=RKIND), dimension(:,:), pointer :: &
       oceanAlgaeConc,              &
@@ -2317,6 +2319,8 @@ contains
          call mpas_pool_get_subpool(block_ptr % structs, 'wave_coupling', waveCoupling)
          call mpas_pool_get_array(waveCoupling, 'significantWaveHeight', significantWaveHeight)
          call mpas_pool_get_array(waveCoupling, 'waveSpectra', waveSpectra)
+         call mpas_pool_get_array(waveCoupling, 'waveIceStressUCell',waveIceStressUCell)
+         call mpas_pool_get_array(waveCoupling, 'waveIceStressVCell',waveIceStressVCell)
       endif
 
       if (config_use_aerosols) then
@@ -2377,9 +2381,12 @@ contains
 
         if (wav_ice_coup == 'twoway') then
            if (config_use_column_waves) then
-              significantWaveHeight(i)     = x2i_i % rAttr(index_x2i_Sw_Hs, n)
+              significantWaveHeight(i) = x2i_i % rAttr(index_x2i_Sw_Hs, n)
+              waveIceStressUCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twix, n) 
+              waveIceStressVCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twiy, n) 
+
               do iFreq = 1,nFrequencies
-                 waveSpectra(iFreq,i)      = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
+                 waveSpectra(iFreq,i)  = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
               enddo
            endif
         endif

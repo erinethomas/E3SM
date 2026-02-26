@@ -133,6 +133,8 @@ module mpassi_cpl_indices
   ! drv -> ice (waves) 
   integer :: index_x2i_Sw_Hs           ! wave significant wave height
   integer,dimension(:),allocatable :: index_x2i_Sw_wavespec ! wave spectrum
+  integer :: index_x2i_Fwiw_Twix
+  integer :: index_x2i_Fwiw_Twiy
 
 contains
 
@@ -245,6 +247,8 @@ contains
 
     if (wav_ice_coup .eq. 'twoway') then
        index_x2i_Sw_Hs         = mct_avect_indexra(x2i,'Sw_Hs')
+       index_x2i_Fwiw_Twix     = mct_avect_indexra(x2i,'Fwiw_Twix')
+       index_x2i_Fwiw_Twiy     = mct_avect_indexra(x2i,'Fwiw_Twiy')
        allocate(index_x2i_Sw_wavespec(1:wav_nfreq))
        do i = 1,wav_nfreq
           write(freqnum,'(i2.2)') i

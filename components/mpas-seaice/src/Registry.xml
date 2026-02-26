@@ -4326,6 +4326,26 @@
 		     units="m2 Hz-1"
 		     description="Wave Power per frequency bin (direction integrated)"
 		/>
+		<var name="waveIceStressUCell"
+		     type="real"
+		     units="N m-2"
+		     dimensions="nCells Time"
+		/>
+		<var name="waveIceStressVCell"
+		     type="real"
+		     units="N m-2"
+		     dimensions="nCells Time"
+		/>
+		<var name="waveIceStressUVertex"
+		     type="real"
+		     units="N m-2"
+		     dimensions="nVertices Time"
+		/>
+		<var name="waveIceStressVVertex"
+		     type="real"
+		     units="N m-2"
+		     dimensions="nVertices Time"
+		/>
         </var_struct>
 
 	<!--ocean coupling -->
