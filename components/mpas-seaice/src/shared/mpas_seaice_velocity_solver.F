@@ -1492,6 +1492,64 @@ contains
 
   end subroutine ice_strength
 
+
+!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+!
+!  Wave Stress 
+!
+!-----------------------------------------------------------------------
+
+  subroutine wave_stress(domain)
+
+    use seaice_mesh, only: &
+         seaice_interpolate_cell_to_vertex, &
+         seaice_latlon_vector_rotation_forward
+   
+    type(MPAS_pool_type), pointer :: &
+         meshPool, &
+
+    real(kind=RKIND), dimension(:), pointer :: &
+         waveIceStressUVertex, &
+         waveIceStressVVertex, &
+         waveIceStressUCell, &
+         waveIceStressVCell
+
+    call MPAS_pool_get_subpool(blockPtr % structs, "mesh", meshPool)
+    call mpas_pool_get_array(waveCoupling, 'waveIceStressUCell',waveIceStressUCell)
+    call mpas_pool_get_array(waveCoupling, 'waveIceStressVCell',waveIceStressVCell)
+    call MPAS_pool_get_config(mesh, "sphere_radius", sphere_radius)
+    call MPAS_pool_get_array(mesh, "latCell", latCell)
+    call MPAS_pool_get_array(mesh, "lonCell", lonCell)
+    call MPAS_pool_get_array(mesh, "xCell", xCell)
+    call MPAS_pool_get_array(mesh, "yCell", yCell)
+    call MPAS_pool_get_array(mesh, "zCell", zCell)
+    call MPAS_pool_get_dimension(mesh, "nCells", nCells)
+    call MPAS_pool_get_config(block % configs, "config_rotate_cartesian_grid", config_rotate_cartesian_grid)
+
+
+    ! rotate cells forward
+    do iCell = 1, nCells
+       call seaice_latlon_vector_rotation_forward(&
+               waveIceStressUCell(iCell), &
+               waveIceStressVCell(iCell), &
+               waveIceStressUCell(iCell), &
+               waveIceStressVCell(iCell), &
+               latCell(iCell), &
+               lonCell(iCell), &
+               xCell(iCell), &
+               yCell(iCell), &
+               zCell(iCell), &
+               sphere_radius, &
+               config_rotate_cartesian_grid)
+    enddo ! iCell
+    
+    ! interpolate cell to vertex
+    call seaice_interpolate_cell_to_vertex(meshPool, waveIceStressUVertex, waveIceStressUCell)
+    call seaice_interpolate_cell_to_vertex(meshPool, waveIceStressVVertex, waveIceStressVCell)
+
+
+  end subroutine wave_stress
+
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 !
 !  air_stress
@@ -2514,7 +2572,7 @@ contains
     if (constitutiveRelationType == EVP_CONSTITUTIVE_RELATION) then
 
        call mpas_timer_start("Velocity solver compute")
-       call solve_velocity(domain)
+      call solve_velocity(domain)
        call mpas_timer_stop("Velocity solver compute")
 
     else if (constitutiveRelationType == REVISED_EVP_CONSTITUTIVE_RELATION) then
@@ -2994,6 +3052,8 @@ contains
        call MPAS_pool_get_array(velocitySolverPool, "oceanStressU", oceanStressU)
        call MPAS_pool_get_array(velocitySolverPool, "oceanStressV", oceanStressV)
        call MPAS_pool_get_array(velocitySolverPool, "oceanStressCoeff", oceanStressCoeff)
+       call mpas_pool_get_array(waveCoupling, 'waveIceStressUVertex',waveIceStressUVertex)
+       call mpas_pool_get_array(waveCoupling, 'waveIceStressVVertex',waveIceStressVVertex)
 
 #ifdef MPAS_OPENMP
 !$omp parallel do default(shared) private(iVertex, leftMatrix, rightHandSide, solutionDenominator)
@@ -3014,10 +3074,12 @@ contains
 
              ! right hand side of matrix solve
              rightHandSide(1) = stressDivergenceU(iVertex) + airStressVertexU(iVertex) + surfaceTiltForceU(iVertex) + &
+                  waveIceStressUVertex(ivertex) +
                   oceanStressCoeff(iVertex) * oceanStressU(iVertex) + &
                   (totalMassVertex(iVertex) * uVelocity(iVertex)) / elasticTimeStep
 
              rightHandSide(2) = stressDivergenceV(iVertex) + airStressVertexV(iVertex) + surfaceTiltForceV(iVertex) + &
+                  waveIceStressVVertex(ivertex) +
                   oceanStressCoeff(iVertex) * oceanStressV(iVertex) + &
                   (totalMassVertex(iVertex) * vVelocity(iVertex)) / elasticTimeStep
 
@@ -3127,7 +3189,8 @@ contains
        call MPAS_pool_get_array(velocitySolverPool, "oceanStressV", oceanStressV)
        call MPAS_pool_get_array(velocitySolverPool, "oceanStressCoeff", oceanStressCoeff)
        call MPAS_pool_get_array(velocitySolverPool, "dynamicsTimeStep", dynamicsTimeStep)
-
+       call mpas_pool_get_array(waveCoupling, 'waveIceStressU',waveIceStressU)
+       call mpas_pool_get_array(waveCoupling, 'waveIceStressV',waveIceStressV)
        do iVertex = 1, nVerticesSolve
 
           if (solveVelocity(iVertex) == 1) then
@@ -3146,11 +3209,13 @@ contains
 
              ! right hand side of matrix solve
              rightHandSide(1) = stressDivergenceU(iVertex) + airStressVertexU(iVertex) + surfaceTiltForceU(iVertex) + &
+                  waveIceStressU(ivertex) +
                   oceanStressCoeff(iVertex) * oceanStressU(iVertex) + &
                   (totalMassVertex(iVertex) * (numericalInertiaCoefficient * uVelocity(iVertex) + &
                   uVelocityInitial(iVertex))) / dynamicsTimeStep
 
              rightHandSide(2) = stressDivergenceV(iVertex) + airStressVertexV(iVertex) + surfaceTiltForceV(iVertex) + &
+                  waveIceStressV(ivertex) +
                   oceanStressCoeff(iVertex) * oceanStressV(iVertex) + &
                   (totalMassVertex(iVertex) * (numericalInertiaCoefficient * vVelocity(iVertex) + &
                   vVelocityInitial(iVertex))) / dynamicsTimeStep
