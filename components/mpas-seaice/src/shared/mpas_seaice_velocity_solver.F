@@ -3129,12 +3129,12 @@ contains
 
              ! right hand side of matrix solve
              rightHandSide(1) = stressDivergenceU(iVertex) + airStressVertexU(iVertex) + surfaceTiltForceU(iVertex) + &
-                  waveIceStressUVertex(ivertex) +
+                  waveIceStressUVertex(ivertex) + &
                   oceanStressCoeff(iVertex) * oceanStressU(iVertex) + &
                   (totalMassVertex(iVertex) * uVelocity(iVertex)) / elasticTimeStep
 
              rightHandSide(2) = stressDivergenceV(iVertex) + airStressVertexV(iVertex) + surfaceTiltForceV(iVertex) + &
-                  waveIceStressVVertex(ivertex) +
+                  waveIceStressVVertex(ivertex) + &
                   oceanStressCoeff(iVertex) * oceanStressV(iVertex) + &
                   (totalMassVertex(iVertex) * vVelocity(iVertex)) / elasticTimeStep
 
@@ -3268,13 +3268,13 @@ contains
 
              ! right hand side of matrix solve
              rightHandSide(1) = stressDivergenceU(iVertex) + airStressVertexU(iVertex) + surfaceTiltForceU(iVertex) + &
-                  waveIceStressUVertex(iVertex) +
+                  waveIceStressUVertex(iVertex) + &
                   oceanStressCoeff(iVertex) * oceanStressU(iVertex) + &
                   (totalMassVertex(iVertex) * (numericalInertiaCoefficient * uVelocity(iVertex) + &
                   uVelocityInitial(iVertex))) / dynamicsTimeStep
 
              rightHandSide(2) = stressDivergenceV(iVertex) + airStressVertexV(iVertex) + surfaceTiltForceV(iVertex) + &
-                  waveIceStressVVertex(iVertex) +
+                  waveIceStressVVertex(iVertex) + &
                   oceanStressCoeff(iVertex) * oceanStressV(iVertex) + &
                   (totalMassVertex(iVertex) * (numericalInertiaCoefficient * vVelocity(iVertex) + &
                   vVelocityInitial(iVertex))) / dynamicsTimeStep

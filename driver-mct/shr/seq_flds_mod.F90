@@ -2284,6 +2284,22 @@ contains
           attname  = name
           call metadata_set(attname, longname, stdname, units)
        enddo
+
+       call seq_flds_add(w2x_fluxes,'Fwiw_Twix')
+       call seq_flds_add(x2i_fluxes,'Fwiw_Twix')
+       longname = 'Zonal wave to sea ice stress'
+       stdname  = 'Zonal_wave_to_sea_ice_stress'
+       units    = 'N m-2'
+       attname  = 'Fwiw_Twix'
+       call metadata_set(attname, longname, stdname, units)
+       
+       call seq_flds_add(w2x_fluxes,'Fwiw_Twiy')
+       call seq_flds_add(x2i_fluxes,'Fwiw_Twiy')
+       longname = 'Meridional wave to sea ice stress'
+       stdname  = 'Meridional_wave_to_sea_ice_stress'
+       units    = 'N m-2'
+       attname  = 'Fwiw_Twiy'
+       call metadata_set(attname, longname, stdname, units)
     endif
 
     !-----------------------------
