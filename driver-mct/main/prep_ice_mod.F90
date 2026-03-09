@@ -48,6 +48,7 @@ module prep_ice_mod
   public :: prep_ice_get_mapper_Sg2i
   public :: prep_ice_get_mapper_Fg2i
   public :: prep_ice_get_mapper_Sw2i
+  public :: prep_ice_get_mapper_Fw2i
 
   !--------------------------------------------------------------------------
   ! Private interfaces
@@ -66,6 +67,7 @@ module prep_ice_mod
   type(seq_map), pointer :: mapper_Fg2i
   type(seq_map), pointer :: mapper_Rr2i
   type(seq_map), pointer :: mapper_Sw2i
+  type(seq_map), pointer :: mapper_Fw2i
 
   ! attribute vectors
   type(mct_aVect), pointer :: a2x_ix(:) ! Atm export, ice grid, cpl pes - allocated in driver
@@ -132,6 +134,7 @@ contains
     allocate(mapper_Fg2i)
     allocate(mapper_Rr2i)
     allocate(mapper_Sw2i)
+    allocate(mapper_Fw2i)
 
     if (ice_present) then
 
@@ -229,6 +232,13 @@ contains
           call seq_map_init_rcfile(mapper_Sw2i, wav(1), ice(1), &
                'seq_maps.rc','wav2ice_smapname:','wav2ice_smaptype:',samegrid_iw, &
                'mapper_Sw2i initialization', esmf_map_flag)
+          if (iamroot_CPLID) then
+             write(logunit,*) ' '
+             write(logunit,F00) 'Initializing mapper_Fw2i'
+          end if
+          call seq_map_init_rcfile(mapper_Fw2i, wav(1), ice(1), &
+               'seq_maps.rc','wav2ice_fmapname:','wav2ice_fmaptype:',samegrid_iw, &
+               'mapper_Fw2i initialization', esmf_map_flag)
        endif
        call shr_sys_flush(logunit)
 
@@ -629,6 +639,7 @@ contains
     do ewi = 1,num_inst_wav
        w2x_wx => component_get_c2x_cx(wav(ewi))
        call seq_map_map(mapper_Sw2i, w2x_wx, w2x_ix(ewi), fldlist=seq_flds_w2x_states, norm=.true.)
+       call seq_map_map(mapper_Fw2i, w2x_wx, w2x_ix(ewi), fldlist=seq_flds_w2x_fluxes, norm=.true.)
     enddo
     call t_drvstopf  (trim(timer))
 
@@ -711,5 +722,10 @@ contains
     type(seq_map), pointer :: prep_ice_get_mapper_Sw2i
     prep_ice_get_mapper_Sw2i => mapper_Sw2i
   end function prep_ice_get_mapper_Sw2i
+
+  function prep_ice_get_mapper_Fw2i()
+      type(seq_map), pointer :: prep_ice_get_mapper_Fw2i
+      prep_ice_get_mapper_Fw2i => mapper_Fw2i
+   end function prep_ice_get_mapper_Fw2i
 
 end module prep_ice_mod
