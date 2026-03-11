@@ -2358,6 +2358,10 @@ contains
          call mpas_pool_get_array(waveCoupling, 'waveSpectra', waveSpectra)
          call mpas_pool_get_array(waveCoupling, 'waveIceStressUCell',waveIceStressUCell)
          call mpas_pool_get_array(waveCoupling, 'waveIceStressVCell',waveIceStressVCell)
+
+         ! Ensure no stale wave stress forcing when two-way wave coupling is off.
+         waveIceStressUCell = 0.0_RKIND
+         waveIceStressVCell = 0.0_RKIND
       endif
 
       if (config_use_aerosols) then
@@ -2407,16 +2411,14 @@ contains
         seaSurfaceTiltU(i)             = x2i_i % rAttr(index_x2i_So_dhdx, n)
         seaSurfaceTiltV(i)             = x2i_i % rAttr(index_x2i_So_dhdy, n)
 
-        if (wav_ice_coup == 'twoway') then
-           if (config_use_column_waves) then
-              significantWaveHeight(i) = x2i_i % rAttr(index_x2i_Sw_Hs, n)
-              waveIceStressUCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twix, n) 
-              waveIceStressVCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twiy, n) 
+        if (config_use_column_waves .and. wav_ice_coup == 'twoway') then
+           significantWaveHeight(i) = x2i_i % rAttr(index_x2i_Sw_Hs, n)
+           waveIceStressUCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twix, n)
+           waveIceStressVCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twiy, n)
 
-              do iFreq = 1,nFrequencies
-                 waveSpectra(iFreq,i)  = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
-              enddo
-           endif
+           do iFreq = 1,nFrequencies
+              waveSpectra(iFreq,i)  = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
+           enddo
         endif
 
         if (trim(config_ocean_surface_type) == "free") then ! free surface (MPAS-O)

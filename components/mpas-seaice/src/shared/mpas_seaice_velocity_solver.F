@@ -593,6 +593,9 @@ contains
     type(domain_type), intent(inout) :: &
          domain
 
+    logical, pointer :: &
+         config_use_column_waves
+
     ! aggregate categories for area and volume into total mass
     call mpas_timer_start("agg mass and area")
     call aggregate_mass_and_area(domain)
@@ -618,10 +621,13 @@ contains
     call air_stress(domain)
     call mpas_timer_stop("air stress")
 
-     ! calculate wave-ice stress and interpolate to vertices
-     call mpas_timer_start("wave stress")
-     call wave_stress(domain)
-     call mpas_timer_stop("wave stress")
+      ! calculate wave-ice stress and interpolate to vertices when wave coupling is enabled
+      call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
+      if (config_use_column_waves) then
+           call mpas_timer_start("wave stress")
+           call wave_stress(domain)
+           call mpas_timer_stop("wave stress")
+      endif
 
     ! calculate the coriolis force coefficient
     call mpas_timer_start("coliolis force coef")
@@ -3042,6 +3048,9 @@ contains
     integer, dimension(:), pointer :: &
          solveVelocity
 
+    logical, pointer :: &
+         config_use_column_waves
+
     real(kind=RKIND), dimension(:), pointer :: &
          uVelocity, &
          vVelocity, &
@@ -3069,7 +3078,9 @@ contains
          leftMatrix
 
     real(kind=RKIND) :: &
-         solutionDenominator
+         solutionDenominator, &
+         waveStressU, &
+         waveStressV
 
     integer, pointer :: &
          nVerticesSolve
@@ -3081,6 +3092,7 @@ contains
     do while (associated(blockPtr))
 
        call MPAS_pool_get_dimension(blockPtr % dimensions, "nVerticesSolve", nVerticesSolve)
+     call MPAS_pool_get_config(blockPtr % configs, "config_use_column_waves", config_use_column_waves)
 
        call MPAS_pool_get_subpool(blockPtr % structs, "velocity_solver", velocitySolverPool)
        call MPAS_pool_get_subpool(blockPtr % structs, "icestate", icestatePool)
@@ -3112,6 +3124,14 @@ contains
 
           if (solveVelocity(iVertex) == 1) then
 
+                     if (config_use_column_waves) then
+                          waveStressU = waveIceStressUVertex(iVertex)
+                          waveStressV = waveIceStressVVertex(iVertex)
+                     else
+                          waveStressU = 0.0_RKIND
+                          waveStressV = 0.0_RKIND
+                     endif
+
              ! U equation
              leftMatrix(1,1) =  totalMassVertex(iVertex) / elasticTimeStep + oceanStressCoeff(iVertex) * cosOceanTurningAngle
              leftMatrix(1,2) = -totalMassVertexfVertex(iVertex) - &
@@ -3124,12 +3144,12 @@ contains
 
              ! right hand side of matrix solve
              rightHandSide(1) = stressDivergenceU(iVertex) + airStressVertexU(iVertex) + surfaceTiltForceU(iVertex) + &
-                  waveIceStressUVertex(ivertex) + &
+                  waveStressU + &
                   oceanStressCoeff(iVertex) * oceanStressU(iVertex) + &
                   (totalMassVertex(iVertex) * uVelocity(iVertex)) / elasticTimeStep
 
              rightHandSide(2) = stressDivergenceV(iVertex) + airStressVertexV(iVertex) + surfaceTiltForceV(iVertex) + &
-                  waveIceStressVVertex(ivertex) + &
+                  waveStressV + &
                   oceanStressCoeff(iVertex) * oceanStressV(iVertex) + &
                   (totalMassVertex(iVertex) * vVelocity(iVertex)) / elasticTimeStep
 
@@ -3179,6 +3199,9 @@ contains
     integer, dimension(:), pointer :: &
          solveVelocity
 
+    logical, pointer :: &
+         config_use_column_waves
+
     real(kind=RKIND), dimension(:), pointer :: &
          uVelocity, &
          vVelocity, &
@@ -3208,7 +3231,9 @@ contains
          leftMatrix
 
     real(kind=RKIND) :: &
-         solutionDenominator
+         solutionDenominator, &
+         waveStressU, &
+         waveStressV
 
     integer, pointer :: &
          nVerticesSolve
@@ -3220,6 +3245,7 @@ contains
     do while (associated(blockPtr))
 
        call MPAS_pool_get_dimension(blockPtr % dimensions, "nVerticesSolve", nVerticesSolve)
+     call MPAS_pool_get_config(blockPtr % configs, "config_use_column_waves", config_use_column_waves)
 
      call MPAS_pool_get_subpool(blockPtr % structs, "velocity_solver", velocitySolverPool)
      call MPAS_pool_get_subpool(blockPtr % structs, "icestate", icestatePool)
@@ -3249,6 +3275,14 @@ contains
 
           if (solveVelocity(iVertex) == 1) then
 
+                     if (config_use_column_waves) then
+                          waveStressU = waveIceStressUVertex(iVertex)
+                          waveStressV = waveIceStressVVertex(iVertex)
+                     else
+                          waveStressU = 0.0_RKIND
+                          waveStressV = 0.0_RKIND
+                     endif
+
              ! U equation
              leftMatrix(1,1) =  (numericalInertiaCoefficient + 1.0_RKIND) * (totalMassVertex(iVertex) / dynamicsTimeStep) &
                              +  oceanStressCoeff(iVertex) * cosOceanTurningAngle
@@ -3263,13 +3297,13 @@ contains
 
              ! right hand side of matrix solve
              rightHandSide(1) = stressDivergenceU(iVertex) + airStressVertexU(iVertex) + surfaceTiltForceU(iVertex) + &
-                  waveIceStressUVertex(iVertex) + &
+                  waveStressU + &
                   oceanStressCoeff(iVertex) * oceanStressU(iVertex) + &
                   (totalMassVertex(iVertex) * (numericalInertiaCoefficient * uVelocity(iVertex) + &
                   uVelocityInitial(iVertex))) / dynamicsTimeStep
 
              rightHandSide(2) = stressDivergenceV(iVertex) + airStressVertexV(iVertex) + surfaceTiltForceV(iVertex) + &
-                  waveIceStressVVertex(iVertex) + &
+                  waveStressV + &
                   oceanStressCoeff(iVertex) * oceanStressV(iVertex) + &
                   (totalMassVertex(iVertex) * (numericalInertiaCoefficient * vVelocity(iVertex) + &
                   vVelocityInitial(iVertex))) / dynamicsTimeStep
