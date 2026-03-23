@@ -21,7 +21,8 @@ module seaice_velocity_solver
   use mpas_timer
   use mpas_log, only: mpas_log_write, mpas_log_info
   use seaice_constants, only: seaicePuny
-
+     
+      
   implicit none
 
   private
@@ -1528,10 +1529,13 @@ contains
    
     type(MPAS_pool_type), pointer :: &
          meshPool, &
-         waveCoupling
+         waveCoupling, &
+         velocitySolverPool, &
+         tracersAggregatePool
 
     integer, pointer :: &
-         nCells
+         nCells, &
+         solveStress(:)
 
     real(kind=RKIND), pointer :: &
          sphere_radius
@@ -1545,7 +1549,8 @@ contains
          waveIceStressUVertex, &
          waveIceStressVVertex, &
          waveIceStressUCell, &
-         waveIceStressVCell
+         waveIceStressVCell, &
+         iceAreaCell
 
     integer :: &
          iCell
@@ -1561,6 +1566,8 @@ contains
 
        call MPAS_pool_get_subpool(blockPtr % structs, "mesh", meshPool)
        call MPAS_pool_get_subpool(blockPtr % structs, "wave_coupling", waveCoupling)
+       call MPAS_pool_get_subpool(blockPtr % structs, "velocity_solver", velocitySolverPool)
+       call MPAS_pool_get_subpool(blockPtr % structs, "tracers_aggregate", tracersAggregatePool)
 
        call mpas_pool_get_array(waveCoupling, 'waveIceStressUCell',waveIceStressUCell)
        call mpas_pool_get_array(waveCoupling, 'waveIceStressVCell',waveIceStressVCell)
@@ -1574,22 +1581,29 @@ contains
        call MPAS_pool_get_array(meshPool, "yCell", yCell)
        call MPAS_pool_get_array(meshPool, "zCell", zCell)
        call MPAS_pool_get_dimension(meshPool, "nCells", nCells)
+       call MPAS_pool_get_array(velocitySolverPool, "solveStress", solveStress)
+       call MPAS_pool_get_array(tracersAggregatePool, "iceAreaCell", iceAreaCell)
        call MPAS_pool_get_config(blockPtr % configs, "config_rotate_cartesian_grid", config_rotate_cartesian_grid)
 
        ! rotate cells forward
        do iCell = 1, nCells
-          call seaice_latlon_vector_rotation_forward(&
-                  waveIceStressUCell(iCell), &
-                  waveIceStressVCell(iCell), &
-                  waveIceStressUCell(iCell), &
-                  waveIceStressVCell(iCell), &
-                  latCell(iCell), &
-                  lonCell(iCell), &
-                  xCell(iCell), &
-                  yCell(iCell), &
-                  zCell(iCell), &
-                  sphere_radius, &
-                  config_rotate_cartesian_grid)
+          if (solveStress(iCell) == 1 .and. iceAreaCell(iCell) > 1.0e-4) then
+             call seaice_latlon_vector_rotation_forward(&
+                     waveIceStressUCell(iCell), &
+                     waveIceStressVCell(iCell), &
+                     waveIceStressUCell(iCell), &
+                     waveIceStressVCell(iCell), &
+                     latCell(iCell), &
+                     lonCell(iCell), &
+                     xCell(iCell), &
+                     yCell(iCell), &
+                     zCell(iCell), &
+                     sphere_radius, &
+                     config_rotate_cartesian_grid)
+          else
+             waveIceStressUCell(iCell) = 0.0_RKIND
+             waveIceStressVCell(iCell) = 0.0_RKIND
+          endif ! solveStress
        enddo ! iCell
     
        ! interpolate cell to vertex
