@@ -65,6 +65,11 @@ module seaice_velocity_solver
        sinOceanTurningAngle = 0.0_RKIND, & ! northern hemisphere
        cosOceanTurningAngle = 1.0_RKIND    ! northern hemisphere
 
+  ! semi-implicit wave stress linearization controls
+  real(kind=RKIND), parameter, private :: &
+       waveStressJacobianSpeedFloor = 5.0e-2_RKIND, &
+       waveStressJacobianCoeffMax   = 5.0e2_RKIND
+
   ! velocity solver constants initialized in seaice_init_velocity_solver
   real(kind=RKIND), private :: &
        seaiceAreaMinimum, &
@@ -591,6 +596,9 @@ contains
     use seaice_mesh_pool, only: &
          seaice_mesh_pool_update
 
+    use seq_flds_mod, only: &
+         wav_ice_coup
+
     type(domain_type), intent(inout) :: &
          domain
 
@@ -624,7 +632,7 @@ contains
 
       ! calculate wave-ice stress and interpolate to vertices when wave coupling is enabled
       call MPAS_pool_get_config(domain % configs, "config_use_column_waves", config_use_column_waves)
-      if (config_use_column_waves) then
+      if (config_use_column_waves .and. wav_ice_coup .eq. 'twoway') then
            call mpas_timer_start("wave stress")
            call wave_stress(domain)
            call mpas_timer_stop("wave stress")
@@ -3048,6 +3056,9 @@ contains
 
   subroutine solve_velocity(domain)
 
+    use seq_flds_mod, only: &
+         wav_ice_coup
+
     type(domain_type), intent(inout) :: &
          domain
 
@@ -3094,7 +3105,12 @@ contains
     real(kind=RKIND) :: &
          solutionDenominator, &
          waveStressU, &
-         waveStressV
+         waveStressV, &
+         waveStressCoeff, &
+         waveStressRhsU, &
+         waveStressRhsV, &
+         waveStressMagnitude, &
+         iceSpeedForJacobian
 
     integer, pointer :: &
          nVerticesSolve
@@ -3132,38 +3148,49 @@ contains
        call mpas_pool_get_array(waveCoupling, 'waveIceStressVVertex',waveIceStressVVertex)
 
 #ifdef MPAS_OPENMP
-!$omp parallel do default(shared) private(iVertex, leftMatrix, rightHandSide, solutionDenominator)
+!$omp parallel do default(shared) private(iVertex, leftMatrix, rightHandSide, solutionDenominator, waveStressU, waveStressV, waveStressCoeff, waveStressRhsU, waveStressRhsV, waveStressMagnitude, iceSpeedForJacobian)
 #endif
        do iVertex = 1, nVerticesSolve
 
           if (solveVelocity(iVertex) == 1) then
 
-                     if (config_use_column_waves) then
+                     if (config_use_column_waves .and. wav_ice_coup == 'twoway') then
                           waveStressU = waveIceStressUVertex(iVertex)
                           waveStressV = waveIceStressVVertex(iVertex)
+
+                          waveStressMagnitude = sqrt(waveStressU * waveStressU + waveStressV * waveStressV)
+                          iceSpeedForJacobian = sqrt(uVelocity(iVertex) * uVelocity(iVertex) + &
+                                                     vVelocity(iVertex) * vVelocity(iVertex))
+                          waveStressCoeff = waveStressMagnitude / max(iceSpeedForJacobian, waveStressJacobianSpeedFloor)
+                          waveStressCoeff = min(waveStressCoeff, waveStressJacobianCoeffMax)
+                          waveStressRhsU = waveStressU + waveStressCoeff * uVelocity(iVertex)
+                          waveStressRhsV = waveStressV + waveStressCoeff * vVelocity(iVertex)
                      else
                           waveStressU = 0.0_RKIND
                           waveStressV = 0.0_RKIND
+                          waveStressCoeff = 0.0_RKIND
+                          waveStressRhsU = 0.0_RKIND
+                          waveStressRhsV = 0.0_RKIND
                      endif
 
              ! U equation
-             leftMatrix(1,1) =  totalMassVertex(iVertex) / elasticTimeStep + oceanStressCoeff(iVertex) * cosOceanTurningAngle
+             leftMatrix(1,1) =  totalMassVertex(iVertex) / elasticTimeStep + oceanStressCoeff(iVertex) * cosOceanTurningAngle + waveStressCoeff
              leftMatrix(1,2) = -totalMassVertexfVertex(iVertex) - &
                   oceanStressCoeff(iVertex) * sinOceanTurningAngle * sign(1.0_RKIND,totalMassVertexfVertex(iVertex))
 
              ! V equation
              leftMatrix(2,1) =  totalMassVertexfVertex(iVertex) + &
                   oceanStressCoeff(iVertex) * sinOceanTurningAngle * sign(1.0_RKIND,totalMassVertexfVertex(iVertex))
-             leftMatrix(2,2) =  totalMassVertex(iVertex) / elasticTimeStep  + oceanStressCoeff(iVertex) * cosOceanTurningAngle
+             leftMatrix(2,2) =  totalMassVertex(iVertex) / elasticTimeStep  + oceanStressCoeff(iVertex) * cosOceanTurningAngle + waveStressCoeff
 
              ! right hand side of matrix solve
              rightHandSide(1) = stressDivergenceU(iVertex) + airStressVertexU(iVertex) + surfaceTiltForceU(iVertex) + &
-                  waveStressU + &
+                  waveStressRhsU + &
                   oceanStressCoeff(iVertex) * oceanStressU(iVertex) + &
                   (totalMassVertex(iVertex) * uVelocity(iVertex)) / elasticTimeStep
 
              rightHandSide(2) = stressDivergenceV(iVertex) + airStressVertexV(iVertex) + surfaceTiltForceV(iVertex) + &
-                  waveStressV + &
+                  waveStressRhsV + &
                   oceanStressCoeff(iVertex) * oceanStressV(iVertex) + &
                   (totalMassVertex(iVertex) * vVelocity(iVertex)) / elasticTimeStep
 
@@ -3198,6 +3225,9 @@ contains
 
     use seaice_velocity_solver_constitutive_relation, only: &
          numericalInertiaCoefficient
+
+    use seq_flds_mod, only: &
+         wav_ice_coup
 
     type(domain_type), intent(inout) :: &
          domain
@@ -3247,7 +3277,12 @@ contains
     real(kind=RKIND) :: &
          solutionDenominator, &
          waveStressU, &
-         waveStressV
+         waveStressV, &
+         waveStressCoeff, &
+         waveStressRhsU, &
+         waveStressRhsV, &
+         waveStressMagnitude, &
+         iceSpeedForJacobian
 
     integer, pointer :: &
          nVerticesSolve
@@ -3289,17 +3324,28 @@ contains
 
           if (solveVelocity(iVertex) == 1) then
 
-                     if (config_use_column_waves) then
+                     if (config_use_column_waves .and. wav_ice_coup .eq. 'twoway') then
                           waveStressU = waveIceStressUVertex(iVertex)
                           waveStressV = waveIceStressVVertex(iVertex)
+
+                          waveStressMagnitude = sqrt(waveStressU * waveStressU + waveStressV * waveStressV)
+                          iceSpeedForJacobian = sqrt(uVelocity(iVertex) * uVelocity(iVertex) + &
+                                                     vVelocity(iVertex) * vVelocity(iVertex))
+                          waveStressCoeff = waveStressMagnitude / max(iceSpeedForJacobian, waveStressJacobianSpeedFloor)
+                          waveStressCoeff = min(waveStressCoeff, waveStressJacobianCoeffMax)
+                          waveStressRhsU = waveStressU + waveStressCoeff * uVelocity(iVertex)
+                          waveStressRhsV = waveStressV + waveStressCoeff * vVelocity(iVertex)
                      else
                           waveStressU = 0.0_RKIND
                           waveStressV = 0.0_RKIND
+                          waveStressCoeff = 0.0_RKIND
+                          waveStressRhsU = 0.0_RKIND
+                          waveStressRhsV = 0.0_RKIND
                      endif
 
              ! U equation
              leftMatrix(1,1) =  (numericalInertiaCoefficient + 1.0_RKIND) * (totalMassVertex(iVertex) / dynamicsTimeStep) &
-                             +  oceanStressCoeff(iVertex) * cosOceanTurningAngle
+                             +  oceanStressCoeff(iVertex) * cosOceanTurningAngle + waveStressCoeff
              leftMatrix(1,2) = -totalMassVertexfVertex(iVertex) &
                              -  oceanStressCoeff(iVertex) * sinOceanTurningAngle * sign(1.0_RKIND,totalMassVertexfVertex(iVertex))
 
@@ -3307,17 +3353,17 @@ contains
              leftMatrix(2,1) =  totalMassVertexfVertex(iVertex) &
                              +  oceanStressCoeff(iVertex) * sinOceanTurningAngle * sign(1.0_RKIND,totalMassVertexfVertex(iVertex))
              leftMatrix(2,2) =  (numericalInertiaCoefficient + 1.0_RKIND) * (totalMassVertex(iVertex) / dynamicsTimeStep) &
-                             +  oceanStressCoeff(iVertex) * cosOceanTurningAngle
+                             +  oceanStressCoeff(iVertex) * cosOceanTurningAngle + waveStressCoeff
 
              ! right hand side of matrix solve
              rightHandSide(1) = stressDivergenceU(iVertex) + airStressVertexU(iVertex) + surfaceTiltForceU(iVertex) + &
-                  waveStressU + &
+                  waveStressRhsU + &
                   oceanStressCoeff(iVertex) * oceanStressU(iVertex) + &
                   (totalMassVertex(iVertex) * (numericalInertiaCoefficient * uVelocity(iVertex) + &
                   uVelocityInitial(iVertex))) / dynamicsTimeStep
 
              rightHandSide(2) = stressDivergenceV(iVertex) + airStressVertexV(iVertex) + surfaceTiltForceV(iVertex) + &
-                  waveStressV + &
+                  waveStressRhsV + &
                   oceanStressCoeff(iVertex) * oceanStressV(iVertex) + &
                   (totalMassVertex(iVertex) * (numericalInertiaCoefficient * vVelocity(iVertex) + &
                   vVelocityInitial(iVertex))) / dynamicsTimeStep
