@@ -1595,7 +1595,7 @@ contains
 
        ! rotate cells forward
        do iCell = 1, nCells
-          if (solveStress(iCell) == 1 .and. iceAreaCell(iCell) > 1.0e-4) then
+          if (solveStress(iCell) == 1) then
              call seaice_latlon_vector_rotation_forward(&
                      waveIceStressUCell(iCell), &
                      waveIceStressVCell(iCell), &
