@@ -2377,20 +2377,12 @@ contains
         if (wav_ice_coup == 'twoway') then
            if (config_use_column_waves) then
               significantWaveHeight(i)     = x2i_i(index_x2i_Sw_Hs, n)
+              waveIceStressUCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twix, n)
+              waveIceStressVCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twiy, n)
               do iFreq = 1,nFrequencies
                  waveSpectra(iFreq,i)      = x2i_i(index_x2i_Sw_wavespec(iFreq), n)
               enddo
            endif
-        endif
-
-        if (config_use_column_waves .and. wav_ice_coup == 'twoway') then
-           significantWaveHeight(i) = x2i_i % rAttr(index_x2i_Sw_Hs, n)
-           waveIceStressUCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twix, n)
-           waveIceStressVCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twiy, n)
-
-           do iFreq = 1,nFrequencies
-              waveSpectra(iFreq,i)  = x2i_i % rAttr(index_x2i_Sw_wavespec(iFreq), n)
-           enddo
         endif
 
         if (trim(config_ocean_surface_type) == "free") then ! free surface (MPAS-O)
@@ -3006,12 +2998,6 @@ contains
          if (wav_ice_coup == 'twoway') then
             if (config_use_floe_size_distribution) then
                i2x_i(index_i2x_Si_ifloe, n)  = floeSizeDiameter(i)
-            endif
-         endif
-
-         if (wav_ice_coup == 'twoway') then
-            if (config_use_floe_size_distribution) then
-               i2x_i % rAttr(index_i2x_Si_ifloe, n)  = floeSizeDiameter(i)
             endif
          endif
 
