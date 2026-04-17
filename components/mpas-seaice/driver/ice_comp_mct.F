@@ -2376,11 +2376,11 @@ contains
 
         if (wav_ice_coup == 'twoway') then
            if (config_use_column_waves) then
-              significantWaveHeight(i)     = x2i_i(index_x2i_Sw_Hs, n)
-              waveIceStressUCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twix, n)
-              waveIceStressVCell(i)    = x2i_i % rAttr(index_x2i_Fwiw_Twiy, n)
+              significantWaveHeight(i) = x2i_i(index_x2i_Sw_Hs, n)
+              waveIceStressUCell(i)    = x2i_i(index_x2i_Fwiw_Twix, n)
+              waveIceStressVCell(i)    = x2i_i(index_x2i_Fwiw_Twiy, n)
               do iFreq = 1,nFrequencies
-                 waveSpectra(iFreq,i)      = x2i_i(index_x2i_Sw_wavespec(iFreq), n)
+                 waveSpectra(iFreq,i)  = x2i_i(index_x2i_Sw_wavespec(iFreq), n)
               enddo
            endif
         endif
