@@ -102,6 +102,9 @@ module seq_flux_mct
   real(r8), allocatable ::  qref (:)  ! diagnostic:  2m ref Q
   real(r8), allocatable :: duu10n(:)  ! diagnostic: 10m wind speed squared
   real(r8), allocatable :: u10res(:)  ! diagnostic: 10m "resolved" (no gustiness) wind speed (m/s)
+   real(r8), allocatable ::  charnsea(:) ! Charnock coeff accounting for the wave stress
+   real(r8), allocatable ::  ustarwav(:) ! Friction velocity from WW3
+   real(r8), allocatable ::  z0wav(:)    ! Surface roughness length from WW3
 
   real(r8), allocatable :: fswpen (:) ! fraction of sw penetrating ocn surface layer
   real(r8), allocatable :: ocnsal (:) ! ocean salinity
@@ -182,6 +185,9 @@ module seq_flux_mct
   integer :: index_o2x_So_t
   integer :: index_o2x_So_u
   integer :: index_o2x_So_v
+   integer :: index_w2x_Sw_Charn
+   integer :: index_w2x_Sw_Z0
+   integer :: index_w2x_Sw_Ustar
   integer :: index_o2x_So_fswpen
   integer :: index_o2x_So_s
   integer :: index_o2x_So_roce_16O
@@ -408,6 +414,15 @@ contains
     allocate(u10res(nloc),stat=ier)
     if(ier/=0) call mct_die(subName,'allocate u10res',ier)
     u10res = 0.0_r8
+   allocate(charnsea(nloc),stat=ier)
+   if(ier/=0) call mct_die(subName,'allocate charnsea',ier)
+   charnsea = 0.0_r8
+   allocate(ustarwav(nloc),stat=ier)
+   if(ier/=0) call mct_die(subName,'allocate ustarwav',ier)
+   ustarwav = 0.0_r8
+   allocate(z0wav(nloc),stat=ier)
+   if(ier/=0) call mct_die(subName,'allocate z0wav',ier)
+   z0wav = 0.0_r8
 
     allocate(u10gust(nloc),stat=ier)
     if(ier/=0) call mct_die(subName,'allocate u10gust',ier)
@@ -1519,7 +1534,7 @@ contains
 
   !===============================================================================
 
-  subroutine seq_flux_atmocn_moab(infodata, tod, dt, a2x, o2x, xao, mbid, mbfid)
+   subroutine seq_flux_atmocn_moab(infodata, tod, dt, a2x, o2x, xao, mbid, mbfid, w2x)
     use shr_moab_mod,     only: mbGetnCells,mbGetCellTagVals,mbSetCellTagVals
 
     !-----------------------------------------------------------------------
@@ -1533,13 +1548,14 @@ contains
     type(mct_aVect)         , intent(inout)      :: xao
     integer(in)             , intent(in)         :: mbid ! input atm moab app
     integer(in)             , intent(in)         :: mbfid ! flux moab app
+   type(mct_aVect), optional, intent(in)        :: w2x  ! w2x_ax or w2x_ox
     !
     ! Local variables
     !
     logical     :: flux_albav   ! flux avg option
     logical     :: dead_comps   ! .true.  => dead components are used
     integer     :: n            ! indices
-    integer     :: nloc, nloca, nloco    ! number of gridcells
+   integer     :: nloc, nloca, nloco, nlocw    ! number of gridcells
     logical,save:: first_call = .true.
     logical     :: cold_start      ! .true. to initialize internal fields in shr_flux diurnal
     logical     :: read_restart    ! .true. => continue run
@@ -1661,6 +1677,14 @@ contains
        index_o2x_So_roce_16O = mct_aVect_indexRA(o2x,'So_roce_16O', perrWith='quiet')
        index_o2x_So_roce_HDO = mct_aVect_indexRA(o2x,'So_roce_HDO', perrWith='quiet')
        index_o2x_So_roce_18O = mct_aVect_indexRA(o2x,'So_roce_18O', perrWith='quiet')
+       if (wav_ocn_coup == 'twoway' .or. wav_atm_coup == 'twoway') then
+          if (.not. present(w2x)) then
+             call shr_sys_abort(trim(subname)//' ERROR wave coupling active but w2x is not present')
+          endif
+          index_w2x_Sw_Charn = mct_aVect_indexRA(w2x,'Sw_Charn')
+          index_w2x_Sw_Z0 = mct_aVect_indexRA(w2x,'Sw_Z0')
+          index_w2x_Sw_Ustar = mct_aVect_indexRA(w2x,'Sw_Ustar')
+       endif
        call shr_flux_adjust_constants(flux_convergence_tolerance=flux_convergence, &
             flux_convergence_max_iteration=flux_max_iteration, &
             coldair_outbreak_mod=coldair_outbreak_mod)
@@ -1673,11 +1697,21 @@ contains
 
 
     nloc = mbGetnCells(mbid)
+    nloca = mct_aVect_lsize(a2x)
+    nloco = mct_aVect_lsize(o2x)
+    if (present(w2x)) then
+       nlocw = mct_aVect_lsize(w2x)
+    else
+       nlocw = nloc
+    endif
 
     nlocf = mbGetnCells(mbfid)
 
-    if (nloc /= nlocf) then
+    if (nloc /= nlocf .or. nloc /= nloca .or. nloc /= nloco) then
        call shr_sys_abort(trim(subname)//' ERROR nloc sizes do not match')
+    endif
+    if ((wav_ocn_coup == 'twoway' .or. wav_atm_coup == 'twoway') .and. nloc /= nlocw) then
+       call shr_sys_abort(trim(subname)//' ERROR nloc sizes do not match for wave vector')
     endif
 
     ! Update ocean surface fluxes
@@ -1717,6 +1751,9 @@ contains
           prec(n) =   0.0_r8
           fswpen(n)=  0.0_r8
           ocnsal(n)=  0.0_r8
+          charnsea(n) = 0.0_r8
+          ustarwav(n) = 0.0_r8
+          z0wav(n) = 0.0_r8
 
           warm       (n) = 0.0_r8
           salt       (n) = 0.0_r8
@@ -1803,6 +1840,18 @@ contains
           if (mask(n) /= 0) then
              uGust(n) = 0.0_r8
              prec(n)  = rainc(n)+rainl(n)+snowc(n)+snowl(n)
+             if (wav_atm_coup == 'twoway') then
+                if (.not. present(w2x)) then
+                   call shr_sys_abort(trim(subname)//' ERROR wav_atm_coup twoway but w2x is not present')
+                endif
+                charnsea(n) = w2x%rAttr(index_w2x_Sw_Charn,n)
+                ustarwav(n) = w2x%rAttr(index_w2x_Sw_Ustar,n)
+                z0wav(n) = w2x%rAttr(index_w2x_Sw_Z0,n)
+             else
+                charnsea(n) = 0.0_r8
+                ustarwav(n) = 0.0_r8
+                z0wav(n) = 0.0_r8
+             endif
           endif
           ! make sure values are 0 where mask is 0 (ocean is not active)
           if (mask(n) == 0) then
@@ -1842,6 +1891,9 @@ contains
              prec (n) = 0.0_r8
              fswpen(n)= 0.0_r8
              ocnsal(n)= 0.0_r8
+             charnsea(n) = 0.0_r8
+             ustarwav(n) = 0.0_r8
+             z0wav(n) = 0.0_r8
 
              warm       (n) = 0.0_r8
              salt       (n) = 0.0_r8
@@ -1884,15 +1936,28 @@ contains
             duu10n,ustar, re  , ssq, wsresp=wsresp, tau_est=tau_est)
        u10res = sqrt(duu10n) ! atm-supplied gustiness not implemented for UA
     else
-       call shr_flux_atmocn (nloc , zbot , ubot, vbot, thbot, &
-            shum , shum_16O , shum_HDO, shum_18O, dens , tbot, uocn, vocn , &
-            tocn , emask, seq_flux_atmocn_minwind, &
-            sen , lat , lwup , &
-            roce_16O, roce_HDO, roce_18O,    &
-            evap , evap_16O, evap_HDO, evap_18O, taux , tauy, tref, qref , &
-            ocn_surface_flux_scheme, &
-            duu10n, u10res, ustar, re  , ssq, &
-            wsresp=wsresp, tau_est=tau_est, ugust=ugust_atm)
+       if (wav_atm_coup == 'twoway') then
+          call shr_flux_atmocn (nloc , zbot , ubot, vbot, thbot, &
+               shum , shum_16O , shum_HDO, shum_18O, dens , tbot, uocn, vocn , &
+               tocn , emask, seq_flux_atmocn_minwind, &
+               sen , lat , lwup , &
+               roce_16O, roce_HDO, roce_18O,    &
+               evap , evap_16O, evap_HDO, evap_18O, taux , tauy, tref, qref , &
+               ocn_surface_flux_scheme, &
+               duu10n, u10res, ustar, re  , ssq, &
+               wsresp=wsresp, tau_est=tau_est, ugust=ugust_atm, &
+               z0wav=z0wav, ustarwav=ustarwav, charnockSeaState=charnsea)
+       else
+          call shr_flux_atmocn (nloc , zbot , ubot, vbot, thbot, &
+               shum , shum_16O , shum_HDO, shum_18O, dens , tbot, uocn, vocn , &
+               tocn , emask, seq_flux_atmocn_minwind, &
+               sen , lat , lwup , &
+               roce_16O, roce_HDO, roce_18O,    &
+               evap , evap_16O, evap_HDO, evap_18O, taux , tauy, tref, qref , &
+               ocn_surface_flux_scheme, &
+               duu10n, u10res, ustar, re  , ssq, &
+               wsresp=wsresp, tau_est=tau_est, ugust=ugust_atm)
+       endif
        !missval should not be needed if flux calc
        !consistent with mrgx2a fraction
        !duu10n,ustar, re  , ssq, missval = 0.0_r8 )

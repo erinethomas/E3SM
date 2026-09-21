@@ -1136,6 +1136,7 @@ subroutine prep_ocn_mrg_moab(infodata, xao_ox, timer_mrg)
     type(mct_avect) , pointer   :: a2x_o  ! used just for indexing
     type(mct_avect) , pointer   :: i2x_o
     type(mct_avect) , pointer   :: r2x_o
+    type(mct_avect) , pointer   :: w2x_o
     type(mct_avect) , pointer   :: x2o_o
     type(mct_aVect) , pointer   :: xao_o
     !---------------------------------------------------------------
@@ -1150,7 +1151,7 @@ subroutine prep_ocn_mrg_moab(infodata, xao_ox, timer_mrg)
     integer  :: n,ka,ki,ko,kr,kw,kx,kir,kor,i,i1,o1
     integer  :: kof,kif
     integer  :: lsize, arrsize ! for double arrays
-    integer , save :: noflds,naflds,niflds,nrflds,nxflds!  ,ngflds,nwflds, no glacier or wave model
+    integer , save :: noflds,naflds,niflds,nrflds,nwflds,nxflds
     real(R8) :: ifrac,ifracr
     real(R8) :: afrac,afracr
     real(R8) :: frac_sum
@@ -1160,14 +1161,14 @@ subroutine prep_ocn_mrg_moab(infodata, xao_ox, timer_mrg)
     character(CL),allocatable :: field_atm(:)   ! string converted to char
     character(CL),allocatable :: field_ice(:)   ! string converted to char
     character(CL),allocatable :: field_rof(:)   ! string converted to char
-    !character(CL),allocatable :: field_wav(:)   ! string converted to char
+    character(CL),allocatable :: field_wav(:)   ! string converted to char
     character(CL),allocatable :: field_xao(:)   ! string converted to char
     !character(CL),allocatable :: field_glc(:)   ! string converted to char
     character(CL),allocatable :: itemc_ocn(:)   ! string converted to char
     character(CL),allocatable :: itemc_atm(:)   ! string converted to char
     character(CL),allocatable :: itemc_ice(:)   ! string converted to char
     character(CL),allocatable :: itemc_rof(:)   ! string converted to char
-    !character(CL),allocatable :: itemc_wav(:)   ! string converted to char
+    character(CL),allocatable :: itemc_wav(:)   ! string converted to char
     character(CL),allocatable :: itemc_xao(:)   ! string converted to char
     !character(CL),allocatable :: itemc_g2x(:)   ! string converted to char
     integer, save :: index_a2x_Faxa_swvdr
@@ -1307,13 +1308,14 @@ subroutine prep_ocn_mrg_moab(infodata, xao_ox, timer_mrg)
       a2x_o => a2x_ox(1)
       i2x_o => i2x_ox(1)
       r2x_o => r2x_ox(1)
+      w2x_o => w2x_ox(1)
       xao_o => xao_ox(1)
       x2o_o => component_get_x2c_cx(ocn(1))
       noflds = mct_aVect_nRattr(x2o_o) ! these are saved after first time
       naflds = mct_aVect_nRattr(a2x_o)
       niflds = mct_aVect_nRattr(i2x_o)
       nrflds = mct_aVect_nRattr(r2x_o)
-   !nwflds = mct_aVect_nRattr(w2x_o)
+      nwflds = mct_aVect_nRattr(w2x_o)
       nxflds = mct_aVect_nRattr(xao_o)
 
       if (.not. allocated(x2o_om)) then
@@ -1446,7 +1448,7 @@ subroutine prep_ocn_mrg_moab(infodata, xao_ox, timer_mrg)
        allocate(field_ice(niflds), itemc_ice(niflds))
        allocate(field_ocn(noflds), itemc_ocn(noflds))
        allocate(field_rof(nrflds), itemc_rof(nrflds))
-       !allocate(field_wav(nwflds), itemc_wav(nwflds))
+      allocate(field_wav(nwflds), itemc_wav(nwflds))
        allocate(field_xao(nxflds), itemc_xao(nxflds))
        !allocate(field_glc(ngflds), itemc_g2x(ngflds))
        allocate(mrgstr(noflds))
@@ -1473,10 +1475,10 @@ subroutine prep_ocn_mrg_moab(infodata, xao_ox, timer_mrg)
           field_rof(kr) = mct_aVect_getRList2c(kr, r2x_o)
           itemc_rof(kr) = trim(field_rof(kr)(scan(field_rof(kr),'_'):))
        enddo
-      !  do kw = 1,nwflds
-      !     field_wav(kw) = mct_aVect_getRList2c(kw, w2x_o)
-      !     itemc_wav(kw) = trim(field_wav(kw)(scan(field_wav(kw),'_'):))
-      !  enddo
+       do kw = 1,nwflds
+          field_wav(kw) = mct_aVect_getRList2c(kw, w2x_o)
+          itemc_wav(kw) = trim(field_wav(kw)(scan(field_wav(kw),'_'):))
+       enddo
        do kx = 1,nxflds
           field_xao(kx) = mct_aVect_getRList2c(kx, xao_o)
           itemc_xao(kx) = trim(field_xao(kx)(scan(field_xao(kx),'_'):))
@@ -1489,7 +1491,7 @@ subroutine prep_ocn_mrg_moab(infodata, xao_ox, timer_mrg)
        call mct_aVect_setSharedIndices(a2x_o, x2o_o, a2x_SharedIndices)
        call mct_aVect_setSharedIndices(i2x_o, x2o_o, i2x_SharedIndices)
        call mct_aVect_setSharedIndices(r2x_o, x2o_o, r2x_SharedIndices)
-       !call mct_aVect_setSharedIndices(w2x_o, x2o_o, w2x_SharedIndices)
+       call mct_aVect_setSharedIndices(w2x_o, x2o_o, w2x_SharedIndices)
        call mct_aVect_setSharedIndices(xao_o, x2o_o, xao_SharedIndices)
        !call mct_aVect_setSharedIndices(g2x_o, x2o_o, g2x_SharedIndices)
 
@@ -1620,11 +1622,11 @@ subroutine prep_ocn_mrg_moab(infodata, xao_ox, timer_mrg)
           mrgstr(o1) = trim(mrgstr(o1))//trim(lnum)
 #endif
        enddo
-      !  do i=1,w2x_SharedIndices%shared_real%num_indices
-      !     i1=w2x_SharedIndices%shared_real%aVindices1(i)
-      !     o1=w2x_SharedIndices%shared_real%aVindices2(i)
-      !     mrgstr(o1) = trim(mrgstr(o1))//' = w2x%'//trim(field_wav(i1))
-      !  enddo
+       do i=1,w2x_SharedIndices%shared_real%num_indices
+          i1=w2x_SharedIndices%shared_real%aVindices1(i)
+          o1=w2x_SharedIndices%shared_real%aVindices2(i)
+          mrgstr(o1) = trim(mrgstr(o1))//' = w2x%'//trim(field_wav(i1))
+       enddo
        do i=1,xao_SharedIndices%shared_real%num_indices
           i1=xao_SharedIndices%shared_real%aVindices1(i)
           o1=xao_SharedIndices%shared_real%aVindices2(i)
@@ -2032,6 +2034,15 @@ subroutine prep_ocn_mrg_moab(infodata, xao_ox, timer_mrg)
        end do
     end do
 
+    if (wav_ocn_coup == 'twoway') then
+       w2x_o => w2x_ox(1)
+       do i=1,w2x_SharedIndices%shared_real%num_indices
+          i1=w2x_SharedIndices%shared_real%aVindices1(i)
+          o1=w2x_SharedIndices%shared_real%aVindices2(i)
+          x2o_om(:,o1) = w2x_o%rAttr(i1,:)
+       enddo
+    endif
+
    ! after we are done, set x2o_om to the mboxid
     tagname = trim(seq_flds_x2o_fields)//C_NULL_CHAR
     arrsize = noflds * lsize
@@ -2077,7 +2088,7 @@ subroutine prep_ocn_mrg_moab(infodata, xao_ox, timer_mrg)
        deallocate(field_ocn,itemc_ocn)
        deallocate(field_ice,itemc_ice)
        deallocate(field_rof,itemc_rof)
-       !Sdeallocate(field_wav,itemc_wav)
+       deallocate(field_wav,itemc_wav)
        deallocate(field_xao,itemc_xao)
     endif
 

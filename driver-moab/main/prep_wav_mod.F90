@@ -27,7 +27,7 @@ module prep_wav_mod
   !--------------------------------------------------------------------------
 
   public :: prep_wav_init
-  public :: prep_wav_mrg
+  public :: prep_wav_mrg_moab
 
   public :: prep_wav_calc_a2x_wx
   public :: prep_wav_calc_o2x_wx
@@ -169,7 +169,7 @@ contains
 
   !================================================================================================
 
-  subroutine prep_wav_mrg(infodata, fractions_wx, timer_mrg)
+  subroutine prep_wav_mrg_moab(infodata, fractions_wx, timer_mrg)
 
     !---------------------------------------------------------------
     ! Description
@@ -183,7 +183,7 @@ contains
     ! Local Variables
     integer                  :: eai, eoi, eii, ewi, efi
     type(mct_avect), pointer :: x2w_wx
-    character(*), parameter  :: subname = '(prep_wav_mrg)'
+    character(*), parameter  :: subname = '(prep_wav_mrg_moab)'
     !---------------------------------------------------------------
 
     call t_drvstartf (trim(timer_mrg),barrier=mpicom_CPLID)
@@ -200,7 +200,7 @@ contains
     enddo
     call t_drvstopf  (trim(timer_mrg))
 
-  end subroutine prep_wav_mrg
+   end subroutine prep_wav_mrg_moab
 
   !================================================================================================
 

@@ -412,9 +412,11 @@ contains
     type(mct_avect) , pointer, save   :: r2x_i
     type(mct_avect) , pointer, save   :: o2x_i
     type(mct_avect) , pointer, save   :: g2x_i
+    type(mct_avect) , pointer, save   :: w2x_i
     type(mct_aVect_sharedindices),save :: o2x_SharedIndices
     type(mct_aVect_sharedindices),save :: a2x_SharedIndices
     type(mct_aVect_sharedindices),save :: g2x_SharedIndices
+    type(mct_aVect_sharedindices),save :: w2x_SharedIndices
 
     integer ent_type, ierr,n
 #ifdef MOABDEBUG
@@ -443,6 +445,7 @@ contains
       r2x_i => r2x_ix(1)
       o2x_i => o2x_ix(1)
       g2x_i => g2x_ix(1)
+      w2x_i => w2x_ix(1)
       x2i_i => component_get_x2c_cx(ice(1))
 
       niflds = mct_aVect_nRattr(x2i_i)
@@ -496,6 +499,7 @@ contains
        call mct_aVect_setSharedIndices(o2x_i, x2i_i, o2x_SharedIndices)
        call mct_aVect_setSharedIndices(a2x_i, x2i_i, a2x_SharedIndices)
        call mct_aVect_setSharedIndices(g2x_i, x2i_i, g2x_SharedIndices)
+       call mct_aVect_setSharedIndices(w2x_i, x2i_i, w2x_SharedIndices)
 
        !--- document copy operations ---
        do i=1,o2x_SharedIndices%shared_real%num_indices
@@ -525,6 +529,16 @@ contains
           mrgstr(o1) = trim(mrgstr(o1))//' = g2x%'//trim(field)
 #ifdef MOABDEBUG
           write(lnum, "(I3, A18, I3)" )i1, ' in g2x_ix, x2i_ix ', o1
+          mrgstr(o1) = trim(mrgstr(o1))//trim(lnum)
+#endif
+       enddo
+       do i=1,w2x_SharedIndices%shared_real%num_indices
+          i1=w2x_SharedIndices%shared_real%aVindices1(i)
+          o1=w2x_SharedIndices%shared_real%aVindices2(i)
+          field = mct_aVect_getRList2c(i1, w2x_i)
+          mrgstr(o1) = trim(mrgstr(o1))//' = w2x%'//trim(field)
+#ifdef MOABDEBUG
+          write(lnum, "(I3, A18, I3)" )i1, ' in w2x_ix, x2i_ix ', o1
           mrgstr(o1) = trim(mrgstr(o1))//trim(lnum)
 #endif
        enddo
@@ -589,6 +603,14 @@ contains
     ierr = iMOAB_GetDoubleTagStorage ( mbixid, tagname, arrsize , ent_type, r2x_im)
     if (ierr .ne. 0) then
       call shr_sys_abort(subname//' error in getting r2x_im array ')
+    endif
+
+    if (wav_ice_coup == 'twoway') then
+       do i=1,w2x_SharedIndices%shared_real%num_indices
+          i1=w2x_SharedIndices%shared_real%aVindices1(i)
+          o1=w2x_SharedIndices%shared_real%aVindices2(i)
+          x2i_im(:,o1) = w2x_i%rAttr(i1,:)
+       enddo
     endif
 
     ! Merge total snow and precip for ice input

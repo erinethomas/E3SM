@@ -275,6 +275,8 @@ module cime_comp_mod
   type(mct_aVect) , pointer :: o2x_ax(:) => null()
   type(mct_aVect) , pointer :: xao_ox(:) => null()
   type(mct_aVect) , pointer :: xao_ax(:) => null()
+   type(mct_aVect) , pointer :: w2x_ax(:) => null()
+   type(mct_aVect) , pointer :: w2x_ox(:) => null()
 
   !- from component type (single instance inside array of components)
   type(mct_aVect) , pointer :: o2x_ox => null()
@@ -2126,7 +2128,7 @@ contains
 
        ! init maps for So2a, Sl2a, Si2a, Fo2a, Fl2a, Fi2a
        ! MOAB: calculate o2a intx, l2a intx for tri-grid
-       call prep_atm_init(infodata, ocn_c2_atm, ice_c2_atm, lnd_c2_atm, iac_c2_lnd)
+      call prep_atm_init(infodata, ocn_c2_atm, ice_c2_atm, lnd_c2_atm, iac_c2_lnd, wav_c2_atm)
 
        ! init maps for Sa2l, Fa2l, Fr2l, Sg2l, Fg2l
        ! MOABTODO:  a2l intx for tri-grid  r2l intx for bi-grid intx
@@ -4077,12 +4079,18 @@ contains
        do exi = 1,num_inst_xao
           eai = mod((exi-1),num_inst_atm) + 1
           eoi = mod((exi-1),num_inst_ocn) + 1
+          ewi = mod((exi-1),num_inst_wav) + 1
           efi = mod((exi-1),num_inst_frc) + 1
           a2x_ax => component_get_c2x_cx(atm(eai))
           o2x_ax => prep_atm_get_o2x_ax()    ! array over all instances
           xao_ax => prep_aoflux_get_xao_ax() ! array over all instances
+          if (wav_present) w2x_ax => prep_atm_get_w2x_ax()
           ! TODO:  Fix this so it works with fluxes on atm mesh.  Need mbafxid
-          call seq_flux_atmocn_moab(infodata, tod, dtime, a2x_ax, o2x_ax(eoi), xao_ax(exi), mbaxid, mbofxid)
+          if (wav_present) then
+             call seq_flux_atmocn_moab(infodata, tod, dtime, a2x_ax, o2x_ax(eoi), xao_ax(exi), mbaxid, mbofxid, w2x=w2x_ax(ewi))
+          else
+             call seq_flux_atmocn_moab(infodata, tod, dtime, a2x_ax, o2x_ax(eoi), xao_ax(exi), mbaxid, mbofxid)
+          endif
        enddo
        call t_drvstopf  ('CPL:atmocna_fluxa',hashint=hashint(6))
 
@@ -4097,11 +4105,17 @@ contains
        do exi = 1,num_inst_xao
           eai = mod((exi-1),num_inst_atm) + 1
           eoi = mod((exi-1),num_inst_ocn) + 1
+          ewi = mod((exi-1),num_inst_wav) + 1
           efi = mod((exi-1),num_inst_frc) + 1
           a2x_ox => prep_ocn_get_a2x_ox()
           o2x_ox => component_get_c2x_cx(ocn(eoi))
           xao_ox => prep_aoflux_get_xao_ox()
-          call seq_flux_atmocn_moab(infodata, tod, dtime, a2x_ox(eai), o2x_ox, xao_ox(exi), mboxid, mbofxid)
+          if (wav_present) w2x_ox => prep_ocn_get_w2x_ox()
+          if (wav_present) then
+             call seq_flux_atmocn_moab(infodata, tod, dtime, a2x_ox(eai), o2x_ox, xao_ox(exi), mboxid, mbofxid, w2x=w2x_ox(ewi))
+          else
+             call seq_flux_atmocn_moab(infodata, tod, dtime, a2x_ox(eai), o2x_ox, xao_ox(exi), mboxid, mbofxid)
+          endif
        enddo
        call t_drvstopf  ('CPL:atmocnp_fluxo',hashint=hashint(6))
     endif  ! aoflux_grid
@@ -4157,6 +4171,9 @@ contains
        endif
        if (lnd_c2_atm) then
           call prep_atm_calc_l2x_ax(fractions_lx, timer='CPL:atmprep_lnd2atm')
+       endif
+       if (wav_c2_atm) then
+          call prep_atm_calc_w2x_ax(timer='CPL:atmprep_wav2atm')
        endif
        if (iac_c2_atm) then
           call prep_atm_calc_z2x_ax(fractions_zx, timer='CPL:atmprep_iac2atm')
@@ -4891,7 +4908,7 @@ contains
        if (ocn_c2_wav) call prep_wav_calc_o2x_wx(timer='CPL:wavprep_ocn2wav')
        if (ice_c2_wav) call prep_wav_calc_i2x_wx(timer='CPL:wavprep_ice2wav')
 
-       !call prep_wav_mrg(infodata, fractions_wx, timer_mrg='CPL:wavprep_mrgx2w')
+        call prep_wav_mrg_moab(infodata, fractions_wx, timer_mrg='CPL:wavprep_mrgx2w')
 
        call component_diag(infodata, wav, flow='x2c', comment= 'send wav', &
             info_debug=info_debug, timer_diag='CPL:wavprep_diagav')

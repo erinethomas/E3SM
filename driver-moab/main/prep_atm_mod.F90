@@ -5,7 +5,7 @@ module prep_atm_mod
   use shr_kind_mod,     only: cl => SHR_KIND_CL
   use shr_kind_mod,     only: CX => shr_kind_CX, CXX => shr_kind_CXX
   use shr_sys_mod,      only: shr_sys_abort, shr_sys_flush
-  use seq_comm_mct,     only: num_inst_atm, num_inst_ocn, num_inst_ice, num_inst_lnd, num_inst_xao, &
+  use seq_comm_mct,     only: num_inst_atm, num_inst_ocn, num_inst_ice, num_inst_lnd, num_inst_wav, num_inst_xao, &
        num_inst_frc, num_inst_max, CPLID, logunit
   use seq_comm_mct,     only: seq_comm_getData=>seq_comm_setptrs
   use seq_infodata_mod, only: seq_infodata_type, seq_infodata_getdata
@@ -16,7 +16,7 @@ module prep_atm_mod
   use mct_mod
   use perf_mod
   use component_type_mod, only: component_get_x2c_cx, component_get_c2x_cx
-  use component_type_mod, only: atm, lnd, ocn, ice
+  use component_type_mod, only: atm, lnd, ocn, ice, wav
 
   use shr_mpi_mod,  only:  shr_mpi_commrank
   use seq_comm_mct, only : mbaxid   ! iMOAB id for atm migrated mesh to coupler pes
@@ -55,18 +55,21 @@ module prep_atm_mod
   public :: prep_atm_get_l2x_ax
   public :: prep_atm_get_i2x_ax
   public :: prep_atm_get_o2x_ax
+  public :: prep_atm_get_w2x_ax
   public :: prep_atm_get_z2x_ax
   public :: prep_atm_get_o2x_am
 
   public :: prep_atm_calc_l2x_ax
   public :: prep_atm_calc_i2x_ax
   public :: prep_atm_calc_o2x_ax
+  public :: prep_atm_calc_w2x_ax
   public :: prep_atm_calc_z2x_ax
 
   public :: prep_atm_get_mapper_So2a
   public :: prep_atm_get_mapper_Fo2a
   public :: prep_atm_get_mapper_Sof2a
   public :: prep_atm_get_mapper_Fof2a
+  public :: prep_atm_get_mapper_Sw2a
   public :: prep_atm_get_mapper_Sl2a
   public :: prep_atm_get_mapper_Fl2a
   public :: prep_atm_get_mapper_Si2a
@@ -83,6 +86,7 @@ module prep_atm_mod
 
   ! mappers
   type(seq_map), pointer :: mapper_So2a
+  type(seq_map), pointer :: mapper_Sw2a
   type(seq_map), pointer :: mapper_Sof2a          ! for moab fluxes
   type(seq_map), pointer :: mapper_Sl2a
   type(seq_map), pointer :: mapper_Si2a
@@ -95,6 +99,7 @@ module prep_atm_mod
   type(mct_aVect), pointer :: l2x_ax(:)   ! Lnd export, atm grid, cpl pes - allocated in driver
   type(mct_aVect), pointer :: i2x_ax(:)   ! Ice export, atm grid, cpl pes - allocated in driver
   type(mct_aVect), pointer :: o2x_ax(:)   ! Ocn export, atm grid, cpl pes - allocated in driver
+  type(mct_aVect), pointer :: w2x_ax(:)   ! Wav export, atm grid, cpl pes - allocated in driver
   type(mct_aVect), pointer :: z2x_ax(:)   ! Iac export, atm grid, cpl pes - allocated in driver
 
   ! other module variables
@@ -112,13 +117,14 @@ module prep_atm_mod
   real (kind=r8) , allocatable, private :: xao_am (:,:)  ! ?
   logical :: compute_maps_online_o2a, compute_maps_online_i2a, compute_maps_online_l2a
   logical :: samegrid_al
+  logical :: samegrid_aw
   !================================================================================================
 
 contains
 
   !================================================================================================
 
-  subroutine prep_atm_init(infodata, ocn_c2_atm, ice_c2_atm, lnd_c2_atm, iac_c2_atm)
+  subroutine prep_atm_init(infodata, ocn_c2_atm, ice_c2_atm, lnd_c2_atm, iac_c2_atm, wav_c2_atm)
 
    use iMOAB, only: iMOAB_ComputeMeshIntersectionOnSphere, iMOAB_RegisterApplication, &
    iMOAB_WriteMesh , iMOAB_ComputeCommGraph, iMOAB_ComputeScalarProjectionWeights, &
@@ -133,21 +139,25 @@ contains
    logical                  , intent(in)    :: ice_c2_atm ! .true.  => ice to atm coupling on
    logical                  , intent(in)    :: lnd_c2_atm ! .true.  => lnd to atm coupling on
    logical                  , intent(in)    :: iac_c2_atm ! .true.  => iac to atm coupling on
+   logical                  , intent(in)    :: wav_c2_atm ! .true.  => wav to atm coupling on
    !
    ! Local Variables
    integer                          :: lsize_a
-   integer                          :: eli, eii, emi
+   integer                          :: eli, eii, emi, ewi
    logical                          :: samegrid_ao    ! samegrid atm and ocean
+   logical                          :: samegrid_aw    ! samegrid atm and wave
    logical                          :: esmf_map_flag  ! .true. => use esmf for mapping
    logical                          :: atm_present    ! .true.  => atm is present
    logical                          :: ocn_present    ! .true.  => ocn is present
    logical                          :: ice_present    ! .true.  => ice is present
    logical                          :: lnd_present    ! .true.  => lnd is prsent
+   logical                          :: wav_present    ! .true.  => wav is present
    logical                          :: cpl_compute_maps_online    ! .true.  => maps are computed online
    logical                          :: dead_comps    ! .true. => all comps are dead, so we need to be careful in map init and moab intx
    character(CL)                    :: ocn_gnam       ! ocn grid
    character(CL)                    :: atm_gnam       ! atm grid
    character(CL)                    :: lnd_gnam       ! lnd grid
+   character(CL)                    :: wav_gnam       ! wav grid
    type(mct_avect), pointer         :: a2x_ax
    character(*), parameter          :: subname = '(prep_atm_init)'
    character(*), parameter          :: F00 = "('"//subname//" : ', 4A )"
@@ -176,14 +186,17 @@ contains
       ocn_present=ocn_present,       &
       ice_present=ice_present,       &
       lnd_present=lnd_present,       &
+      wav_present=wav_present,       &
       atm_gnam=atm_gnam,             &
       ocn_gnam=ocn_gnam,             &
       lnd_gnam=lnd_gnam,             &
+      wav_gnam=wav_gnam,             &
       cpl_compute_maps_online=cpl_compute_maps_online, &
       esmf_map_flag=esmf_map_flag, &
       dead_comps=dead_comps)
 
    allocate(mapper_So2a)
+   allocate(mapper_Sw2a)
    allocate(mapper_Sof2a)
    allocate(mapper_Sl2a)
    allocate(mapper_Si2a)
@@ -210,6 +223,11 @@ contains
          call mct_aVect_init(o2x_ax(emi), rList=seq_flds_o2x_fields, lsize=lsize_a)
          call mct_aVect_zero(o2x_ax(emi))
       enddo
+      allocate(w2x_ax(num_inst_wav))
+      do ewi = 1,num_inst_wav
+         call mct_aVect_init(w2x_ax(ewi), rList=seq_flds_w2x_fields, lsize=lsize_a)
+         call mct_aVect_zero(w2x_ax(ewi))
+      end do
       allocate(i2x_ax(num_inst_ice))
       do eii = 1,num_inst_ice
          call mct_aVect_init(i2x_ax(eii), rList=seq_flds_i2x_fields, lsize=lsize_a)
@@ -218,8 +236,21 @@ contains
 
       samegrid_al = .true.
       samegrid_ao = .true.
+      samegrid_aw = .true.
       if (trim(atm_gnam) /= trim(lnd_gnam)) samegrid_al = .false.
       if (trim(atm_gnam) /= trim(ocn_gnam)) samegrid_ao = .false.
+      if (trim(atm_gnam) /= trim(wav_gnam)) samegrid_aw = .false.
+
+      if (wav_c2_atm) then
+         if (iamroot_CPLID) then
+            write(logunit,*) ' '
+            write(logunit,F00) 'Initializing mapper_Sw2a'
+         endif
+         call seq_map_init_rcfile(mapper_Sw2a, wav(1), atm(1), &
+              'seq_maps.rc','wav2atm_smapname:','wav2atm_smaptype:',samegrid_aw, &
+              'mapper_Sw2a initialization',esmf_map_flag)
+      endif
+      call shr_sys_flush(logunit)
 
       ! TODO: make these namelists
       ! C_NULL_CHAR is added at each iMOAB C API call site; keep variables clean for diagnostics.
@@ -1610,6 +1641,43 @@ contains
 
   !================================================================================================
 
+  subroutine prep_atm_calc_w2x_ax(fractions_wx, timer)
+    !---------------------------------------------------------------
+    ! Description
+    ! Create w2x_ax (note that w2x_ax is a local module variable)
+    !
+    ! Arguments
+    type(mct_aVect) , optional, intent(in) :: fractions_wx(:)
+    character(len=*), optional, intent(in) :: timer
+    !
+    ! Local Variables
+    integer :: efi, emi, ewi
+    type(mct_aVect) , pointer :: w2x_wx
+    character(*), parameter   :: subname = '(prep_atm_calc_w2x_ax)'
+    character(*), parameter   :: F00 = "('"//subname//" : ', 4A )"
+    !---------------------------------------------------------------
+
+    call t_drvstartf (trim(timer),barrier=mpicom_CPLID)
+    do emi = 1,num_inst_wav
+       ewi = mod((emi-1),num_inst_wav) + 1
+       efi = mod((emi-1),num_inst_frc) + 1
+
+       w2x_wx => component_get_c2x_cx(wav(ewi))
+       if (present(fractions_wx)) then
+          call seq_map_map(mapper_Sw2a, w2x_wx, w2x_ax(ewi),&
+               fldlist=seq_flds_w2x_states,norm=.true., &
+               avwts_s=fractions_wx(efi),avwtsfld_s='wfrac')
+       else
+          call seq_map_map(mapper_Sw2a, w2x_wx, w2x_ax(ewi),&
+               fldlist=seq_flds_w2x_states,norm=.true.)
+       endif
+    enddo
+    call t_drvstopf  (trim(timer))
+
+  end subroutine prep_atm_calc_w2x_ax
+
+  !================================================================================================
+
   subroutine prep_atm_calc_i2x_ax(fractions_ix, timer)
     !---------------------------------------------------------------
     ! Description
@@ -1709,6 +1777,11 @@ contains
     prep_atm_get_o2x_ax => o2x_ax(:)
   end function prep_atm_get_o2x_ax
 
+   function prep_atm_get_w2x_ax()
+      type(mct_aVect), pointer :: prep_atm_get_w2x_ax(:)
+      prep_atm_get_w2x_ax => w2x_ax(:)
+   end function prep_atm_get_w2x_ax
+
   function prep_atm_get_z2x_ax()
     type(mct_aVect), pointer :: prep_atm_get_z2x_ax(:)
     prep_atm_get_z2x_ax => z2x_ax(:)
@@ -1733,6 +1806,11 @@ contains
     type(seq_map), pointer :: prep_atm_get_mapper_Fof2a
     prep_atm_get_mapper_Fof2a => mapper_Fof2a
   end function prep_atm_get_mapper_Fof2a
+
+   function prep_atm_get_mapper_Sw2a()
+      type(seq_map), pointer :: prep_atm_get_mapper_Sw2a
+      prep_atm_get_mapper_Sw2a => mapper_Sw2a
+   end function prep_atm_get_mapper_Sw2a
 
   function prep_atm_get_mapper_Sl2a()
     type(seq_map), pointer :: prep_atm_get_mapper_Sl2a
