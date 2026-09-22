@@ -4085,11 +4085,11 @@ contains
           o2x_ax => prep_atm_get_o2x_ax()    ! array over all instances
           xao_ax => prep_aoflux_get_xao_ax() ! array over all instances
           if (wav_present) w2x_ax => prep_atm_get_w2x_ax()
-          ! TODO:  Fix this so it works with fluxes on atm mesh.  Need mbafxid
+          ! For AO fluxes on atm grid, keep mbid and mbfid on the same atm mesh.
           if (wav_present) then
-             call seq_flux_atmocn_moab(infodata, tod, dtime, a2x_ax, o2x_ax(eoi), xao_ax(exi), mbaxid, mbofxid, w2x=w2x_ax(ewi))
+             call seq_flux_atmocn_moab(infodata, tod, dtime, a2x_ax, o2x_ax(eoi), xao_ax(exi), mbaxid, mbaxid, w2x=w2x_ax(ewi))
           else
-             call seq_flux_atmocn_moab(infodata, tod, dtime, a2x_ax, o2x_ax(eoi), xao_ax(exi), mbaxid, mbofxid)
+             call seq_flux_atmocn_moab(infodata, tod, dtime, a2x_ax, o2x_ax(eoi), xao_ax(exi), mbaxid, mbaxid)
           endif
        enddo
        call t_drvstopf  ('CPL:atmocna_fluxa',hashint=hashint(6))

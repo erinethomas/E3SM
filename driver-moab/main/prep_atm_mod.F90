@@ -27,6 +27,8 @@ module prep_atm_mod
   use seq_comm_mct, only : mbintxao ! iMOAB id for intx mesh between atm and ocean
   use seq_comm_mct, only : mbixid   ! iMOAB id for mpas ice migrated mesh to coupler pes
   use seq_comm_mct, only : mbintxia  ! iMOAB id for intx mesh between ice and atm
+  use seq_comm_mct, only : mbwxid   ! iMOAB id for wave mesh on coupler pes
+  use seq_comm_mct, only : mbintxwa ! iMOAB id for intx mesh between wave and atm
   use seq_comm_mct, only : mhid     ! iMOAB id for atm instance
   use seq_comm_mct, only : mhpgid   ! iMOAB id for atm pgx grid, on atm pes; created with se and gll grids
   use seq_comm_mct, only : atm_pg_active  ! whether the atm uses FV mesh or not ; made true if fv_nphys > 0
@@ -166,7 +168,7 @@ contains
    integer                  :: ierr, idintx, rank
    character*32             :: appname, outfile, wopts, lnum
    character*32             :: dm1, dm2, dofnameS, dofnameT
-   character*32             :: wgtIdSo2a, wgtIdFo2a, wgtIdSi2a, wgtIdFi2a, wgtIdSl2a, wgtIdFl2a
+   character*32             :: wgtIdSo2a, wgtIdFo2a, wgtIdSi2a, wgtIdFi2a, wgtIdSl2a, wgtIdFl2a, wgtIdSw2a
    integer                  :: orderS, orderT, volumetric, noConserve, validate, fInverseDistanceMap
    integer                  :: fNoBubble, monotonicity
 ! will do comm graph over coupler PES, in 2-hop strategy
@@ -241,21 +243,11 @@ contains
       if (trim(atm_gnam) /= trim(ocn_gnam)) samegrid_ao = .false.
       if (trim(atm_gnam) /= trim(wav_gnam)) samegrid_aw = .false.
 
-      if (wav_c2_atm) then
-         if (iamroot_CPLID) then
-            write(logunit,*) ' '
-            write(logunit,F00) 'Initializing mapper_Sw2a'
-         endif
-         call seq_map_init_rcfile(mapper_Sw2a, wav(1), atm(1), &
-              'seq_maps.rc','wav2atm_smapname:','wav2atm_smaptype:',samegrid_aw, &
-              'mapper_Sw2a initialization',esmf_map_flag)
-      endif
-      call shr_sys_flush(logunit)
-
       ! TODO: make these namelists
       ! C_NULL_CHAR is added at each iMOAB C API call site; keep variables clean for diagnostics.
       wgtIdSo2a = 'scalar_o2a'
       wgtIdFo2a = 'flux_o2a'
+      wgtIdSw2a = 'scalar_w2a'
       wgtIdSi2a = 'scalar_i2a'
       wgtIdFi2a = 'flux_i2a'
       wgtIdSl2a = 'scalar_l2a'
@@ -803,6 +795,69 @@ contains
          endif
       endif
 
+      if (wav_c2_atm) then
+         if (iamroot_CPLID) then
+            write(logunit,*) ' '
+            write(logunit,F00) 'Initializing mapper_Sw2a'
+         endif
+         call seq_map_mapinit(mapper_Sw2a, mpicom_CPLID)
+         if (samegrid_aw) then
+            mapper_Sw2a%rearrange_only = .true.
+            mapper_Sw2a%strategy = "rearrange"
+         endif
+      endif
+
+      if (wav_present) then
+
+         if (mbwxid < 0) then
+            if (trim(wav_gnam) == trim(atm_gnam)) then
+               mbwxid = mbaxid
+            else if (trim(wav_gnam) == trim(ocn_gnam)) then
+               mbwxid = mboxid
+            end if
+         end if
+
+         if ((mbaxid .ge. 0) .and. (mbwxid .ge. 0)) then
+
+            if (iamroot_CPLID) then
+               write(logunit,*) ' '
+               write(logunit,F00) 'Initializing wav atm coupler'
+            endif
+
+            mapper_Sw2a%src_mbid = mbwxid
+            mapper_Sw2a%tgt_mbid = mbaxid
+            mapper_Sw2a%src_context = wav(1)%cplcompid
+            mapper_Sw2a%weight_identifier = wgtIdSw2a
+            mapper_Sw2a%mbname = 'mapper_Sw2a'
+
+            if (.not. samegrid_aw) then
+               appname = "WAV_ATM_COU"
+               idintx = 100*wav(1)%cplcompid + atm(1)%cplcompid
+               ierr = iMOAB_RegisterApplication(trim(appname)//C_NULL_CHAR, mpicom_CPLID, idintx, mbintxwa)
+               if (ierr .ne. 0) then
+                  write(logunit,*) subname,' error in registering wav-atm intersection'
+                  call shr_sys_abort(subname//' ERROR in registering wav-atm intersection')
+               end if
+
+               call seq_comm_getinfo(CPLID ,mpigrp=mpigrp_CPLID)
+
+               mapper_Sw2a%intx_mbid = mbintxwa
+               mapper_Sw2a%intx_context = idintx
+               type1 = 3
+               arearead = 0
+               call moab_map_init_rcfile(mapper_Sw2a, type1, &
+                    'seq_maps.rc', 'wav2atm_smapname:', 'wav2atm_smaptype:', samegrid_aw, &
+                    arearead, wgtIdSw2a, 'mapper_Sw2a MOAB initialization', esmf_map_flag)
+            endif
+
+            if (samegrid_aw) then
+               mapper_Sw2a%intx_context = atm(1)%cplcompid
+            endif
+
+         endif
+      endif
+      call shr_sys_flush(logunit)
+      
       ! needed for domain checking
       if (lnd_present) then
 

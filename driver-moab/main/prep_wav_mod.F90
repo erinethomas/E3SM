@@ -8,6 +8,9 @@ module prep_wav_mod
   use seq_comm_mct    , only: num_inst_wav, num_inst_frc
   use seq_comm_mct    , only: CPLID, WAVID, logunit
   use seq_comm_mct    , only: seq_comm_getdata=>seq_comm_setptrs
+  use seq_comm_mct    , only: mbaxid, mboxid, mbixid
+  use seq_comm_mct    , only: mbwxid
+  use seq_comm_mct    , only: mbintxaw, mbintxow, mbintxiw
   use seq_infodata_mod, only: seq_infodata_getdata, seq_infodata_type
   use seq_map_type_mod
   use seq_map_mod
@@ -17,6 +20,7 @@ module prep_wav_mod
   use perf_mod
   use component_type_mod, only: component_get_x2c_cx, component_get_c2x_cx
   use component_type_mod, only: wav, ocn, ice, atm
+  use iso_c_binding
 
   implicit none
   save
@@ -66,6 +70,8 @@ contains
 
   subroutine prep_wav_init(infodata, atm_c2_wav, ocn_c2_wav, ice_c2_wav)
 
+      use iMOAB, only: iMOAB_RegisterApplication
+
     !---------------------------------------------------------------
     ! Description
     ! Initialize module attribute vectors and all other non-mapping
@@ -82,13 +88,19 @@ contains
     integer                     :: lsize_w
     logical                     :: samegrid_ow   ! samegrid ocean and wave
     logical                     :: samegrid_aw   ! samegrid atm and wave
+    logical                     :: samegrid_iw   ! samegrid ice and wave
     logical                     :: iamroot_CPLID ! .true. => CPLID masterproc
     logical                     :: esmf_map_flag ! .true. => use esmf for mapping
     logical                     :: wav_present   ! .true. => wav is present
     character(CL)               :: atm_gnam      ! atm grid
     character(CL)               :: ocn_gnam      ! ocn grid
+    character(CL)               :: ice_gnam      ! ice grid
     character(CL)               :: wav_gnam      ! wav grid
     type(mct_avect) , pointer   :: w2x_wx
+    integer                     :: ierr, idintx
+    integer                     :: type1, arearead
+    character*32                :: appname
+    character*32                :: wgtIdSa2w, wgtIdSo2w, wgtIdSi2w
     character(*)    , parameter :: subname = '(prep_wav_init)'
     character(*)    , parameter :: F00 = "('"//subname//" : ', 4A )"
     !---------------------------------------------------------------
@@ -96,9 +108,14 @@ contains
     call seq_infodata_getData(infodata, &
          wav_present=wav_present      , &
          ocn_gnam=ocn_gnam            , &
+         ice_gnam=ice_gnam            , &
          wav_gnam=wav_gnam            , &
          atm_gnam=atm_gnam            , &
          esmf_map_flag=esmf_map_flag  )
+
+    wgtIdSa2w = 'scalar_a2w'
+    wgtIdSo2w = 'scalar_o2w'
+    wgtIdSi2w = 'scalar_i2w'
 
     allocate(mapper_sa2w)
     allocate(mapper_so2w)
@@ -129,17 +146,46 @@ contains
 
        samegrid_ow = .true.
        samegrid_aw = .true.
+       samegrid_iw = .true.
        if (trim(ocn_gnam) /= trim(wav_gnam)) samegrid_ow = .false.
        if (trim(atm_gnam) /= trim(wav_gnam)) samegrid_aw = .false.
+       if (trim(ice_gnam) /= trim(wav_gnam)) samegrid_iw = .false.
 
        if (atm_c2_wav) then
           if (iamroot_CPLID) then
              write(logunit,*) ' '
              write(logunit,F00) 'Initializing mapper_Sa2w'
           end if
-          call seq_map_init_rcfile(mapper_Sa2w, atm(1), wav(1), &
-               'seq_maps.rc','atm2wav_smapname:','atm2wav_smaptype:',samegrid_aw, &
-               'mapper_Sa2w initialization')
+          call seq_map_mapinit(mapper_Sa2w, mpicom_CPLID)
+          if ( (mbaxid .ge. 0) .and. (mbwxid .ge. 0) ) then
+             mapper_Sa2w%src_mbid = mbaxid
+             mapper_Sa2w%tgt_mbid = mbwxid
+             mapper_Sa2w%src_context = atm(1)%cplcompid
+             mapper_Sa2w%weight_identifier = wgtIdSa2w
+             mapper_Sa2w%mbname = 'mapper_Sa2w'
+             if (samegrid_aw) then
+                mapper_Sa2w%rearrange_only = .true.
+                mapper_Sa2w%strategy = "rearrange"
+                mapper_Sa2w%intx_context = wav(1)%cplcompid
+             else
+                if (mbintxaw < 0) then
+                   appname = "ATM_WAV_COU"
+                   idintx = 100*atm(1)%cplcompid + wav(1)%cplcompid
+                   ierr = iMOAB_RegisterApplication(trim(appname)//C_NULL_CHAR, mpicom_CPLID, idintx, mbintxaw)
+                   if (ierr .ne. 0) then
+                      write(logunit,*) subname,' error in registering atm-wave intersection'
+                      call shr_sys_abort(subname//' ERROR in registering atm-wave intersection')
+                   end if
+                end if
+                mapper_Sa2w%intx_mbid = mbintxaw
+                mapper_Sa2w%intx_context = 100*atm(1)%cplcompid + wav(1)%cplcompid
+                type1 = 3
+                arearead = 0
+                call moab_map_init_rcfile(mapper_Sa2w, type1, &
+                     'seq_maps.rc', 'atm2wav_smapname:', 'atm2wav_smaptype:', samegrid_aw, &
+                     arearead, wgtIdSa2w, 'mapper_Sa2w MOAB initialization', esmf_map_flag)
+             endif
+          endif
        endif
        call shr_sys_flush(logunit)
        if (ocn_c2_wav) then
@@ -147,9 +193,36 @@ contains
              write(logunit,*) ' '
              write(logunit,F00) 'Initializing mapper_So2w'
           end if
-          call seq_map_init_rcfile(mapper_So2w, ocn(1), wav(1), &
-               'seq_maps.rc','ocn2wav_smapname:','ocn2wav_smaptype:',samegrid_ow, &
-               'mapper_So2w initialization')
+          call seq_map_mapinit(mapper_So2w, mpicom_CPLID)
+          if ( (mboxid .ge. 0) .and. (mbwxid .ge. 0) ) then
+             mapper_So2w%src_mbid = mboxid
+             mapper_So2w%tgt_mbid = mbwxid
+             mapper_So2w%src_context = ocn(1)%cplcompid
+             mapper_So2w%weight_identifier = wgtIdSo2w
+             mapper_So2w%mbname = 'mapper_So2w'
+             if (samegrid_ow) then
+                mapper_So2w%rearrange_only = .true.
+                mapper_So2w%strategy = "rearrange"
+                mapper_So2w%intx_context = wav(1)%cplcompid
+             else
+                if (mbintxow < 0) then
+                   appname = "OCN_WAV_COU"
+                   idintx = 100*ocn(1)%cplcompid + wav(1)%cplcompid
+                   ierr = iMOAB_RegisterApplication(trim(appname)//C_NULL_CHAR, mpicom_CPLID, idintx, mbintxow)
+                   if (ierr .ne. 0) then
+                      write(logunit,*) subname,' error in registering ocn-wave intersection'
+                      call shr_sys_abort(subname//' ERROR in registering ocn-wave intersection')
+                   end if
+                end if
+                mapper_So2w%intx_mbid = mbintxow
+                mapper_So2w%intx_context = 100*ocn(1)%cplcompid + wav(1)%cplcompid
+                type1 = 3
+                arearead = 0
+                call moab_map_init_rcfile(mapper_So2w, type1, &
+                     'seq_maps.rc', 'ocn2wav_smapname:', 'ocn2wav_smaptype:', samegrid_ow, &
+                     arearead, wgtIdSo2w, 'mapper_So2w MOAB initialization', esmf_map_flag)
+             endif
+          endif
        endif
        call shr_sys_flush(logunit)  !TODO ??? is this in Tony's code
        if (ice_c2_wav) then
@@ -157,9 +230,36 @@ contains
              write(logunit,*) ' '
              write(logunit,F00) 'Initializing mapper_Si2w'
           end if
-          call seq_map_init_rcfile(mapper_Si2w, ice(1), wav(1), &
-               'seq_maps.rc','ice2wav_smapname:','ice2wav_smaptype:',samegrid_ow, &
-               'mapper_Si2w initialization')
+          call seq_map_mapinit(mapper_Si2w, mpicom_CPLID)
+          if ( (mbixid .ge. 0) .and. (mbwxid .ge. 0) ) then
+             mapper_Si2w%src_mbid = mbixid
+             mapper_Si2w%tgt_mbid = mbwxid
+             mapper_Si2w%src_context = ice(1)%cplcompid
+             mapper_Si2w%weight_identifier = wgtIdSi2w
+             mapper_Si2w%mbname = 'mapper_Si2w'
+             if (samegrid_iw) then
+                mapper_Si2w%rearrange_only = .true.
+                mapper_Si2w%strategy = "rearrange"
+                mapper_Si2w%intx_context = wav(1)%cplcompid
+             else
+                if (mbintxiw < 0) then
+                   appname = "ICE_WAV_COU"
+                   idintx = 100*ice(1)%cplcompid + wav(1)%cplcompid
+                   ierr = iMOAB_RegisterApplication(trim(appname)//C_NULL_CHAR, mpicom_CPLID, idintx, mbintxiw)
+                   if (ierr .ne. 0) then
+                      write(logunit,*) subname,' error in registering ice-wave intersection'
+                      call shr_sys_abort(subname//' ERROR in registering ice-wave intersection')
+                   end if
+                end if
+                mapper_Si2w%intx_mbid = mbintxiw
+                mapper_Si2w%intx_context = 100*ice(1)%cplcompid + wav(1)%cplcompid
+                type1 = 3
+                arearead = 0
+                call moab_map_init_rcfile(mapper_Si2w, type1, &
+                     'seq_maps.rc', 'ice2wav_smapname:', 'ice2wav_smaptype:', samegrid_iw, &
+                     arearead, wgtIdSi2w, 'mapper_Si2w MOAB initialization', esmf_map_flag)
+             endif
+          endif
        endif
        call shr_sys_flush(logunit)
 

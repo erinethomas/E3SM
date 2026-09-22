@@ -13,6 +13,8 @@ module prep_ice_mod
   use seq_comm_mct    , only: mbrxid   ! iMOAB id of moab ROF read on couple PEs
   use seq_comm_mct    , only: mbixid   ! iMOAB for SEA-ICE migrated to coupler PEs
   use seq_comm_mct    , only: mbintxri ! iMOAB id for intx mesh between ROF and ICE
+  use seq_comm_mct    , only: mbwxid   ! iMOAB id for wave mesh on coupler pes
+  use seq_comm_mct    , only: mbintxwi ! iMOAB id for intx mesh between wave and ice
   use seq_comm_mct    , only: num_moab_exports
 
   use seq_comm_mct    , only: seq_comm_getinfo => seq_comm_setptrs
@@ -90,7 +92,7 @@ module prep_ice_mod
 
   logical :: no_match ! used to force a new mapper
   logical :: compute_maps_online_r2i
-  character*32             :: wgtIdSr2i
+  character*32             :: wgtIdSr2i, wgtIdSw2i
 
   !================================================================================================
 
@@ -124,6 +126,7 @@ contains
     logical                          :: samegrid_ro   ! samegrid rof and ice/ocn
     logical                          :: samegrid_iw   ! samegrid ice and wav
     logical                          :: ice_present   ! .true. => ice is present
+    logical                          :: wav_present   ! .true. => wav is present
     logical                          :: esmf_map_flag ! .true. => use esmf for mapping
     character(CL)                    :: ice_gnam      ! ice grid
     character(CL)                    :: ocn_gnam      ! ocn grid
@@ -153,6 +156,7 @@ contains
     call seq_infodata_getData(infodata, &
          esmf_map_flag=esmf_map_flag  , &
          ice_present=ice_present      , &
+         wav_present=wav_present      , &
          ice_gnam=ice_gnam            , &
          ocn_gnam=ocn_gnam            , &
          rof_gnam=rof_gnam            , &
@@ -161,6 +165,7 @@ contains
 
     ! C_NULL_CHAR is added at each iMOAB C API call site; keep variable clean for diagnostics.
     wgtIdSr2i = 'scalar_r2i'
+    wgtIdSw2i = 'scalar_w2i'
     compute_maps_online_r2i = .false. ! force read from disk
     no_match = .true. ! force to create a new mapper object
 
@@ -342,9 +347,60 @@ contains
              write(logunit,*) ' '
              write(logunit,F00) 'Initializing mapper_Sw2i'
           end if
-          call seq_map_init_rcfile(mapper_Sw2i, wav(1), ice(1), &
-               'seq_maps.rc','wav2ice_smapname:','wav2ice_smaptype:',samegrid_iw, &
-               'mapper_Sw2i initialization', esmf_map_flag)
+          call seq_map_mapinit(mapper_Sw2i, mpicom_CPLID)
+          if (samegrid_iw) then
+             mapper_Sw2i%rearrange_only = .true.
+             mapper_Sw2i%strategy = "rearrange"
+          endif
+       endif
+
+       if (wav_present) then
+
+          if (mbwxid < 0) then
+             if (trim(wav_gnam) == trim(ice_gnam)) then
+                mbwxid = mbixid
+             else if (trim(wav_gnam) == trim(ocn_gnam)) then
+                mbwxid = mboxid
+             end if
+          end if
+
+          if ((mbixid .ge. 0) .and. (mbwxid .ge. 0)) then
+
+             if (iamroot_CPLID) then
+                write(logunit,*) ' '
+                write(logunit,F00) 'Initializing wav ice coupler'
+             end if
+
+          mapper_Sw2i%src_mbid = mbwxid
+          mapper_Sw2i%tgt_mbid = mbixid
+          mapper_Sw2i%src_context = wav(1)%cplcompid
+          mapper_Sw2i%weight_identifier = wgtIdSw2i
+          mapper_Sw2i%mbname = 'mapper_Sw2i'
+          if (.not. samegrid_iw) then
+             appname = "WAV_ICE_COU"
+             idintx = 100*wav(1)%cplcompid + ice(1)%cplcompid
+             ierr = iMOAB_RegisterApplication(trim(appname)//C_NULL_CHAR, mpicom_CPLID, idintx, mbintxwi)
+             if (ierr .ne. 0) then
+                write(logunit,*) subname,' error in registering wav-ice intersection'
+                call shr_sys_abort(subname//' ERROR in registering wav-ice intersection')
+             end if
+
+             call seq_comm_getinfo(CPLID ,mpigrp=mpigrp_CPLID)
+
+             mapper_Sw2i%intx_mbid = mbintxwi
+             mapper_Sw2i%intx_context = idintx
+             type1 = 3
+             arearead = 0
+             call moab_map_init_rcfile(mapper_Sw2i, type1, &
+                  'seq_maps.rc', 'wav2ice_smapname:', 'wav2ice_smaptype:', samegrid_iw, &
+                  arearead, wgtIdSw2i, 'mapper_Sw2i MOAB initialization', esmf_map_flag)
+          endif
+
+          if (samegrid_iw) then
+             mapper_Sw2i%intx_context = ice(1)%cplcompid
+          endif
+
+          endif
        endif
        call shr_sys_flush(logunit)
 

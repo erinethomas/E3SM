@@ -23,6 +23,8 @@ module prep_ocn_mod
   use seq_comm_mct,     only : mhpgid   ! iMOAB id for atm pgx grid, on atm pes; created with se and gll grids
   ! use dimensions_mod,   only : np     ! for atmosphere degree
   use seq_comm_mct,     only : mbixid   ! iMOAB for sea-ice migrated to coupler
+  use seq_comm_mct,     only : mbwxid   ! iMOAB id for wave mesh on coupler pes
+  use seq_comm_mct,     only : mbintxwo ! iMOAB id for intx mesh between wave and ocean
   use seq_comm_mct,     only : CPLALLICEID
   use seq_comm_mct,     only : seq_comm_iamin
   use seq_comm_mct,     only : num_moab_exports
@@ -222,6 +224,7 @@ contains
     logical                  :: ocn_present    ! .true.  => ocn is present
     logical                  :: atm_present    ! .true.  => atm is present
     logical                  :: ice_present    ! .true.  => ice is present
+    logical                  :: wav_present    ! .true.  => wav is present
     logical                  :: cpl_compute_maps_online    ! .true.  => maps are computed online
     logical                  :: samegrid_ao    ! samegrid atm and ocean
     logical                  :: samegrid_og    ! samegrid glc and ocean
@@ -245,7 +248,7 @@ contains
     ! MOAB stuff
    integer                  :: ierr, idintx, rank
    character*32             :: appname, outfile, wopts, lnum
-   character*32             :: dm1, dm2, dofnameS, dofnameT, wgtIdFr2ol, wgtIdFr2oi, wgtIdFr2o, wgtIdFa2o, wgtIdSa2o, wgtIdVa2o
+   character*32             :: dm1, dm2, dofnameS, dofnameT, wgtIdFr2ol, wgtIdFr2oi, wgtIdFr2o, wgtIdFa2o, wgtIdSa2o, wgtIdVa2o, wgtIdSw2o
    integer                  :: orderS, orderT, volumetric, noConserve, validate, fInverseDistanceMap
    integer                  :: fNoBubble, monotonicity
 ! will do comm graph over coupler PES, in 2-hop strategy
@@ -277,6 +280,7 @@ contains
          ocn_present=ocn_present       , &
          atm_present=atm_present       , &
          ice_present=ice_present       , &
+         wav_present=wav_present       , &
          flood_present=flood_present   , &
          vect_map=vect_map             , &
          atm_gnam=atm_gnam             , &
@@ -295,6 +299,7 @@ contains
     wgtIdFa2o = 'flux_a2o'
     wgtIdSa2o = 'bilinear_a2o'
     wgtIdVa2o = 'vector_a2o'
+    wgtIdSw2o = 'scalar_w2o'
     wgtIdFr2ol = 'flux_r2o_liq'
     wgtIdFr2oi = 'flux_r2o_ice'
     wgtIdFr2o = 'flux_r2o'
@@ -999,9 +1004,60 @@ contains
              write(logunit,*) ' '
              write(logunit,F00) 'Initializing mapper_Sw2o'
           end if
-          call seq_map_init_rcfile(mapper_Sw2o, wav(1), ocn(1), &
-               'seq_maps.rc', 'wav2ocn_smapname:', 'wav2ocn_smaptype:',samegrid_ow, &
-               'mapper_Sw2o initialization', esmf_map_flag, no_match)
+          call seq_map_mapinit(mapper_Sw2o, mpicom_CPLID)
+          if (samegrid_ow) then
+             mapper_Sw2o%rearrange_only = .true.
+             mapper_Sw2o%strategy = "rearrange"
+          endif
+       endif
+
+       if (wav_present) then
+
+          if (mbwxid < 0) then
+             if (trim(wav_gnam) == trim(ocn_gnam)) then
+                mbwxid = mboxid
+             else if (trim(wav_gnam) == trim(atm_gnam)) then
+                mbwxid = mbaxid
+             end if
+          end if
+
+          if ((mboxid .ge. 0) .and. (mbwxid .ge. 0)) then
+
+             if (iamroot_CPLID) then
+                write(logunit,*) ' '
+                write(logunit,F00) 'Initializing wav ocn coupler'
+             end if
+
+          mapper_Sw2o%src_mbid = mbwxid
+          mapper_Sw2o%tgt_mbid = mboxid
+          mapper_Sw2o%src_context = wav(1)%cplcompid
+          mapper_Sw2o%weight_identifier = wgtIdSw2o
+          mapper_Sw2o%mbname = 'mapper_Sw2o'
+          if (.not. samegrid_ow) then
+             appname = "WAV_OCN_COU"
+             idintx = 100*wav(1)%cplcompid + ocn(1)%cplcompid
+             ierr = iMOAB_RegisterApplication(trim(appname)//C_NULL_CHAR, mpicom_CPLID, idintx, mbintxwo)
+             if (ierr .ne. 0) then
+                write(logunit,*) subname,' error in registering wav-ocn intersection'
+                call shr_sys_abort(subname//' ERROR in registering wav-ocn intersection')
+             end if
+
+             call seq_comm_getinfo(CPLID ,mpigrp=mpigrp_CPLID)
+
+             mapper_Sw2o%intx_mbid = mbintxwo
+             mapper_Sw2o%intx_context = idintx
+             type1 = 3
+             arearead = 0
+             call moab_map_init_rcfile(mapper_Sw2o, type1, &
+                  'seq_maps.rc', 'wav2ocn_smapname:', 'wav2ocn_smaptype:', samegrid_ow, &
+                  arearead, wgtIdSw2o, 'mapper_Sw2o MOAB initialization', esmf_map_flag)
+          endif
+
+          if (samegrid_ow) then
+             mapper_Sw2o%intx_context = ocn(1)%cplcompid
+          endif
+
+          endif
        endif
        call shr_sys_flush(logunit)
 

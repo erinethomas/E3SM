@@ -1707,11 +1707,8 @@ contains
 
     nlocf = mbGetnCells(mbfid)
 
-    if (nloc /= nlocf .or. nloc /= nloca .or. nloc /= nloco) then
+    if (nloc /= nlocf) then
        call shr_sys_abort(trim(subname)//' ERROR nloc sizes do not match')
-    endif
-    if ((wav_ocn_coup == 'twoway' .or. wav_atm_coup == 'twoway') .and. nloc /= nlocw) then
-       call shr_sys_abort(trim(subname)//' ERROR nloc sizes do not match for wave vector')
     endif
 
     ! Update ocean surface fluxes
