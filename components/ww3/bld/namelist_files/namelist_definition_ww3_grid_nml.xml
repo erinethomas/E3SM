@@ -1001,6 +1001,12 @@
        group="misc"
        valid_values="">
 </entry>
+<entry id="caltype"
+       type="char*8"
+       category="misc"
+       group="misc"
+       valid_values="">
+</entry>
 <entry id="trckcmpr"
        type="logical"
        category="misc"
