@@ -168,6 +168,7 @@ contains
          pkgColumnTracerLidThicknessActive, &
          pkgColumnTracerEffectiveSnowDensityActive, &
          pkgColumnTracerSnowGrainRadiusActive, &
+         pkgColumnTracerFloeSizeDistActive, &
          pkgColumnTracerAerosolsActive, &
          pkgColumnBiogeochemistryActive, &
          pkgTracerBrineActive, &
@@ -195,8 +196,7 @@ contains
          pkgTracerZAerosolsActive
 
     logical, pointer :: &
-         config_use_level_meltponds, &
-         config_use_floe_size_distribution
+          config_use_level_meltponds
 
     type (mpas_pool_type), pointer :: configPool
 
@@ -239,6 +239,8 @@ contains
                                                                pkgColumnTracerEffectiveSnowDensityActive)
     call MPAS_pool_get_package(domain % blocklist % packages, 'pkgColumnTracerSnowGrainRadiusActive', &
                                                                pkgColumnTracerSnowGrainRadiusActive)
+    call MPAS_pool_get_package(domain % blocklist % packages, 'pkgColumnTracerFloeSizeDistActive', &
+                                                               pkgColumnTracerFloeSizeDistActive)
     call MPAS_pool_get_package(domain % blocklist % packages, 'pkgColumnTracerAerosolsActive', &
                                                                pkgColumnTracerAerosolsActive)
     call MPAS_pool_get_package(domain % blocklist % packages, 'pkgColumnBiogeochemistryActive', &
@@ -292,7 +294,6 @@ contains
 
     configPool => domain % blocklist % configs
     call MPAS_pool_get_config(configPool, "config_use_level_meltponds", config_use_level_meltponds)
-    call MPAS_pool_get_config(configPool, "config_use_floe_size_distribution", config_use_floe_size_distribution)
 
     if (pkgColumnTracerIceAgeActive) then
        call add_tracer_to_tracer_linked_list(tracersHead, 'iceAge',               'iceVolumeCategory')
@@ -302,7 +303,7 @@ contains
        call add_tracer_to_tracer_linked_list(tracersHead, 'firstYearIceArea',     'iceAreaCategory')
     endif
 
-    if (config_use_floe_size_distribution) then
+    if (pkgColumnTracerFloeSizeDistActive) then
        call add_tracer_to_tracer_linked_list(tracersHead, 'floeSizeDist',        'iceAreaCategory')
     endif
 
