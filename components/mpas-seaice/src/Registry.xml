@@ -2764,6 +2764,7 @@
 		<package name="pkgColumnTracerAerosols" description="Evolves aerosol tracers in ice and snow"/>
 		<package name="pkgColumnTracerEffectiveSnowDensity" description="Computes effective snow density based on snow compaction"/>
 		<package name="pkgColumnTracerSnowGrainRadius" description="Evolves snow grain radius for radiative transfer based on dry and wet metamorphism"/>
+		<package name="pkgColumnTracerFloeSizeDist" description="Floe size distribution tracer"/>
 		<package name="pkgTracerBrine" description="brine fraction tracer (ratio of brine penetration height to ice thickness)"/>
 		<package name="pkgTracerMobileFraction"
 			 description="fraction of vertical bgc/aerosol tracer freely moving in the brine"/>
@@ -2889,6 +2890,7 @@
 		     type="real"
 		     dimensions="nFloeCategories nCategories nCells Time"
 		     units="1"
+		     packages="pkgColumnTracerFloeSizeDist"
 		     description="Full Floe Size Distribution"
 		/>
 		<var name="iceAge"
@@ -3396,6 +3398,7 @@
 		     type="real"
 		     dimensions="nFloeCategories nCells Time"
 		     units="1"
+		     packages="pkgColumnTracerFloeSizeDist"
 		     description="Floe Size Distribution over Floe Size Category"
 		/>
 		<var name="iceAgeCell"
@@ -4218,7 +4221,7 @@
 	</var_struct>
 
 	<!-- floe size distribution -->
-	<var_struct name="floe_size_distribution" time_levs="1">
+	<var_struct name="floe_size_distribution" time_levs="1" packages="pkgColumnTracerFloeSizeDist">
 		<var name="floeSizeBinLower"
 		     type="real"
 		     dimensions="nFloeCategories"
